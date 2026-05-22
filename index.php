@@ -442,7 +442,7 @@
 
     <!-- FOOTER -->
     <footer class="bg-white border-t border-gray-200 text-gray-500 p-2 text-center text-[10px] uppercase tracking-tighter z-10">
-        it.noorgee.com &copy; <?php echo date('Y'); ?>. Professional Tools Infrastructure.
+        it.noorgee.com &copy; <?php echo date('Y'); ?>. Professional Tools Infrastructure. updated: 22-May-2026
     </footer>
 </div>
 
