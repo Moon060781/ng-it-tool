@@ -387,7 +387,7 @@ function showLogin($err) { ?>
     <a href="<?=REPO_URL?>/commits/<?=BRANCH?>" target="_blank" class="btn btn-slate btn-sm"><i class="fas fa-list"></i> All Commits</a>
   </div>
   <div class="text-slate-500 text-xs">
-    <i class="fas fa-robot mr-1"></i> Managed with <strong class="text-slate-400">Claude AI</strong> · <?=karachi_fmt()?>
+    <i class="fas fa-robot mr-1"></i> Created with <strong class="text-slate-400">Claude AI</strong> · <?=karachi_fmt()?>
   </div>
 </div>
 
