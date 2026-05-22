@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FX: Hand-Controlled Particle Flux</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Essential styles to make Three.js take up the whole screen */
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #000000; /* Black background for particle contrast */
+        }
+        /* Style for the MediaPipe video feed (keep it hidden behind the scene) */
+        #webcam-input { display: none; }
+        #output-canvas { display: none; } /* Used by MediaPipe for processing */
+    </style>
+</head>
+<body>
+    <video id="webcam-input" playsinline></video>
+    
+    <canvas id="output-canvas"></canvas>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    
+    <script src="main.js"></script>
+</body>
+</html>

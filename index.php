@@ -72,7 +72,7 @@
 
         .tool-label { white-space: nowrap; }
         .tool-link { justify-content: start; }
-        .sidebar-collapsed-text { display: none; }
+        .sidebar-collapsed-text { display: block; }
 
         /* Landing Page Grid Styles */
         #landing-page {
@@ -343,6 +343,9 @@
                 <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white shadow-sm border border-gray-200 flex items-center" data-tool-url="/TW">
                     🎡<span class="tool-label ml-2 sidebar-collapsed-text">Task Assigner</span>
                 </button>
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white shadow-sm border border-gray-200 flex items-center" data-tool-url="/FU">
+                    📂<span class="tool-label ml-2 sidebar-collapsed-text">Fuel Consumption</span>
+                </button>
             </div>
         </aside>
 
@@ -385,6 +388,11 @@
                             <h3 class="text-xl font-bold text-gray-900 mb-2">Task Assigner</h3>
                             <p class="text-sm text-gray-500 leading-relaxed">Fairly distribute tasks among team members.</p>
                         </div>
+                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/FU')">
+                            <div class="text-4xl mb-4 text-blue-600">📂</div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">Measure Fuel Expense </h3>
+                            <p class="text-sm text-gray-500 leading-relaxed">For Calculate fuel consumption as online ride partner (like bykea, yango etc.).</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -425,11 +433,6 @@
             </div>
             <!-- Col 4 -->
             <div class="flex-1 flex flex-col items-center justify-center px-4 bg-blue-900/30 ngo-col text-center">
-                
-                <h3>Karsaziyan</h3>
-                    <p class="text-[14px] font-extrabold text-white leading-tight">Welfare Association</p>
-                    <p class="text-[9px] text-slate-500 mt-1">www.kwa.com.pk</p>
-                
                 <p class="text-[11px] font-bold text-blue-300 mb-3 italic">Join Our Cause</p>
                 <a href="https://kwa.com.pk/donation.html" target="_blank" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-[12px] font-black py-3 rounded shadow-xl border border-white/10 transition transform hover:scale-105 active:scale-95 uppercase">Donate Now</a>
                 <p class="text-[9px] text-slate-500 mt-3 leading-tight font-medium uppercase tracking-tighter">Small Acts, Big Impact</p>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lawyer Intake Tool | Smart Case Filtering</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #c0392b;
+            --light-bg: #f4f7f6;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-top: 5px solid var(--primary-color);
+        }
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box; /* Ensures padding doesn't affect width */
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #1a252f;
+        }
+        /* Result Box Styles */
+        #result-box {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .reject {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 12px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>⚖️ Legal Case Evaluator</h1>
+        <p class="subtitle">Quickly determine if we are the right fit for your case.</p>
+
+        <form id="intakeForm">
+            <div class="form-group">
+                <label for="caseType">What type of legal issue is this?</label>
+                <select id="caseType" required>
+                    <option value="">-- Select an Option --</option>
+                    <option value="criminal">Criminal Defense (Theft, DUI, etc.)</option>
+                    <option value="family">Family Law (Divorce, Custody)</option>
+                    <option value="traffic">Traffic Ticket</option>
+                    <option value="other">Other / Not Sure</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="timeline">When did this incident occur?</label>
+                <select id="timeline" required>
+                    <option value="recent">Within the last 30 days</option>
+                    <option value="months">1 - 12 months ago</option>
+                    <option value="old">More than 1 year ago</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="jurisdiction">Is the court located in [Your City/State]?</label>
+                <select id="jurisdiction" required>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                    <option value="unsure">I am not sure</option>
+                </select>
+            </div>
+
+            <button type="button" onclick="evaluateCase()">Analyze Case Viability</button>
+        </form>
+
+        <div id="result-box"></div>
+    </div>
+
+    <footer>
+        &copy; 2025 Lawyer Tools. Hosted at it.noorgee.com/LW
+    </footer>
+
+    <script>
+        function evaluateCase() {
+            // Get values
+            const type = document.getElementById('caseType').value;
+            const time = document.getElementById('timeline').value;
+            const loc = document.getElementById('jurisdiction').value;
+            const resultBox = document.getElementById('result-box');
+
+            // Simple Logic for the Tool
+            // 1. We only take Criminal or Family cases
+            // 2. We don't take cases older than 1 year
+            // 3. We only take local cases
+
+            let message = "";
+            let isGoodFit = true;
+
+            if (type === "traffic" || type === "other") {
+                message = "We currently specialize in Criminal and Family law only. We recommend contacting the State Bar for a referral.";
+                isGoodFit = false;
+            } else if (time === "old") {
+                message = "Since this incident occurred over a year ago, the statute of limitations may be an issue. Please consult a specialist immediately.";
+                isGoodFit = false;
+            } else if (loc === "no") {
+                message = "We generally do not practice outside of our local jurisdiction. We recommend finding a local attorney in that county.";
+                isGoodFit = false;
+            } else {
+                message = "✅ This looks like a case we can help with! Please call us at 555-0199 to schedule your free consultation.";
+            }
+
+            // Display Result
+            resultBox.style.display = 'block';
+            resultBox.innerText = message;
+            
+            if (isGoodFit) {
+                resultBox.className = 'success';
+            } else {
+                resultBox.className = 'reject';
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,43 @@
+[19-Nov-2025 06:40:47 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'noorgeec_ng'@'localhost' to database 'Noorgeec_it' in /home/noorgeec/it.noorgee.com/UR/index.php:13
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/UR/index.php(13): mysqli->__construct()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/UR/index.php on line 13
+[19-Nov-2025 06:45:35 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'noorgeec_ng'@'localhost' to database 'Noorgeec_it' in /home/noorgeec/it.noorgee.com/UR/test_db.php:8
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/UR/test_db.php(8): mysqli->__construct()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/UR/test_db.php on line 8
+[19-Nov-2025 06:48:11 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'noorgeec_ng'@'localhost' to database 'Noorgeec_it' in /home/noorgeec/it.noorgee.com/UR/test_db.php:8
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/UR/test_db.php(8): mysqli->__construct()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/UR/test_db.php on line 8
+[19-Nov-2025 06:49:09 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'noorgeec_it.Ur_documents' doesn't exist in /home/noorgeec/it.noorgee.com/UR/index.php:67
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/UR/index.php(67): mysqli->query()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/UR/index.php on line 67
+[19-Nov-2025 06:52:10 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Duplicate entry '' for key 'ur_users.session_id' in /home/noorgeec/it.noorgee.com/UR/index.php:30
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/UR/index.php(30): mysqli->query()
+#1 /home/noorgeec/it.noorgee.com/UR/index.php(52): getUserId()
+#2 {main}
+  thrown in /home/noorgeec/it.noorgee.com/UR/index.php on line 30
+[19-Nov-2025 06:57:45 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'noorgeec_ng'@'localhost' to database 'Noorgeec_it' in /home/noorgeec/it.noorgee.com/UR/test_db.php:8
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/UR/test_db.php(8): mysqli->__construct()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/UR/test_db.php on line 8
+[19-Nov-2025 06:59:55 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'noorgeec_ng'@'localhost' to database 'Noorgeec_it' in /home/noorgeec/it.noorgee.com/UR/test_db.php:8
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/UR/test_db.php(8): mysqli->__construct()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/UR/test_db.php on line 8
+[19-Nov-2025 06:59:57 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'noorgeec_ng'@'localhost' to database 'Noorgeec_it' in /home/noorgeec/it.noorgee.com/UR/test_db.php:8
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/UR/test_db.php(8): mysqli->__construct()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/UR/test_db.php on line 8
+[20-Nov-2025 23:26:10 UTC] PHP Parse error:  syntax error, unexpected token "..." in /home/noorgeec/it.noorgee.com/UR/index.php on line 35
+[20-Nov-2025 23:26:15 UTC] PHP Parse error:  syntax error, unexpected token "..." in /home/noorgeec/it.noorgee.com/UR/index.php on line 35

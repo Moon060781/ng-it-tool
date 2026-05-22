@@ -1,0 +1,36 @@
+[07-Feb-2026 22:17:23 UTC] PHP Warning:  copy(): The second argument to copy() function cannot be a directory in /home/noorgeec/it.noorgee.com/NW/deploy.php on line 67
+[07-Feb-2026 22:17:39 UTC] PHP Warning:  copy(): The second argument to copy() function cannot be a directory in /home/noorgeec/it.noorgee.com/NW/deploy.php on line 67
+[07-Feb-2026 22:17:47 UTC] PHP Warning:  copy(): The second argument to copy() function cannot be a directory in /home/noorgeec/it.noorgee.com/NW/deploy.php on line 67
+[07-Feb-2026 22:20:43 UTC] PHP Warning:  copy(): The second argument to copy() function cannot be a directory in /home/noorgeec/it.noorgee.com/NW/deploy.php on line 67
+[07-Feb-2026 22:20:48 UTC] PHP Warning:  copy(): The second argument to copy() function cannot be a directory in /home/noorgeec/it.noorgee.com/NW/deploy.php on line 69
+[07-Feb-2026 22:20:56 UTC] PHP Warning:  copy(): The second argument to copy() function cannot be a directory in /home/noorgeec/it.noorgee.com/NW/deploy.php on line 69
+[12-Feb-2026 11:46:00 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'IF NOT EXISTS is_read TINYINT(1) DEFAULT 0' at line 1 in /home/noorgeec/it.noorgee.com/NW/messages.php:44
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/NW/messages.php(44): mysqli->query()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/NW/messages.php on line 44
+[12-Feb-2026 11:46:04 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'IF NOT EXISTS is_read TINYINT(1) DEFAULT 0' at line 1 in /home/noorgeec/it.noorgee.com/NW/messages.php:44
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/NW/messages.php(44): mysqli->query()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/NW/messages.php on line 44
+[12-Feb-2026 11:46:16 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'IF NOT EXISTS is_read TINYINT(1) DEFAULT 0' at line 1 in /home/noorgeec/it.noorgee.com/NW/messages.php:44
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/NW/messages.php(44): mysqli->query()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/NW/messages.php on line 44
+[12-Feb-2026 11:47:36 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'IF NOT EXISTS is_read TINYINT(1) DEFAULT 0' at line 1 in /home/noorgeec/it.noorgee.com/NW/messages.php:44
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/NW/messages.php(44): mysqli->query()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/NW/messages.php on line 44
+[12-Feb-2026 23:59:18 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'IF NOT EXISTS is_read TINYINT(1) DEFAULT 0' at line 1 in /home/noorgeec/it.noorgee.com/NW/messages.php:44
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/NW/messages.php(44): mysqli->query()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/NW/messages.php on line 44
+[15-Feb-2026 06:01:13 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'IF NOT EXISTS is_read TINYINT(1) DEFAULT 0' at line 1 in /home/noorgeec/it.noorgee.com/NW/messages.php:44
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/NW/messages.php(44): mysqli->query()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/NW/messages.php on line 44

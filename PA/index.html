@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPA فونٹیک ٹول - اردو کنورژن</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Urdu:wght@400;700&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans Urdu', 'Noto Sans', sans-serif; }
+        .ipa-font { font-family: 'Noto Sans', monospace; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .loader {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col p-2 md:p-4">
+
+    <div class="max-w-[1600px] mx-auto flex-grow w-full flex flex-col md:flex-row gap-6">
+        
+        <!-- Main Content Area (85% Approx) -->
+        <main class="w-full md:w-[85%]">
+            <header class="mb-4 text-center">
+                <h1 class="text-2xl font-bold text-slate-800">IPA فونٹیک ٹول</h1>
+                <p class="text-slate-500 text-xs">اردو متن کو صوتی حروف (IPA) میں منتقل کریں</p>
+            </header>
+
+            <!-- Main Split Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                
+                <!-- Right Side Input Section -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider italic">اردو متن لکھیں (Native Text)</label>
+                    <textarea id="urduInput" class="w-full h-80 p-4 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-xl leading-relaxed custom-scrollbar" placeholder="یہاں اردو لکھیں..."></textarea>
+                    
+                    <div class="mt-3 flex justify-center">
+                        <button onclick="handleConvert()" class="bg-blue-600 text-white px-8 py-2 rounded-full font-bold hover:bg-blue-700 transition shadow-lg flex items-center gap-2 transform active:scale-95">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            کنورٹ (Convert)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Left Side Result Section -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider italic">فونٹیک نتیجہ (IPA Result)</label>
+                        <div class="flex gap-2">
+                            <button id="listenBtn" onclick="speakIPA()" class="text-[10px] bg-blue-50 text-blue-600 font-bold px-3 py-1 rounded-lg hover:bg-blue-100 transition border border-blue-100 flex items-center gap-1">
+                                <span id="listenIcon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                                <span>سنیں (Listen)</span>
+                            </button>
+                            <button onclick="copyResult()" class="text-[10px] bg-slate-100 text-slate-600 font-bold px-3 py-1 rounded-lg hover:bg-slate-200 transition">کاپی</button>
+                        </div>
+                    </div>
+                    <textarea id="ipaOutput" dir="ltr" class="w-full h-80 p-4 bg-slate-50 border border-slate-100 rounded-xl text-lg text-blue-900 ipa-font focus:ring-2 focus:ring-orange-400 outline-none custom-scrollbar" placeholder="IPA result here..."></textarea>
+                    
+                    <div id="wordChips" class="mt-2 flex flex-wrap gap-1 max-h-16 overflow-y-auto custom-scrollbar"></div>
+
+                    <!-- Symbol Tray -->
+                    <div class="mt-3 pt-3 border-t border-slate-100">
+                        <div id="symbolTray" class="flex flex-wrap gap-1 justify-center"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar: Ads & Links (15% Approx) -->
+        <aside class="w-full md:w-[15%] space-y-4">
+            <div class="bg-gradient-to-br from-blue-600 to-indigo-700 p-4 rounded-2xl shadow-lg text-white h-fit">
+                <h2 class="font-bold text-base mb-2 border-b border-blue-400 pb-1 italic">NoorGee Tools</h2>
+                <p class="text-[10px] opacity-90 leading-relaxed mb-4">جدید دور کے تقاضوں کے مطابق بہترین آئی ٹی ٹولز، اب ایک ہی جگہ پر۔</p>
+                
+                <div class="space-y-2">
+                    <a href="https://it.noorgee.com" target="_blank" class="block bg-white/20 hover:bg-white/30 p-2 rounded-lg text-[10px] font-bold transition">
+                        🏠 مین ہوم پیج
+                    </a>
+                    <a href="https://it.noorgee.com/PM" target="_blank" class="block bg-white/20 hover:bg-white/30 p-2 rounded-lg text-[10px] transition">
+                        🚀 PM ٹول
+                    </a>
+                    <a href="https://it.noorgee.com/UR" target="_blank" class="block bg-white/20 hover:bg-white/30 p-2 rounded-lg text-[10px] transition">
+                        ✍️ اردو ریسورسز
+                    </a>
+                    <a href="https://it.noorgee.com/NM" target="_blank" class="block bg-white/20 hover:bg-white/30 p-2 rounded-lg text-[10px] transition">
+                        📊 NM سسٹم
+                    </a>
+                </div>
+                
+                <div class="mt-4 text-[9px] text-blue-200 text-center uppercase tracking-tighter italic">
+                    Visit: it.noorgee.com
+                </div>
+            </div>
+
+            <!-- Ad Placeholder -->
+            <div class="bg-white p-3 rounded-xl border border-slate-200 text-center shadow-sm">
+                <p class="text-[9px] text-slate-400 uppercase mb-2 italic">Advertisement</p>
+                <div class="h-24 bg-slate-50 border border-dashed border-slate-200 rounded flex items-center justify-center text-slate-300 text-[10px]">
+                    Space for Ads
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="mt-8 pt-6 pb-4 border-t border-slate-200 text-center">
+        <div class="flex justify-center gap-6 mb-4">
+            <a href="#" class="text-slate-400 hover:text-blue-600 transition" title="Facebook">
+                <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg>
+            </a>
+            <a href="#" class="text-slate-400 hover:text-blue-400 transition" title="Twitter/X">
+                <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg>
+            </a>
+            <a href="#" class="text-slate-400 hover:text-pink-600 transition" title="Instagram">
+                <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            </a>
+            <a href="#" class="text-slate-400 hover:text-red-600 transition" title="YouTube">
+                <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+            </a>
+            <a href="#" class="text-slate-400 hover:text-black transition" title="TikTok">
+                <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M12.525.02c1.31 0 2.591.214 3.75.606V6.28c-1.359-.834-2.964-1.32-4.687-1.32a8.384 8.384 0 00-1.563.147V.02h2.5zm7.332 5.292c-1.117-.001-2.188.21-3.17.592l.001 4.969c0 3.136-2.54 5.679-5.675 5.679a5.682 5.682 0 01-5.675-5.679 5.682 5.682 0 015.675-5.679c.28 0 .553.02.821.058V5.03a8.14 8.14 0 00-.821-.043 8.18 8.18 0 00-8.175 8.18 8.18 8.18 0 008.175 8.18 8.18 8.18 0 008.175-8.18V5.312z"></path></svg>
+            </a>
+        </div>
+        <p class="text-xs text-slate-400">&copy; 2025 NoorGee Tools. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const apiKey = ""; 
+        
+        let rules = [
+            { native: 'آ', ipa: 'ɑː' }, { native: 'ا', ipa: 'ə' }, { native: 'ب', ipa: 'b' },
+            { native: 'پ', ipa: 'p' }, { native: 'ت', ipa: 't' }, { native: 'ٹ', ipa: 'ʈ' },
+            { native: 'ث', ipa: 's' }, { native: 'ج', ipa: 'dʒ' }, { native: 'چ', ipa: 'tʃ' },
+            { native: 'ح', ipa: 'h' }, { native: 'خ', ipa: 'x' }, { native: 'د', ipa: 'd' },
+            { native: 'ڈ', ipa: 'ɖ' }, { native: 'ذ', ipa: 'z' }, { native: 'ر', ipa: 'r' },
+            { native: 'ڑ', ipa: 'ɽ' }, { native: 'ز', ipa: 'z' }, { native: 'ژ', ipa: 'ʒ' },
+            { native: 'س', ipa: 's' }, { native: 'ش', ipa: 'ʃ' }, { native: 'ص', ipa: 's' },
+            { native: 'ض', ipa: 'z' }, { native: 'ط', ipa: 't' }, { native: 'ظ', ipa: 'z' },
+            { native: 'ع', ipa: 'ʔ' }, { native: 'غ', ipa: 'ɣ' }, { native: 'ف', ipa: 'f' },
+            { native: 'ق', ipa: 'q' }, { native: 'ک', ipa: 'k' }, { native: 'گ', ipa: 'ɡ' },
+            { native: 'ل', ipa: 'l' }, { native: 'م', ipa: 'm' }, { native: 'ن', ipa: 'n' },
+            { native: 'و', ipa: 'v' }, { native: 'ہ', ipa: 'h' }, { native: 'ھ', ipa: 'ʰ' },
+            { native: 'ی', ipa: 'j' }, { native: 'ے', ipa: 'e' }, { native: 'ں', ipa: '̃' },
+            { native: 'جھ', ipa: 'dʒʱ' }, { native: 'ٹھ', ipa: 'ʈʰ' }, { native: 'کھ', ipa: 'kʰ' }
+        ];
+
+        const symbols = ['ʃ', 'ʒ', 'tʃ', 'dʒ', 'θ', 'ð', 'ŋ', 'x', 'ɣ', 'ʈ', 'ɖ', 'ɽ', 'ʰ', 'ʱ', 'ɑː', 'iː', 'uː', 'æ', 'ə', 'ʔ', '̃'];
+
+        function renderSymbols() {
+            const tray = document.getElementById('symbolTray');
+            symbols.forEach(s => {
+                const btn = document.createElement('button');
+                btn.className = 'w-8 h-8 flex items-center justify-center bg-white border border-slate-200 rounded text-xs font-bold ipa-font hover:bg-blue-50 hover:border-blue-500 transition';
+                btn.innerText = s;
+                btn.onclick = () => insertSymbol(s);
+                tray.appendChild(btn);
+            });
+        }
+
+        function handleConvert() {
+            const input = document.getElementById('urduInput').value;
+            let result = input;
+            const sorted = [...rules].sort((a, b) => b.native.length - a.native.length);
+            sorted.forEach(rule => {
+                if(rule.native && rule.ipa) {
+                    const regex = new RegExp(rule.native, 'g');
+                    result = result.replace(regex, rule.ipa);
+                }
+            });
+            document.getElementById('ipaOutput').value = result;
+            renderWords(result);
+        }
+
+        function renderWords(text) {
+            const chips = document.getElementById('wordChips');
+            chips.innerHTML = '';
+            text.split(' ').forEach(word => {
+                if(word.trim()) {
+                    const span = document.createElement('span');
+                    span.className = 'px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[9px] font-bold cursor-pointer hover:bg-blue-100 transition border border-blue-100';
+                    span.innerText = word;
+                    span.onclick = () => {
+                        const textarea = document.createElement("textarea");
+                        textarea.value = word;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        const original = span.innerText;
+                        span.innerText = "Copied!";
+                        setTimeout(() => span.innerText = original, 1000);
+                    };
+                    chips.appendChild(span);
+                }
+            });
+        }
+
+        function insertSymbol(s) {
+            const output = document.getElementById('ipaOutput');
+            const start = output.selectionStart;
+            output.value = output.value.slice(0, start) + s + output.value.slice(output.selectionEnd);
+            output.focus();
+            output.setSelectionRange(start + s.length, start + s.length);
+        }
+
+        function pcmToWav(pcmData, sampleRate) {
+            const buffer = new ArrayBuffer(44 + pcmData.length * 2);
+            const view = new DataView(buffer);
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+            writeString(0, 'RIFF');
+            view.setUint32(4, 32 + pcmData.length * 2, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true); 
+            view.setUint16(22, 1, true); 
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, pcmData.length * 2, true);
+            for (let i = 0; i < pcmData.length; i++) {
+                view.setInt16(44 + i * 2, pcmData[i], true);
+            }
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+
+        async function speakIPA() {
+            const text = document.getElementById('ipaOutput').value;
+            if (!text) return;
+            const btn = document.getElementById('listenBtn');
+            const icon = document.getElementById('listenIcon');
+            btn.disabled = true;
+            icon.innerHTML = '<span class="loader"></span>';
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Say: ${text}` }] }],
+                        generationConfig: { 
+                            responseModalities: ["AUDIO"],
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } 
+                        }
+                    })
+                });
+                const data = await response.json();
+                const base64Audio = data.candidates[0].content.parts[0].inlineData.data;
+                const binaryString = atob(base64Audio);
+                const pcmData = new Int16Array(binaryString.length / 2);
+                for (let i = 0; i < pcmData.length; i++) {
+                    pcmData[i] = binaryString.charCodeAt(i * 2) | (binaryString.charCodeAt(i * 2 + 1) << 8);
+                }
+                const wavBlob = pcmToWav(pcmData, 24000);
+                const url = URL.createObjectURL(wavBlob);
+                const audio = new Audio(url);
+                await audio.play();
+            } catch (error) {
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd" /></svg>';
+            }
+        }
+
+        function copyResult() {
+            const output = document.getElementById("ipaOutput");
+            output.select();
+            document.execCommand("copy");
+        }
+
+        window.onload = () => { renderSymbols(); };
+    </script>
+</body>
+</html>

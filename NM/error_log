@@ -1,0 +1,11 @@
+[30-Nov-2025 11:40:49 UTC] PHP Warning:  Undefined array key "original_inputs" in /home/noorgeec/it.noorgee.com/NM/index.php on line 62
+[30-Nov-2025 11:40:49 UTC] PHP Fatal error:  Uncaught TypeError: array_merge(): Argument #2 must be of type array, null given in /home/noorgeec/it.noorgee.com/NM/index.php:62
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/NM/index.php(62): array_merge()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/NM/index.php on line 62
+[30-Nov-2025 11:43:39 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'full_name_suggestion' in 'field list' in /home/noorgeec/it.noorgee.com/NM/index.php:117
+Stack trace:
+#0 /home/noorgeec/it.noorgee.com/NM/index.php(117): mysqli->query()
+#1 {main}
+  thrown in /home/noorgeec/it.noorgee.com/NM/index.php on line 117

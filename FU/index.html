@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel &amp; Profit Partner Tool | it.noorgee.com</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        #map { height: 350px; width: 100%; border-radius: 12px; z-index: 1; background: #f8fafc; }
+        .glass-morphism { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .tab-active { border-bottom: 3px solid #1d4ed8; color: #1e3a8a; font-weight: 700; }
+        .tab-inactive { color: #64748b; border-bottom: 3px solid transparent; }
+        .dropdown:hover .dropdown-menu { display: block; }
+        .dropdown-menu { display: none; min-width: 180px; padding-top: 5px; }
+        .dropdown-menu-inner { background: white; border: 1px solid #e2e8f0; border-radius: 4px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .nav-sticky { position: sticky; top: 0; z-index: 1001; }
+        .header-sticky { position: sticky; top: 36px; z-index: 1000; }
+        .tabs-sticky { position: sticky; top: 112px; z-index: 999; }
+        .tab-profit-active { border-bottom: 3px solid #16a34a; color: #15803d; font-weight: 700; background: #f0fdf4; }
+        .tab-expense-active { border-bottom: 3px solid #dc2626; color: #b91c1c; font-weight: 700; background: #fef2f2; }
+        .editing-mode { border: 2px solid #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.3); }
+        input:focus, textarea:focus { outline: none; border-color: #2563eb; }
+
+        /* Register mode highlight */
+        .register-highlight {
+            animation: pulse-border 1.5s ease-in-out 3;
+            border: 2px solid #f59e0b !important;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: #f59e0b; box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+            50% { border-color: #d97706; box-shadow: 0 0 0 6px rgba(245,158,11,0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-900 pb-20 md:pb-0">
+
+    <!-- Top Navigation -->
+    <nav class="bg-slate-900 text-white py-2 px-4 flex justify-between items-center text-xs nav-sticky">
+        <div class="flex gap-4">
+            <!-- File Menu -->
+            <div class="dropdown relative group">
+                <button class="hover:text-blue-400 flex items-center gap-1"><i class="fas fa-file-alt"></i> File <i class="fas fa-chevron-down text-[8px]"></i></button>
+                <div class="dropdown-menu absolute left-0">
+                    <div class="dropdown-menu-inner py-1 text-slate-700">
+                        <a href="#" class="block px-4 py-2 hover:bg-slate-100 flex items-center gap-2" onclick="showLogin()">
+                            <i class="fas fa-sign-in-alt w-4 text-blue-500"></i> Login
+                        </a>
+                        <a href="#" class="block px-4 py-2 hover:bg-slate-100 flex items-center gap-2" onclick="showLoginForRegister()">
+                            <i class="fas fa-user-plus w-4 text-green-500"></i> Register
+                        </a>
+                        <hr class="my-1 border-slate-100">
+                        <a href="#" class="block px-4 py-2 hover:bg-slate-100 flex items-center gap-2" onclick="logout()">
+                            <i class="fas fa-power-off w-4 text-red-500"></i> Log Out
+                        </a>
+                        <a href="#" class="block px-4 py-2 hover:bg-slate-100 flex items-center gap-2" onclick="window.print()">
+                            <i class="fas fa-print w-4 text-slate-500"></i> Print
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Our Sites Menu -->
+            <div class="dropdown relative group">
+                <button class="hover:text-blue-400 flex items-center gap-1"><i class="fas fa-globe"></i> Our Sites <i class="fas fa-chevron-down text-[8px]"></i></button>
+                <div class="dropdown-menu absolute left-0">
+                    <div class="dropdown-menu-inner py-1 text-slate-700">
+                        <a href="https://it.noorgee.com" target="_blank" class="block px-4 py-2 hover:bg-slate-100">it.noorgee.com</a>
+                        <a href="https://noorgee.com" target="_blank" class="block px-4 py-2 hover:bg-slate-100">noorgee.com</a>
+                        <a href="https://lw.noorgee.pk" target="_blank" class="block px-4 py-2 hover:bg-slate-100">lw.noorgee.pk</a>
+                        <a href="https://it.noorgee.com/NM" target="_blank" class="block px-4 py-2 hover:bg-slate-100">it.noorgee.com/NM</a>
+                        <a href="https://it.noorgee.com/TW" target="_blank" class="block px-4 py-2 hover:bg-slate-100">it.noorgee.com/TW</a>
+                        <a href="https://it.noorgee.com/PM" target="_blank" class="block px-4 py-2 hover:bg-slate-100">it.noorgee.com/PM</a>
+                        <a href="https://it.noorgee.com/UR" target="_blank" class="block px-4 py-2 hover:bg-slate-100">it.noorgee.com/UR</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help Menu -->
+            <div class="dropdown relative group">
+                <button class="hover:text-blue-400 flex items-center gap-1"><i class="fas fa-question-circle"></i> Help <i class="fas fa-chevron-down text-[8px]"></i></button>
+                <div class="dropdown-menu absolute left-0">
+                    <div class="dropdown-menu-inner py-1 text-slate-700">
+                        <a href="#" class="block px-4 py-2 hover:bg-slate-100 flex items-center gap-2" onclick="showHelp()"><i class="fas fa-book w-4"></i> Help Guide</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-slate-100 flex items-center gap-2" onclick="showContact()"><i class="fas fa-phone w-4"></i> Contact Us</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-slate-100 flex items-center gap-2" onclick="showMessageModal()"><i class="fas fa-comment-dots w-4"></i> Message Us</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-400">v3.3.0</span>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="bg-blue-900 text-white py-4 px-6 flex justify-between items-center shadow-lg header-sticky">
+        <div class="flex items-center gap-3">
+            <div class="bg-white p-2 rounded-lg shadow-inner">
+                <img src="https://it.noorgee.com/assets/logo.png" alt="Logo" class="h-8" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1048/1048329.png'">
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight">it.noorgee.com</h1>
+                <p class="text-[10px] text-blue-300 uppercase tracking-widest">Smart Utility for OnLine Riders Calculating Expenses</p>
+            </div>
+        </div>
+        <div id="user-display" class="flex items-center gap-3">
+            <span class="text-xs font-medium bg-blue-800 px-3 py-1 rounded-full border border-blue-700">Guest</span>
+            <button onclick="showLogin()" class="bg-blue-600 hover:bg-blue-500 p-2 rounded-full transition shadow-md">
+                <i class="fas fa-user-circle text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Sidebar: Controls & Form -->
+        <div class="lg:col-span-4 space-y-6">
+            <!-- Tab Switcher -->
+            <!-- START CHANGE: Reorder tabs and rename Profit to Earn profit -->
+            <div class="flex bg-white rounded-xl shadow-sm p-1 border border-slate-200 tabs-sticky">
+                <button id="btn-avg" onclick="switchTab('avg')" class="flex-1 py-3 text-sm font-bold rounded-lg transition-all tab-inactive">
+                    <i class="fas fa-gas-pump mr-1"></i> Fuel Expense
+                </button>
+                <button id="btn-profit" onclick="switchTab('profit')" class="flex-1 py-3 text-sm font-bold rounded-lg transition-all tab-profit-active">
+                    <i class="fas fa-chart-line mr-1"></i> Earn profit
+                </button>
+            </div>
+            <!-- END CHANGE -->
+
+            <!-- Detail Card -->
+            <div class="glass-morphism rounded-2xl shadow-xl border border-white p-6 space-y-5">
+
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Date</label>
+                        <!-- CHANGE 1: Date display shown as formatted text; hidden input holds raw value -->
+                        <input type="date" id="tDate" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                        <div id="tDateDisplay" class="text-xs font-bold text-blue-700 ml-1 mt-0.5 hidden"></div>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Time</label>
+                        <input type="time" id="tTime" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Route (Auto-filled from map)</label>
+                    <textarea id="tRoute" placeholder="Click on map to set route..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm h-28 resize-none" readonly></textarea>
+                </div>
+
+                <!-- PROFIT FIELDS -->
+                <div id="profit-fields" class="space-y-4">
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">Rs</span>
+                        <input type="number" id="tFare" placeholder="Earn amount" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-3 text-lg font-bold text-blue-900 placeholder:text-slate-300">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <!-- START CHANGE: Rename Commission to Deductions amount -->
+                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Deductions amount (Rs)</label>
+                            <input type="number" id="tComm" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                            <!-- END CHANGE -->
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Addition Amount (Rs)</label>
+                            <input type="number" id="tBonus" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Fuel Avg (L/km)</label>
+                            <input type="number" id="tAvg" step="0.0001" placeholder="0.0184" value="0.0184" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Petrol Price (Rs/L)</label>
+                            <input type="number" id="tPrice" placeholder="257" value="257" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Calculated Fuel Cost (Rs)</label>
+                        <input type="number" id="tFuelCost" readonly class="w-full bg-transparent border-0 text-orange-600 font-bold text-lg px-0 py-1 cursor-not-allowed" placeholder="0.00">
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Map Distance (km)</label>
+                        <input type="number" id="tDistance" readonly class="w-full bg-transparent border-0 text-blue-600 font-bold text-lg px-0 py-1 cursor-not-allowed" placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- FUEL EXPENSE FIELDS -->
+                <div id="fuel-fields" class="space-y-4 hidden">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Refuel Amount (Rs)</label>
+                            <input type="number" id="tRefillAmount" placeholder="500" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Petrol Price (Rs/L)</label>
+                            <input type="number" id="tExpPrice" placeholder="257" value="257" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- CHANGE 3: Map Distance field for Fuel Expense tab -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Map Distance (km)</label>
+                        <input type="number" id="tDistanceExp" readonly class="w-full bg-transparent border-0 text-blue-600 font-bold text-lg px-0 py-1 cursor-not-allowed" placeholder="0.00">
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Calculated Avg (L/km) — Apply to Profit Tab</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="number" id="tAvgCalc" readonly class="flex-1 bg-transparent border-0 text-orange-600 font-bold text-lg px-0 py-1 cursor-not-allowed" placeholder="0.0000">
+                            <button onclick="applyAvg()" class="text-[10px] bg-blue-600 text-white px-3 py-2 rounded-lg font-bold hover:bg-blue-700 transition">Apply</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <button id="mainBtn" onclick="saveEntry()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-green-200 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fas fa-save"></i>
+                    <span id="btn-text">Save Profit Detail</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right: Map + History -->
+        <div class="lg:col-span-8 space-y-6">
+            <!-- Map Card -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-700 flex items-center gap-2 text-sm">
+                        <i class="fas fa-map-marked-alt text-blue-500"></i> Route Planner
+                        <span class="text-[10px] font-normal text-slate-400 ml-1">Click map to add points • Click marker to remove</span>
+                    </h3>
+                    <button onclick="resetMap()" class="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest flex items-center gap-1 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition">
+                        <i class="fas fa-trash-alt"></i> Clear Map
+                    </button>
+                </div>
+                <div id="map"></div>
+                <div class="bg-slate-50 px-4 py-2 border-t border-slate-200 flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div id="dist-display">Distance: 0.00 km (Actual: 0.00 km)</div>
+                    <div class="flex items-center gap-1 text-blue-600">
+                        <i class="fas fa-info-circle"></i> 1.3x road multiplier applied
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Table -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fas fa-history text-blue-500"></i> <span id="table-title">Earn History</span>
+                    </h3>
+                    <button onclick="clearHistory()" class="text-[10px] font-bold text-slate-400 hover:text-red-500 uppercase tracking-widest flex items-center gap-1">
+                        <i class="fas fa-trash-alt"></i> Clear All
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead id="history-head"></thead>
+                        <tbody id="history-body" class="divide-y divide-slate-50"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-12 px-6 mt-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div class="space-y-4">
+                <div class="flex items-center gap-2 text-white font-bold text-sm"><div class="w-2 h-6 bg-blue-600 rounded-full"></div>it.noorgee.com/FU</div>
+                <p class="text-slate-500">© 2026 NoorGee Enterprise. All rights reserved.</p>
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2 text-[10px] font-mono text-slate-600 bg-slate-800/50 p-2 rounded w-fit">
+                        <span id="footerUpdate">Last Update: Loading...</span>
+                    </div>
+                    <a href="deploy.php" class="inline-flex items-center gap-2 px-3 py-1 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded hover:bg-blue-600 hover:text-white transition w-fit font-bold text-[10px]" title="Deploy Console">
+                        <i class="fas fa-terminal text-[10px]"></i> Deploy
+                    </a>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-[10px]">Partner Network</h4>
+                <ul class="space-y-2 text-xs">
+                    <li><a href="https://lw.noorgee.pk" class="hover:text-blue-400 transition">lw.noorgee.pk</a></li>
+                    <li><a href="https://noorgee.com/Web" class="hover:text-blue-400 transition">noorgee.com/Web</a></li>
+                    <li><a href="https://noorgee.com" class="hover:text-blue-400 transition">noorgee.com</a></li>
+                    <li><a href="https://noorgee.pk" class="hover:text-blue-400 transition">noorgee.pk</a></li>
+                    <li><a href="https://blog.noorgee.com" class="hover:text-blue-400 transition">blog.noorgee.com</a></li>
+                    <li><a href="https://it.noorgee.com" class="hover:text-blue-400 transition">it.noorgee.com</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-[10px]">Sup &amp; Resources</h4>
+                <ul class="space-y-2 text-xs">
+                    <li><a href="user_message.php" target="_blank" class="hover:text-blue-400 transition">Send Message</a></li>
+                    <li><a href="#" class="hover:text-blue-400 transition" onclick="showHelp()">FAQ / Help Guide</a></li>
+                    <li><a href="privacy_policy.html" onclick="openPrivacy(event)" class="hover:text-blue-400 transition">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000]" onclick="closeModals()"></div>
+
+    <!-- Login / Register Modal -->
+    <div id="login-modal" class="hidden fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-[92%] max-w-md z-[3000] p-8">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-user-circle text-blue-600 text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800">Welcome</h2>
+            <p class="text-slate-400 text-sm mt-1" id="modal-subtitle">Login or create your account</p>
+        </div>
+        <div class="space-y-4">
+            <div class="space-y-1">
+                <label class="text-[10px] font-bold text-slate-500 uppercase">Username</label>
+                <input type="text" id="login-user" placeholder="Enter username" 
+                    class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition">
+            </div>
+            <div class="space-y-1">
+                <label class="text-[10px] font-bold text-slate-500 uppercase">Password</label>
+                <input type="password" id="login-pass" placeholder="Enter password" 
+                    class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition"
+                    onkeydown="if(event.key==='Enter') login()">
+            </div>
+            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-200">
+                <i class="fas fa-sign-in-alt mr-2"></i> Login
+            </button>
+            <button id="register-btn" onclick="showRegister()" 
+                class="w-full bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                <i class="fas fa-user-plus"></i> Create New Account (Register)
+            </button>
+            <p class="text-center text-slate-400 text-xs mt-2">Fill username &amp; password above, then click Register</p>
+        </div>
+        <button onclick="closeModals()" class="absolute top-4 right-4 text-slate-300 hover:text-slate-600 text-xl"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="hidden fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-[95%] max-w-2xl z-[3000] max-h-[90vh] overflow-y-auto">
+        <div class="bg-blue-900 text-white p-6 rounded-t-2xl">
+            <h2 class="text-xl font-black"><i class="fas fa-book mr-2"></i>Help Guide — استعمال کا طریقہ</h2>
+            <p class="text-blue-300 text-xs mt-1">Fuel & Profit Partner Tool | it.noorgee.com/FU</p>
+        </div>
+        <div class="p-6 text-sm">
+            <div id="help-steps" class="space-y-6">
+            <div class="border-l-4 border-blue-500 pl-4">
+                <h3 class="font-bold text-slate-800 mb-1">Step 1: Map Route — میپ پر روٹ لگائیں</h3>
+                <p class="text-slate-600">Click on the map to add start &amp; end points. Wrong point? Click the marker to remove it. Distance is auto-calculated with a <strong>1.3x road multiplier</strong> for real-road accuracy.<br><span class="text-slate-400 text-xs">غلط پوائنٹ پر کلک کریں تو وہ ہٹ جائے گا۔ سیدھی لائن × ۱.۳ = اصل سڑک کا فاصلہ</span></p>
+            </div>
+            <div class="border-l-4 border-green-500 pl-4">
+                <h3 class="font-bold text-slate-800 mb-1">Step 2: Profit Tab — کمائی حساب</h3>
+                <p class="text-slate-600">Enter Earn Amount, Commission (deducted), Addition Amount (bonus, added), Fuel Avg (L/km), and Petrol Price. Formula: <strong>Net Profit = Fare - Commission + Addition - Fuel Cost</strong><br><span class="text-slate-400 text-xs">کرایہ درج کریں، کمیشن منہا ہوگا، بونس جمع ہوگا، پیٹرول خرچ منہا ہوگا</span></p>
+            </div>
+            <div class="border-l-4 border-red-500 pl-4">
+                <h3 class="font-bold text-slate-800 mb-1">Step 3: Fuel Expense Tab — پیٹرول خرچ</h3>
+                <p class="text-slate-600">Enter refill amount and petrol price. System calculates Volume (L) and Efficiency (L/km). Use <strong>"Apply"</strong> button to use this average in Profit tab.<br><span class="text-slate-400 text-xs">پیٹرول بھروائی کی رقم درج کریں، اوسط خود نکلے گا</span></p>
+            </div>
+            <div class="border-l-4 border-orange-500 pl-4">
+                <h3 class="font-bold text-slate-800 mb-1">Step 4: Login to Save — لاگ ان کریں</h3>
+                <p class="text-slate-600">File → Register to create account. File → Login to access. Data saves both locally and in cloud database.<br><span class="text-slate-400 text-xs">فائل مینو سے رجسٹر کریں، لاگ ان کریں، ڈیٹا محفوظ ہوگا</span></p>
+            </div>
+            <div id="contact-details" class="bg-slate-50 rounded-xl p-4">
+                <h3 class="font-bold text-slate-700 mb-2"><i class="fas fa-phone text-blue-500 mr-1"></i> Contact Support</h3>
+                <p class="text-slate-600">Phone: <a href="tel:+923323320369" class="text-blue-600 font-bold">+92-332-3320369</a></p>
+                <p class="text-slate-600">Email: <a href="mailto:admin@noorgee.com" class="text-blue-600 font-bold">admin@noorgee.com</a></p>
+            </div>
+            </div>
+        </div>
+        <button onclick="closeModals()" class="absolute top-4 right-4 text-white hover:text-blue-200 text-xl"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="message-modal" class="hidden fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-[95%] max-w-lg z-[3000] p-8 max-h-[90vh] overflow-y-auto">
+        <h2 class="text-xl font-black text-slate-800 mb-6"><i class="fas fa-comment-dots text-blue-500 mr-2"></i>Send Us a Message</h2>
+        <div class="space-y-4">
+            <input type="text" id="msg-name" placeholder="Your Full Name *" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none">
+            <input type="email" id="msg-email" placeholder="Email Address *" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none">
+            <input type="text" id="msg-phone" placeholder="Phone Number (Optional)" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none">
+            <input type="text" id="msg-subject" placeholder="Subject *" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none">
+            <textarea id="msg-body" placeholder="Your message... *" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm h-28 resize-none focus:border-blue-500 outline-none"></textarea>
+            <button onclick="submitMessage()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition">
+                <i class="fas fa-paper-plane mr-2"></i> Send Message
+            </button>
+        </div>
+        <button onclick="closeModals()" class="absolute top-4 right-4 text-slate-300 hover:text-slate-600 text-xl"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Privacy Policy Popup -->
+    <div id="privacy-modal" class="hidden fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-[95%] max-w-3xl z-[4000] max-h-[90vh] overflow-y-auto">
+        <iframe src="privacy_policy.html" class="w-full h-[80vh] rounded-2xl border-0"></iframe>
+        <button onclick="document.getElementById('privacy-modal').classList.add('hidden'); document.getElementById('modal-overlay').classList.add('hidden');" 
+            class="absolute top-3 right-3 bg-white text-slate-500 hover:text-red-500 shadow-lg rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <script>
+        // ============================================================
+        // GLOBAL STATE
+        // ============================================================
+        let map, markers = [], polyline;
+        let currentTab = 'profit';
+        let currentUser = localStorage.getItem('fu_user') || 'Guest';
+        let history = [];
+        let editingId = null;
+
+        // CHANGE 2: Extended place info storage for Fuel Expense rich route
+        let startPlaceName = '';
+        let endPlaceName = '';
+        let startPlaceArea = '';
+        let endPlaceArea = '';
+        let startCoords = '';
+        let endCoords = '';
+        let startMarkerRef = null;  // track which marker is "start"
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        window.onload = () => {
+            history = JSON.parse(localStorage.getItem('fu_history_' + currentUser)) || [];
+            initMap();
+            updateUserUI();
+            renderHistory();
+
+            const now = new Date();
+            document.getElementById('tDate').valueAsDate = now;
+            updateDateDisplay(now);  // CHANGE 1: update display on load
+
+            document.getElementById('tTime').value = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            switchTab(currentTab);
+
+            // CHANGE 4: Footer Last Update format dd-mmm-yy HH:MM
+            document.getElementById('footerUpdate').innerText = 'Last Update: ' + formatFooterDate(now);
+
+            // Real-time fuel cost listener
+            ['tAvg', 'tPrice'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateFuelCost);
+            });
+
+            // CHANGE 1: Listen to date input changes to update display
+            document.getElementById('tDate').addEventListener('change', function() {
+                if (this.value) updateDateDisplay(new Date(this.value + 'T00:00:00'));
+            });
+        };
+
+        // ============================================================
+        // CHANGE 1: Date format helpers
+        // ============================================================
+        function formatFooterDate(d) {
+            // dd-mmm-yy HH:MM
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mmm = d.toLocaleString('en-GB', { month: 'short' });
+            const yy = String(d.getFullYear()).slice(-2);
+            const hh = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            return `${dd}-${mmm}-${yy} ${hh}:${min}`;
+        }
+
+        function formatTripDate(dateStr) {
+            // ddd, d-mmm-yy  e.g. "Sat, 1-Mar-25"
+            const d = new Date(dateStr + 'T00:00:00');
+            const ddd = d.toLocaleString('en-GB', { weekday: 'short' });
+            const day = d.getDate();
+            const mmm = d.toLocaleString('en-GB', { month: 'short' });
+            const yy = String(d.getFullYear()).slice(-2);
+            return `${ddd}, ${day}-${mmm}-${yy}`;
+        }
+
+        function updateDateDisplay(dateObj) {
+            const display = document.getElementById('tDateDisplay');
+            if (!display) return;
+            const ddd = dateObj.toLocaleString('en-GB', { weekday: 'short' });
+            const day = dateObj.getDate();
+            const mmm = dateObj.toLocaleString('en-GB', { month: 'short' });
+            const yy = String(dateObj.getFullYear()).slice(-2);
+            display.textContent = `${ddd}, ${day}-${mmm}-${yy}`;
+            // Show the display label only in fuel expense tab
+            display.classList.toggle('hidden', currentTab !== 'avg');
+        }
+
+        // ============================================================
+        // MAP
+        // ============================================================
+        function initMap() {
+            if (map) { map.remove(); map = null; }
+            map = L.map('map').setView([24.8607, 67.0011], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            map.on('click', onMapClick);
+        }
+
+        function onMapClick(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            const markerIndex = markers.length; // 0-based index at time of click
+
+            const marker = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: '',
+                    html: `<div style="background:#2563eb;color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)">${markers.length + 1}</div>`,
+                    iconSize: [28, 28], iconAnchor: [14, 14]
+                })
+            }).addTo(map);
+
+            marker.on('click', () => {
+                map.removeLayer(marker);
+                markers = markers.filter(m => m !== marker);
+                // Reset place data when markers change
+                if (markers.length === 0) {
+                    startPlaceName = ''; startPlaceArea = ''; startCoords = '';
+                    endPlaceName = ''; endPlaceArea = ''; endCoords = '';
+                }
+                updateRoute();
+            });
+
+            markers.push(marker);
+
+            // Store coords for this point
+            const coordStr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+            // Reverse geocode
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16`)
+                .then(r => r.json())
+                .then(data => {
+                    const addr = data.address || {};
+                    const road = addr.road || addr.street || '';
+                    const area = addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city_district || addr.city || '';
+
+                    const isFirst = (markerIndex === 0);
+
+                    if (isFirst) {
+                        startPlaceName = road;
+                        startPlaceArea = area;
+                        startCoords = coordStr;
+                    }
+                    // Always update end as last clicked
+                    endPlaceName = road;
+                    endPlaceArea = area;
+                    endCoords = coordStr;
+
+                    updateRouteTextField();
+                })
+                .catch(() => {});
+
+            updateRoute();
+        }
+
+        // CHANGE 2: Build route text differently for profit vs fuel expense
+        function updateRouteTextField() {
+            if (markers.length === 0) {
+                document.getElementById('tRoute').value = '';
+                return;
+            }
+
+            if (currentTab === 'profit') {
+                // Profit tab: formatted multi-line route with coordinates
+                if (markers.length === 1) {
+                    const road = startPlaceName || 'Unknown Road';
+                    const area = startPlaceArea || '';
+                    const line1 = area ? `${road}, ${area}` : road;
+                    document.getElementById('tRoute').value = `Start point, (${line1})\n${startCoords}`;
+                } else {
+                    const sRoad = startPlaceName || 'Unknown Road';
+                    const sArea = startPlaceArea || '';
+                    const sLine = sArea ? `${sRoad}, ${sArea}` : sRoad;
+
+                    const eRoad = endPlaceName || 'Unknown Road';
+                    const eArea = endPlaceArea || '';
+                    const eLine = eArea ? `${eRoad}, ${eArea}` : eRoad;
+
+                    document.getElementById('tRoute').value =
+                        `Start point, (${sLine})\n${startCoords}\nEnd point, (${eLine})\n${endCoords}`;
+                }
+            } else {
+                // Fuel Expense tab — rich multi-line route format
+                if (markers.length === 1) {
+                    const road = startPlaceName || 'Unknown Road';
+                    const area = startPlaceArea || '';
+                    const line1 = area ? `${road}, ${area}` : road;
+                    document.getElementById('tRoute').value = `Start point, (${line1})\n${startCoords}`;
+                } else {
+                    const sRoad = startPlaceName || 'Unknown Road';
+                    const sArea = startPlaceArea || '';
+                    const sLine = sArea ? `${sRoad}, ${sArea}` : sRoad;
+
+                    const eRoad = endPlaceName || 'Unknown Road';
+                    const eArea = endPlaceArea || '';
+                    const eLine = eArea ? `${eRoad}, ${eArea}` : eRoad;
+
+                    document.getElementById('tRoute').value =
+                        `Start point, (${sLine})\n${startCoords}\nEnd point, (${eLine})\n${endCoords}`;
+                }
+            }
+        }
+
+        function updateRoute() {
+            if (polyline) map.removeLayer(polyline);
+            if (markers.length < 2) {
+                document.getElementById('dist-display').innerText = 'Distance: 0.00 km (Actual: 0.00 km)';
+                document.getElementById('tDistance').value = '';
+                document.getElementById('tDistanceExp').value = '';
+                updateFuelCost();
+                return;
+            }
+
+            const latlngs = markers.map(m => m.getLatLng());
+            polyline = L.polyline(latlngs, { color: '#2563eb', weight: 4, opacity: 0.8 }).addTo(map);
+
+            let total = 0;
+            for (let i = 1; i < latlngs.length; i++) {
+                total += latlngs[i - 1].distanceTo(latlngs[i]);
+            }
+            const straightKm = total / 1000;
+            const actualKm = straightKm * 1.3;
+
+            document.getElementById('dist-display').innerText =
+                `Straight: ${straightKm.toFixed(2)} km → Actual: ${actualKm.toFixed(2)} km (×1.3)`;
+            document.getElementById('tDistance').value = actualKm.toFixed(2);
+            // CHANGE 3: sync distance to fuel expense field too
+            document.getElementById('tDistanceExp').value = actualKm.toFixed(2);
+            updateFuelCost();
+        }
+
+        function updateFuelCost() {
+            const dist = parseFloat(document.getElementById('tDistance').value) || 0;
+            const avg = parseFloat(document.getElementById('tAvg').value) || 0;
+            const price = parseFloat(document.getElementById('tPrice').value) || 0;
+            document.getElementById('tFuelCost').value = (dist * avg * price).toFixed(2);
+        }
+
+        function resetMap() {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            if (polyline) map.removeLayer(polyline);
+            startPlaceName = ''; startPlaceArea = ''; startCoords = '';
+            endPlaceName = ''; endPlaceArea = ''; endCoords = '';
+            document.getElementById('tRoute').value = '';
+            document.getElementById('tDistance').value = '';
+            document.getElementById('tDistanceExp').value = '';
+            document.getElementById('tFuelCost').value = '';
+            document.getElementById('dist-display').innerText = 'Distance: 0.00 km (Actual: 0.00 km)';
+        }
+
+        // ============================================================
+        // TAB SWITCHING
+        // ============================================================
+        function switchTab(tab) {
+            currentTab = tab;
+            const btnProfit = document.getElementById('btn-profit');
+            const btnAvg = document.getElementById('btn-avg');
+            const profitFields = document.getElementById('profit-fields');
+            const fuelFields = document.getElementById('fuel-fields');
+            const mainBtn = document.getElementById('mainBtn');
+            const btnText = document.getElementById('btn-text');
+            const tableTitle = document.getElementById('table-title');
+
+            if (tab === 'profit') {
+                document.body.style.backgroundColor = '#f0fdf4';
+                btnProfit.className = 'flex-1 py-3 text-sm font-bold rounded-lg transition-all tab-profit-active';
+                btnAvg.className = 'flex-1 py-3 text-sm font-bold rounded-lg transition-all tab-inactive';
+                profitFields.classList.remove('hidden');
+                fuelFields.classList.add('hidden');
+                mainBtn.className = 'w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-green-200 transition-all transform active:scale-95 flex items-center justify-center gap-2';
+                btnText.innerText = editingId ? 'Update Entry' : 'Save Profit Detail';
+                tableTitle.innerText = 'Earn History';
+                // Hide date display in profit tab
+                document.getElementById('tDateDisplay').classList.add('hidden');
+            } else {
+                document.body.style.backgroundColor = '#fef2f2';
+                btnProfit.className = 'flex-1 py-3 text-sm font-bold rounded-lg transition-all tab-inactive';
+                btnAvg.className = 'flex-1 py-3 text-sm font-bold rounded-lg transition-all tab-expense-active';
+                profitFields.classList.add('hidden');
+                fuelFields.classList.remove('hidden');
+                mainBtn.className = 'w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-red-200 transition-all transform active:scale-95 flex items-center justify-center gap-2';
+                btnText.innerText = editingId ? 'Update Entry' : 'Save Expense';
+                tableTitle.innerText = 'Expense History';
+                // CHANGE 1: Show formatted date display in fuel expense tab
+                const dateVal = document.getElementById('tDate').value;
+                if (dateVal) updateDateDisplay(new Date(dateVal + 'T00:00:00'));
+                document.getElementById('tDateDisplay').classList.remove('hidden');
+                // Sync distance field
+                const dist = document.getElementById('tDistance').value;
+                if (dist) document.getElementById('tDistanceExp').value = dist;
+                // Re-render route in fuel expense format
+                updateRouteTextField();
+            }
+            renderHistory();
+        }
+
+        // ============================================================
+        // SAVE ENTRY
+        // ============================================================
+        function saveEntry() {
+            if (currentUser === 'Guest') {
+                showMsg('Please login to save data!', 'error');
+                showLogin();
+                return;
+            }
+
+            const dateRaw = document.getElementById('tDate').value;
+            const time = document.getElementById('tTime').value;
+            const route = document.getElementById('tRoute').value || 'No route set';
+            const price = parseFloat(document.getElementById(currentTab === 'profit' ? 'tPrice' : 'tExpPrice').value) || 257;
+            const avg = parseFloat(document.getElementById('tAvg').value) || 0.0184;
+            const dist = parseFloat(document.getElementById('tDistance').value) || 0;
+
+            // CHANGE 1: Format date as ddd, d-mmm-yy for storage
+            const formattedDate = dateRaw ? formatTripDate(dateRaw) : '';
+
+            if (currentTab === 'profit') {
+                const fare = parseFloat(document.getElementById('tFare').value) || 0;
+                if (fare <= 0) { showMsg('Please enter Earn Amount!', 'error'); return; }
+                const comm = parseFloat(document.getElementById('tComm').value) || 0;
+                const bonus = parseFloat(document.getElementById('tBonus').value) || 0;
+                const fuelCost = dist * avg * price;
+                const profit = fare - comm + bonus - fuelCost;
+
+                const entry = {
+                    id: editingId || Date.now(),
+                    type: 'profit',
+                    date: formattedDate,
+                    rawDate: dateRaw,
+                    time, route,
+                    dist: dist.toFixed(2),
+                    fare, bonus, comm,
+                    fuelCost: fuelCost.toFixed(2),
+                    price, avg,
+                    profit: profit.toFixed(2)
+                };
+
+                saveToHistory(entry);
+
+                if (currentUser !== 'Guest') {
+                    fetch(`save_data.php?action=save_earn&user=${currentUser}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ date: dateRaw, time, desc: route, fare, bonus, comm, avgL: avg, price, dist, fuelCost, profit })
+                    }).then(r => r.json())
+                      .then(d => { if (d.success) showMsg('Saved to Cloud! ☁️', 'success'); })
+                      .catch(() => {});
+                }
+
+                renderHistory();
+                showMsg(`Profit Saved! Rs ${profit.toFixed(2)}`, 'success');
+
+            } else {
+                const amount = parseFloat(document.getElementById('tRefillAmount').value) || 0;
+                const expPrice = parseFloat(document.getElementById('tExpPrice').value) || 257;
+                if (amount <= 0) { showMsg('Please enter Refuel Amount!', 'error'); return; }
+                const distExp = parseFloat(document.getElementById('tDistanceExp').value) || dist;
+                const liters = amount / expPrice;
+                const efficiency = distExp > 0 ? liters / distExp : 0;
+
+                document.getElementById('tAvgCalc').value = efficiency.toFixed(4);
+
+                const entry = {
+                    id: editingId || Date.now(),
+                    type: 'expense',
+                    date: formattedDate,
+                    rawDate: dateRaw,
+                    time, route,
+                    dist: distExp.toFixed(2),
+                    amount, price: expPrice,
+                    liters: liters.toFixed(4),
+                    efficiency: efficiency.toFixed(4)
+                };
+
+                saveToHistory(entry);
+
+                if (currentUser !== 'Guest') {
+                    fetch(`save_data.php?action=save_expense&user=${currentUser}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ date: dateRaw, time, desc: route, amount, rate: expPrice, vol: liters, dist: distExp, avg: efficiency })
+                    }).then(r => r.json())
+                      .then(d => { if (d.success) showMsg('Saved to Cloud! ☁️', 'success'); })
+                      .catch(() => {});
+                }
+
+                renderHistory();
+                showMsg(`Expense Saved! Avg: ${efficiency.toFixed(4)} L/km`, 'success');
+            }
+        }
+
+        function saveToHistory(entry) {
+            if (editingId) {
+                const idx = history.findIndex(h => h.id === editingId);
+                if (idx !== -1) history[idx] = entry;
+                editingId = null;
+            } else {
+                history.unshift(entry);
+            }
+            if (history.length > 20) history.pop();
+            localStorage.setItem('fu_history_' + currentUser, JSON.stringify(history));
+        }
+
+        function applyAvg() {
+            const avg = document.getElementById('tAvgCalc').value;
+            if (avg && parseFloat(avg) > 0) {
+                document.getElementById('tAvg').value = avg;
+                switchTab('profit');
+                updateFuelCost();
+                showMsg('Average applied to Profit tab!', 'success');
+            }
+        }
+
+        // ============================================================
+        // RENDER HISTORY TABLES
+        // ============================================================
+        function renderHistory() {
+            const head = document.getElementById('history-head');
+            const body = document.getElementById('history-body');
+
+            if (currentTab === 'profit') {
+                head.innerHTML = `
+                    <tr class="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-200 text-[10px]">
+                        <th class="px-3 py-3">Date & Time</th>
+                        <th class="px-3 py-3">Route</th>
+                        <th class="px-3 py-3">Fare<br>for<br>Dist</th>
+                        <!-- START CHANGE: Update header labels -->
+                        <th class="px-3 py-3 text-green-600">+Bonus (Rs)<br>-Comm (Rs)<br>Fuel Cost (Rs)</th>
+                        <!-- END CHANGE -->
+                        <th class="px-3 py-3">P.Price<br>Avg L/km</th>
+                        <th class="px-3 py-3 text-blue-900 font-black">Profit</th>
+                        <th class="px-3 py-3">Act</th>
+                    </tr>`;
+
+                const profitItems = history.filter(h => h.type === 'profit' || !h.type);
+                body.innerHTML = profitItems.length ? profitItems.map(item => `
+                    <tr class="hover:bg-slate-50 transition text-[11px] ${editingId === item.id ? 'editing-mode bg-amber-50' : ''}">
+                        <td class="px-3 py-2 font-medium text-slate-600 whitespace-nowrap">${item.date}<br><span class="text-[10px] text-slate-400">${item.time || ''}</span></td>
+                        <td class="px-3 py-2 text-slate-500 max-w-[100px]"><div class="break-words">${item.route}</div></td>
+                        <td class="px-3 py-2 whitespace-nowrap"><div class="font-bold">Rs ${item.fare}</div><div class="text-slate-500 text-[10px]">${item.dist} km</div></td>
+                        <!-- START CHANGE: Add Rs. and negative symbol for fuel cost -->
+                        <td class="px-3 py-2 whitespace-nowrap"><div class="text-green-600 font-bold">+ Rs ${(item.bonus || 0).toFixed(1)}</div><div class="text-red-500">-Rs. ${item.comm || 0}</div><div class="text-orange-600">-Rs. ${item.fuelCost || 0}</div></td>
+                        <!-- END CHANGE -->
+                        <td class="px-3 py-2 whitespace-nowrap"><div class="font-bold">${item.price}</div><div class="text-slate-500 text-[10px]">${item.avg || 0}</div></td>
+                        <td class="px-3 py-2 font-black whitespace-nowrap ${parseFloat(item.profit) >= 0 ? 'text-green-600' : 'text-red-600'}">Rs ${item.profit}</td>
+                        <td class="px-3 py-2 whitespace-nowrap">
+                            <div class="flex gap-1">
+                                <button onclick="editEntry(${item.id})" title="Edit" class="text-blue-400 hover:text-blue-600 p-1"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteEntry(${item.id})" title="Delete" class="text-slate-300 hover:text-red-500 p-1"><i class="fas fa-times-circle"></i></button>
+                            </div>
+                        </td>
+                    </tr>`).join('')
+                : '<tr><td colspan="8" class="px-6 py-10 text-center text-slate-400 italic">No profit history found.</td></tr>';
+
+            } else {
+                head.innerHTML = `
+                    <tr class="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-200 text-[10px]">
+                        <th class="px-3 py-3">Date & Time</th>
+                        <th class="px-3 py-3">Route / DESC</th>
+                        <th class="px-3 py-3">Map Dist</th>
+                        <!-- START CHANGE: Update header label -->
+                        <th class="px-3 py-3">Cost (Rs)<br>Vol (L)<br>@ P. Rate</th>
+                        <!-- END CHANGE -->
+                        <th class="px-3 py-3">Avg L/km</th>
+                        <th class="px-3 py-3">Act</th>
+                    </tr>`;
+
+                const expItems = history.filter(h => h.type === 'expense');
+                body.innerHTML = expItems.length ? expItems.map(item => `
+                    <tr class="hover:bg-slate-50 transition text-[11px] ${editingId === item.id ? 'editing-mode bg-amber-50' : ''}">
+                        <td class="px-3 py-2 font-medium text-slate-600 whitespace-nowrap">${item.date}<br><span class="text-[10px] text-slate-400">${item.time || ''}</span></td>
+                        <td class="px-3 py-2 text-slate-500 max-w-[120px]"><div class="break-words whitespace-pre-line">${item.route}</div></td>
+                        <td class="px-3 py-2 whitespace-nowrap">${item.dist} km</td>
+                        <!-- START CHANGE: Add @ symbol for P. Rate -->
+                        <td class="px-3 py-2 whitespace-nowrap"><div class="font-bold">Rs ${item.amount}</div><div class="text-orange-600">${item.liters} L</div><div>@ ${item.price}</div></td>
+                        <!-- END CHANGE -->
+                        <td class="px-3 py-2 font-mono text-[10px] whitespace-nowrap">${item.efficiency} L/km</td>
+                        <td class="px-3 py-2 whitespace-nowrap">
+                            <!-- START CHANGE: Ensure action buttons work in Expense tab -->
+                            <div class="flex gap-1">
+                                <button onclick="editEntry(${item.id})" title="Edit" class="text-blue-400 hover:text-blue-600 p-1"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteEntry(${item.id})" title="Delete" class="text-slate-300 hover:text-red-500 p-1"><i class="fas fa-times-circle"></i></button>
+                            </div>
+                            <!-- END CHANGE -->
+                        </td>
+                    </tr>`).join('')
+                : '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-400 italic">No expense history found.</td></tr>';
+            }
+        }
+
+        function editEntry(id) {
+            const item = history.find(h => h.id === id);
+            if (!item) return;
+            editingId = id;
+
+            document.getElementById('tDate').value = item.rawDate || '';
+            document.getElementById('tTime').value = item.time || '';
+            document.getElementById('tRoute').value = item.route;
+
+            if (item.type === 'profit' || !item.type) {
+                switchTab('profit');
+                document.getElementById('tFare').value = item.fare;
+                document.getElementById('tComm').value = item.comm || 0;
+                document.getElementById('tBonus').value = item.bonus || 0;
+                document.getElementById('tAvg').value = item.avg || 0.0184;
+                document.getElementById('tPrice').value = item.price;
+                document.getElementById('tDistance').value = item.dist;
+                updateFuelCost();
+            } else {
+                switchTab('avg');
+                document.getElementById('tRefillAmount').value = item.amount;
+                document.getElementById('tExpPrice').value = item.price;
+                document.getElementById('tDistance').value = item.dist;
+                document.getElementById('tDistanceExp').value = item.dist;
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showMsg('Editing entry — make changes and click Save.', 'info');
+        }
+
+        function deleteEntry(id) {
+            if (confirm('Delete this entry?')) {
+                history = history.filter(h => h.id !== id);
+                localStorage.setItem('fu_history_' + currentUser, JSON.stringify(history));
+                renderHistory();
+            }
+        }
+
+        function clearHistory() {
+            if (confirm('Clear ALL history? This cannot be undone.')) {
+                history = [];
+                localStorage.setItem('fu_history_' + currentUser, JSON.stringify(history));
+                renderHistory();
+            }
+        }
+
+        // ============================================================
+        // AUTH FUNCTIONS
+        // ============================================================
+        function showLoginForRegister() {
+            showLogin();
+            setTimeout(() => {
+                const regBtn = document.getElementById('register-btn');
+                if (regBtn) {
+                    regBtn.classList.add('register-highlight');
+                    regBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => regBtn.classList.remove('register-highlight'), 4500);
+                }
+                document.getElementById('modal-subtitle').innerText = 'Fill details below, then click Register ↓';
+                showMsg('Username aur Password bharein, phir Register dabayein', 'info');
+            }, 200);
+        }
+
+        function showRegister() {
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            if (!user || !pass) {
+                showMsg('Username aur Password dono zaroori hain!', 'error');
+                document.getElementById('login-user').classList.add('border-red-400');
+                document.getElementById('login-pass').classList.add('border-red-400');
+                setTimeout(() => {
+                    document.getElementById('login-user').classList.remove('border-red-400');
+                    document.getElementById('login-pass').classList.remove('border-red-400');
+                }, 3000);
+                return;
+            }
+
+            if (confirm(`Register new account for "${user}"?`)) {
+                fetch('auth.php?action=register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showMsg('Account created! Please login now.', 'success');
+                        document.getElementById('login-user').value = '';
+                        document.getElementById('login-pass').value = '';
+                        document.getElementById('modal-subtitle').innerText = 'Login or create your account';
+                    } else {
+                        showMsg(data.message || 'Registration failed', 'error');
+                    }
+                })
+                .catch(() => showMsg('Connection error. Try again.', 'error'));
+            }
+        }
+
+        function login() {
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            if (!user || !pass) {
+                showMsg('Username aur Password dono zaroori hain!', 'error');
+                return;
+            }
+
+            fetch('auth.php?action=login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    currentUser = user;
+                    localStorage.setItem('fu_user', user);
+                    localStorage.setItem('fu_user_id', data.user_id || '');
+                    history = JSON.parse(localStorage.getItem('fu_history_' + user)) || [];
+
+                    fetch(`save_data.php?action=load_all&user=${user}`)
+                        .then(r => r.json())
+                        .then(dbData => {
+                            if (dbData.success) {
+                                const dbHistory = [
+                                    ...(dbData.trips || []).map(t => ({
+                                        id: t.id, type: 'profit',
+                                        date: t.ride_date ? formatTripDate(t.ride_date) : '',
+                                        rawDate: t.ride_date,
+                                        time: t.ride_time, route: t.route_desc,
+                                        dist: t.distance_km, fare: t.total_fare,
+                                        bonus: t.bonus_amount, comm: t.commission_amount,
+                                        fuelCost: t.fuel_cost, price: t.petrol_price,
+                                        avg: t.fuel_efficiency, profit: t.net_profit
+                                    })),
+                                    ...(dbData.expenses || []).map(e => ({
+                                        id: 'e' + e.id, type: 'expense',
+                                        date: e.expense_date ? formatTripDate(e.expense_date) : '',
+                                        rawDate: e.expense_date,
+                                        time: e.expense_time, route: e.description,
+                                        dist: e.map_distance_km, amount: e.amount_spent,
+                                        price: e.petrol_rate, liters: e.fuel_vol_liters,
+                                        efficiency: e.efficiency_l_km
+                                    }))
+                                ];
+                                if (dbHistory.length > 0) {
+                                    history = dbHistory;
+                                    localStorage.setItem('fu_history_' + user, JSON.stringify(history));
+                                }
+                                renderHistory();
+                            }
+                        }).catch(() => {});
+
+                    updateUserUI();
+                    closeModals();
+                    document.getElementById('login-user').value = '';
+                    document.getElementById('login-pass').value = '';
+                    showMsg('Welcome back, ' + user + '! 👋', 'success');
+                } else {
+                    showMsg(data.message || 'Login failed. Check credentials.', 'error');
+                }
+            })
+            .catch(() => showMsg('Connection error. Check internet.', 'error'));
+        }
+
+        function logout() {
+            currentUser = 'Guest';
+            localStorage.removeItem('fu_user');
+            history = [];
+            updateUserUI();
+            renderHistory();
+            showMsg('Logged out successfully.', 'info');
+        }
+
+        function updateUserUI() {
+            document.getElementById('user-display').innerHTML = `
+                <span class="text-xs font-medium bg-blue-800 px-3 py-1 rounded-full border border-blue-700">${currentUser}</span>
+                <button onclick="${currentUser === 'Guest' ? 'showLogin()' : 'logout()'}" class="bg-blue-600 hover:bg-blue-500 p-2 rounded-full transition shadow-md">
+                    <i class="fas fa-${currentUser === 'Guest' ? 'user-circle' : 'sign-out-alt'} text-lg"></i>
+                </button>`;
+        }
+
+        // ============================================================
+        // MODAL FUNCTIONS
+        // ============================================================
+        function showLogin() {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('help-modal').classList.add('hidden');
+            document.getElementById('message-modal').classList.add('hidden');
+        }
+
+        function showHelp() {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('help-modal').classList.remove('hidden');
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('message-modal').classList.add('hidden');
+            document.getElementById('help-steps').classList.remove('hidden');
+            document.getElementById('contact-details').classList.add('hidden');
+            document.querySelector('#help-modal h2').innerHTML = '<i class="fas fa-book mr-2"></i>Help Guide — استعمال کا طریقہ';
+        }
+
+        function showContact() { 
+            showHelp();
+            document.getElementById('help-steps').classList.add('hidden');
+            document.getElementById('contact-details').classList.remove('hidden');
+            document.querySelector('#help-modal h2').innerHTML = '<i class="fas fa-phone mr-2"></i>Contact Us — رابطہ کریں';
+        }
+
+        function showMessageModal() {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('message-modal').classList.remove('hidden');
+            document.getElementById('help-modal').classList.add('hidden');
+            document.getElementById('login-modal').classList.add('hidden');
+        }
+
+        function closeModals() {
+            document.getElementById('modal-overlay').classList.add('hidden');
+            document.getElementById('help-modal').classList.add('hidden');
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('message-modal').classList.add('hidden');
+            document.getElementById('privacy-modal').classList.add('hidden');
+        }
+
+        function openPrivacy(e) {
+            e.preventDefault();
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('privacy-modal').classList.remove('hidden');
+        }
+
+        // ============================================================
+        // SUBMIT MESSAGE
+        // ============================================================
+        function submitMessage() {
+            const name = document.getElementById('msg-name').value.trim();
+            const email = document.getElementById('msg-email').value.trim();
+            const phone = document.getElementById('msg-phone').value.trim();
+            const subject = document.getElementById('msg-subject').value.trim();
+            const body = document.getElementById('msg-body').value.trim();
+
+            if (!name || !email || !subject || !body) {
+                showMsg('Please fill all required fields!', 'error');
+                return;
+            }
+
+            fetch('send_message.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    site_source: 'it.noorgee.com/FU',
+                    name, email, contact: phone, subject, message: body
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showMsg('Message sent successfully! ✅', 'success');
+                    ['msg-name','msg-email','msg-phone','msg-subject','msg-body'].forEach(id => {
+                        document.getElementById(id).value = '';
+                    });
+                    closeModals();
+                } else {
+                    showMsg(data.message || 'Send failed. Try again.', 'error');
+                }
+            })
+            .catch(() => showMsg('Connection error. Please try again.', 'error'));
+        }
+
+        // ============================================================
+        // NOTIFICATION MESSAGES
+        // ============================================================
+        function showMsg(text, type) {
+            const colors = {
+                success: 'bg-green-600 text-white',
+                error: 'bg-red-600 text-white',
+                info: 'bg-blue-600 text-white',
+                warning: 'bg-amber-500 text-white'
+            };
+            const msg = document.createElement('div');
+            msg.className = `fixed bottom-24 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-2xl z-[5000] font-bold text-sm transition-all transform translate-y-10 opacity-0 ${colors[type] || colors.info}`;
+            msg.innerText = text;
+            document.body.appendChild(msg);
+            setTimeout(() => { msg.classList.remove('translate-y-10', 'opacity-0'); }, 100);
+            setTimeout(() => {
+                msg.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => msg.remove(), 500);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
