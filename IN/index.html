@@ -1,1 +1,915 @@
-Hi this is inpage software
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Online InPage - Modern Urdu publishing platform inspired by classic InPage. Unicode-first, cloud-based, with professional layout tools.">
+    <meta name="keywords" content="Urdu typing, Urdu publishing, InPage, Nastaliq, Unicode, Urdu editor, publishing platform">
+    <meta name="author" content="Online InPage Team">
+    <meta name="theme-color" content="#1a3a3a">
+    <title>Online InPage - Modern Urdu Publishing Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a3a3a;
+            --primary-light: #2d5a5a;
+            --accent: #e74c3c;
+            --accent-light: #ff6b5b;
+            --text-dark: #1a1a1a;
+            --text-light: #666;
+            --bg-light: #f8f9fa;
+            --border: #e0e0e0;
+            --success: #27ae60;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background-color: #fff;
+        }
+
+        /* Header & Navigation */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1.5rem;
+            transition: opacity 0.3s;
+            font-size: 0.95rem;
+        }
+
+        nav a:hover {
+            opacity: 0.7;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 100px 20px;
+            text-align: center;
+        }
+
+        .hero-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .hero-tagline {
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            font-style: italic;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: transparent;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Section Styles */
+        section {
+            padding: 80px 20px;
+        }
+
+        section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        /* Problem Statement */
+        .problems-section {
+            background: var(--bg-light);
+        }
+
+        .problems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .problem-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-top: 4px solid var(--accent);
+        }
+
+        .problem-card h3 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .problem-card p {
+            color: var(--text-light);
+            line-height: 1.8;
+        }
+
+        /* Features Section */
+        .features-section {
+            background: white;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-light);
+            padding: 2rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .feature-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .feature-card ul {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .feature-card li {
+            padding: 0.4rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-light);
+        }
+
+        .feature-card li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        /* Target Users */
+        .users-section {
+            background: var(--bg-light);
+        }
+
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .user-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .user-card h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .user-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        /* MVP Section */
+        .mvp-section {
+            background: white;
+        }
+
+        .mvp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .mvp-card {
+            background: white;
+            border: 2px solid var(--border);
+            padding: 2rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .mvp-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.1);
+        }
+
+        .mvp-card h3 {
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .mvp-list {
+            list-style: none;
+        }
+
+        .mvp-list li {
+            padding: 0.6rem 0;
+            padding-left: 1.8rem;
+            position: relative;
+            color: var(--text-light);
+        }
+
+        .mvp-list li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Technical Stack */
+        .stack-section {
+            background: var(--bg-light);
+        }
+
+        .stack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .stack-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stack-card h4 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        .stack-card ul {
+            list-style: none;
+        }
+
+        .stack-card li {
+            padding: 0.4rem 0;
+            color: var(--text-light);
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+
+        /* Revenue Model */
+        .revenue-section {
+            background: white;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .pricing-card {
+            background: var(--bg-light);
+            padding: 2.5rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--accent);
+            background: white;
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(231, 76, 60, 0.2);
+        }
+
+        .pricing-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .price {
+            font-size: 2rem;
+            color: var(--accent);
+            margin: 1rem 0;
+            font-weight: 700;
+        }
+
+        .pricing-card ul {
+            list-style: none;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+
+        .pricing-card li {
+            padding: 0.6rem 0;
+            color: var(--text-light);
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .cta-section h2 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 3rem 20px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .footer-links a:hover {
+            opacity: 0.7;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 1.5rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            nav a {
+                margin: 0 0.5rem;
+                font-size: 0.85rem;
+            }
+
+            section {
+                padding: 40px 20px;
+            }
+
+            section h2 {
+                font-size: 1.8rem;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-card, .problem-card, .user-card {
+            animation: slideIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header & Navigation -->
+    <header>
+        <div class="nav-container">
+            <div class="logo">📝 Online InPage</div>
+            <nav>
+                <a href="#features">Features</a>
+                <a href="#users">Users</a>
+                <a href="#mvp">MVP</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <h1>Online InPage</h1>
+            <p class="hero-subtitle">Modern Urdu Publishing Platform Inspired by Classic InPage</p>
+            <div class="hero-tagline">
+                "Use InPage in browser — without installation. Classic Urdu publishing experience + modern web power."
+            </div>
+            <div class="cta-buttons">
+                <button class="btn btn-primary">Launch Editor</button>
+                <button class="btn btn-secondary">Learn More</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Statement -->
+    <section class="problems-section" id="problems">
+        <div class="container">
+            <h2>Why Online InPage?</h2>
+            <div class="problems-grid">
+                <div class="problem-card">
+                    <h3>🖥️ Legacy Software</h3>
+                    <p>Old InPage is Windows-dependent with poor Unicode compatibility and installation/licensing headaches.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>☁️ No Cloud Workflow</h3>
+                    <p>Urdu publishers need modern cloud collaboration, not desktop-only publishing tools.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>📱 Mobile Gap</h3>
+                    <p>Professional Urdu content creators need seamless mobile and web access across devices.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>🚀 Market Explosion</h3>
+                    <p>Urdu content creation is exploding but lacks modern publishing tools built for the Unicode era.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>🌍 Global Community</h3>
+                    <p>Millions in Pakistan, India, and Gulf communities need accessible Urdu publishing solutions.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>✨ No AI Support</h3>
+                    <p>Traditional tools lack spell-checking, grammar correction, and AI-powered typing assistance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Target Users -->
+    <section class="users-section" id="users">
+        <div class="container">
+            <h2>Who Are You?</h2>
+            <div class="users-grid">
+                <div class="user-card">
+                    <h4>📰 Publishers</h4>
+                    <p>Books, newspapers, magazines</p>
+                </div>
+                <div class="user-card">
+                    <h4>✍️ Journalists</h4>
+                    <p>TV channels, blogs, news writers</p>
+                </div>
+                <div class="user-card">
+                    <h4>🕌 Religious Scholars</h4>
+                    <p>Quranic notes, Islamic books</p>
+                </div>
+                <div class="user-card">
+                    <h4>🎓 Educators</h4>
+                    <p>Students, teachers, assignments</p>
+                </div>
+                <div class="user-card">
+                    <h4>🎭 Poets</h4>
+                    <p>Urdu poets, ghazals, mushaira</p>
+                </div>
+                <div class="user-card">
+                    <h4>🖨️ Print Shops</h4>
+                    <p>Wedding cards, banners, flex</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MVP Features -->
+    <section class="mvp-section" id="mvp">
+        <div class="container">
+            <h2>MVP Phase 1 Features</h2>
+            <div class="mvp-grid">
+                <div class="mvp-card">
+                    <h3>⌨️ Urdu Typing Engine</h3>
+                    <ul class="mvp-list">
+                        <li>Unicode Urdu typing</li>
+                        <li>RTL support</li>
+                        <li>Phonetic keyboard</li>
+                        <li>InPage keyboard mapping</li>
+                        <li>Smart line breaking</li>
+                        <li>Kashida support</li>
+                    </ul>
+                </div>
+
+                <div class="mvp-card">
+                    <h3>🎨 Text Formatting</h3>
+                    <ul class="mvp-list">
+                        <li>Font families (Nastaleeq)</li>
+                        <li>Font sizes</li>
+                        <li>Bold, Italic, Underline</li>
+                        <li>Text & highlight color</li>
+                        <li>Alignment & justify</li>
+                        <li>Line spacing</li>
+                    </ul>
+                </div>
+
+                <div class="mvp-card">
+                    <h3>📄 Document System</h3>
+                    <ul class="mvp-list">
+                        <li>A4 page layouts</li>
+                        <li>Custom page sizes</li>
+                        <li>Multiple pages</li>
+                        <li>Headers & footers</li>
+                        <li>Page numbering</li>
+                        <li>Margin controls</li>
+                    </ul>
+                </div>
+
+                <div class="mvp-card">
+                    <h3>💾 Export Options</h3>
+                    <ul class="mvp-list">
+                        <li>PDF export</li>
+                        <li>DOCX export</li>
+                        <li>TXT export</li>
+                        <li>HTML export</li>
+                        <li>High resolution</li>
+                        <li>Print preview</li>
+                    </ul>
+                </div>
+
+                <div class="mvp-card">
+                    <h3>☁️ Cloud Features</h3>
+                    <ul class="mvp-list">
+                        <li>Google/Email login</li>
+                        <li>Auto save</li>
+                        <li>Draft recovery</li>
+                        <li>File organization</li>
+                        <li>Recent files</li>
+                        <li>Cloud sync</li>
+                    </ul>
+                </div>
+
+                <div class="mvp-card">
+                    <h3>🖥️ InPage Interface</h3>
+                    <ul class="mvp-list">
+                        <li>Top toolbar</li>
+                        <li>Left tool panel</li>
+                        <li>Right formatting panel</li>
+                        <li>Center page canvas</li>
+                        <li>Bottom zoom bar</li>
+                        <li>Familiar workflow</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <h2>Advanced Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>🕌 Quranic Text Support</h3>
+                    <ul>
+                        <li>Arabic shaping engine</li>
+                        <li>Tajweed color coding</li>
+                        <li>Ayah numbering</li>
+                        <li>Verse formatting</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>✒️ Poetry Mode</h3>
+                    <ul>
+                        <li>Ghazal alignment</li>
+                        <li>Nazm formatting</li>
+                        <li>Couplet structure</li>
+                        <li>Poetic punctuation</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🎭 Calligraphy Controls</h3>
+                    <ul>
+                        <li>Ligature density</li>
+                        <li>Character spacing</li>
+                        <li>Nastaliq slant</li>
+                        <li>Kashida adjustment</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🤖 AI Assistant (Future)</h3>
+                    <ul>
+                        <li>Spell checker</li>
+                        <li>Grammar correction</li>
+                        <li>Auto punctuation</li>
+                        <li>Transliteration</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>👥 Collaboration (Future)</h3>
+                    <ul>
+                        <li>Multi-user editing</li>
+                        <li>Live comments</li>
+                        <li>Share documents</li>
+                        <li>Revision history</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🖨️ Print Shop Features</h3>
+                    <ul>
+                        <li>CMYK safe export</li>
+                        <li>Margin guides</li>
+                        <li>Bleed support</li>
+                        <li>High resolution PDF</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Stack -->
+    <section class="stack-section">
+        <div class="container">
+            <h2>Technical Stack</h2>
+            <div class="stack-grid">
+                <div class="stack-card">
+                    <h4>Frontend</h4>
+                    <ul>
+                        <li>⚛️ React</li>
+                        <li>▶️ Next.js</li>
+                        <li>🎨 Tailwind CSS</li>
+                        <li>🖼️ Fabric.js / Konva.js</li>
+                    </ul>
+                </div>
+
+                <div class="stack-card">
+                    <h4>Backend</h4>
+                    <ul>
+                        <li>🟢 Node.js</li>
+                        <li>📦 Express</li>
+                        <li>🗄️ PostgreSQL</li>
+                        <li>⚡ Redis</li>
+                    </ul>
+                </div>
+
+                <div class="stack-card">
+                    <h4>Text Rendering</h4>
+                    <ul>
+                        <li>🔤 HarfBuzz</li>
+                        <li>📝 OpenType Shaping</li>
+                        <li>🎯 RTL Engine</li>
+                        <li>✨ Canvas Rendering</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Revenue Model -->
+    <section class="revenue-section" id="pricing">
+        <div class="container">
+            <h2>Freemium Model</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>🎁 Free</h3>
+                    <div class="price">$0</div>
+                    <ul>
+                        <li>✓ Basic Urdu typing</li>
+                        <li>✓ Limited exports</li>
+                        <li>✓ Basic fonts</li>
+                        <li>✓ Standard documents</li>
+                        <li>✗ No AI tools</li>
+                        <li>✗ No cloud storage</li>
+                    </ul>
+                    <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">Start Free</button>
+                </div>
+
+                <div class="pricing-card featured">
+                    <h3>⭐ Premium</h3>
+                    <div class="price">$9.99/mo</div>
+                    <ul>
+                        <li>✓ All Free features</li>
+                        <li>✓ Premium fonts</li>
+                        <li>✓ AI assistance</li>
+                        <li>✓ Cloud storage (10GB)</li>
+                        <li>✓ Advanced printing</li>
+                        <li>✓ Collaboration tools</li>
+                    </ul>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Upgrade Now</button>
+                </div>
+
+                <div class="pricing-card">
+                    <h3>🏢 Enterprise</h3>
+                    <div class="price">Custom</div>
+                    <ul>
+                        <li>✓ All Premium features</li>
+                        <li>✓ Unlimited storage</li>
+                        <li>✓ Priority support</li>
+                        <li>✓ API access</li>
+                        <li>✓ Custom branding</li>
+                        <li>✓ Team accounts</li>
+                    </ul>
+                    <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">Contact Sales</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="contact">
+        <div class="container">
+            <h2>Ready to Revolutionize Urdu Publishing?</h2>
+            <p>Join thousands of Urdu publishers, journalists, poets, and educators creating beautiful content online.</p>
+            <div class="cta-buttons">
+                <button class="btn btn-primary">Launch Beta</button>
+                <button class="btn btn-secondary">Join Newsletter</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#features">Features</a>
+                <a href="#mvp">MVP</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#contact">Contact</a>
+                <a href="#privacy">Privacy</a>
+                <a href="#terms">Terms</a>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Online InPage. Bringing Urdu publishing to the modern web. 🇵🇰</p>
+                <p>Made with ❤️ for the Urdu community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Button interactions
+        document.querySelector('.btn-primary').addEventListener('click', function() {
+            alert('Welcome to Online InPage Editor! (Coming Soon)');
+        });
+
+        document.querySelector('.btn-secondary').addEventListener('click', function() {
+            alert('Learn More page coming soon!');
+        });
+    </script>
+</body>
+</html>
