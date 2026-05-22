@@ -1,35 +1,68 @@
----
+# 📂 NOORGEE TOOLS & BLOGS NETWORK - OFFICIAL ARCHITECTURE
 
-# 📂 BRAND DOCUMENTATION: NOORGEE DIGITAL NETWORK
-
-## 1. 🌐 MAIN TOOL HUB (it.noorgee.com)
-
-* **Core Idea:** یہ مرکزی پورٹل (Main Hub) ہے جہاں تمام سب-پیجز (ٹولز) کو **iFrame** کے ذریعے ایک ہی جگہ ڈسپلے اور کنٹرول کیا جاتا ہے۔
-* **Root Structure:** ہوم پیج پر index.php اور مرکزی deploy.php موجود ہے جو پورے نیٹ ورک کی گٹ ہب سرگرمیوں کو سنک کرتی ہے۔
-
-### 🛠️ SUB-PAGES ARCHITECTURE (ٹولز کی تفصیل اور ڈائریکٹریز)
-
-| Sub-page URL | Tool Name & Description | Core Files & Assets |
-| --- | --- | --- |
-| **[it.noorgee.com/FU]()** | **Fuel Calculator:** آن لائن رائیڈرز اور فیول کاؤنٹنگ کے لیے ڈیٹا بیس ٹول۔ | admin.php, api.php, auth.php, deploy.php, schema.sql, tasks/ |
-| **[it.noorgee.com/FX]()** | **Screen Hand Gestures:** ہینڈ گیسچر کنٹرول اور اسکرین انٹرایکشن۔ | index.html, main.js |
-| **[it.noorgee.com/IN]()** | **InPage Online Editor:** ویب پر مبنی ان پیج اردو سافٹ ویئر ایڈیٹر۔ | index.html |
-| **[it.noorgee.com/LW]()** | **Legal Case Evaluator:** قانونی کیسز کی جانچ اور ایویلویشن کا خودکار نظام۔ | index.html |
-| **[it.noorgee.com/NM]()** | **Name Generator:** معنی اور تفصیل کے ساتھ نام تجویز کرنے والا ٹول۔ | index.php |
-| **[it.noorgee.com/NW]()** | **News Ticker Writer:** جیو نیوز فارمیٹ پر مبنی خودکار نیوز ٹکر رائٹر۔ | index.php, config.js, deploy.php, reporters.json, ticker_inst.md |
-| **[it.noorgee.com/PA]()** | **IPA Phonetic Tool:** آرٹیفیشل انٹیلیجنس (AI) وائس اوور کے لیے بالکل درست ٹیکسٹ لکھنے کا صوتیاتی ٹول۔ | index.html, script.js, style.css |
-| **[it.noorgee.com/PM]()** | **AI Prompt Maker:** تمام انواع (Genres) کے لیے ایڈوانسڈ AI پرامپٹ رائٹر۔ | index.html, README.md |
-| **[it.noorgee.com/TW]()** | **Task Wheeler Selector:** کاموں کی تقسیم اور اسائنمنٹس کے لیے وہیل سلیکٹر۔ | task_wheel.php, load_assignments.php, index.php |
-| **[it.noorgee.com/UR]()** | **Online Urdu Keyboard:** ٹیکسٹ ایڈیٹر کے ساتھ مکمل آن لائن اردو کی بورڈ۔ | index.php, test_db.php |
+This repository serves as the core documentation and configuration hub for the **NoorGee Digital Ecosystem**, developed using AI code assistants, synchronized via GitControl, and fully optimized for SEO and Google AdSense monetization.
 
 ---
 
-## 2. 🚀 DEPLOYMENT & GIT HUB INTEGRATION
+## 🚀 1. SYSTEM ENVIRONMENT & DEPLOYMENT
 
-* **Repository Link:** [https://github.com/grapheart247/test-pm.git]()
-* **Local Root Path:** /home/noorgeec/[it.noorgee.com/PM]() (cPanel Git™ Version Control کے ساتھ منسلک)
-* **The deploy.php Mechanism:** روٹ ڈائریکٹری اور سب-فولڈرز (FU/, NW/) میں موجود deploy.php فائلوں کا بنیادی مقصد گٹ ہب پر ہونے والی تبدیلیوں (Commits) کو لسٹ اپ کرنا اور لائیو سرور پر کوڈ کو اپ ٹو ڈیٹ (Deploy) کرنا ہے۔
+* **Main Hub URL:** `it.noorgee.com`
+* **Development Workflow:** High-speed development and optimization utilizing AI code assistants.
+* **Local Server Path:** `/home/noorgeec/it.noorgee.com`
+* **GitHub Repository:** `https://github.com/grapheart247/ng-it-tool.git`
+* **Deployment Engine:** Connected via GitControl directly to the root cPanel directory to automate updates and track repository commits.
 
-### 🔒 CREDENTIALS SECURITY & CONFIG:
+---
 
-حساس ڈیٹا اور ڈیٹا بیس کی معلومات کو محفوظ رکھنے کے لیے مرکزی کنفیگریشن فائل روٹ سے باہر cred/config.php میں رکھی گئی ہے، جبکہ لوکل فولڈرز میں گٹ ہب سے پروٹیکشن کے لیے .env اور .gitignore کا اصول لاگو ہے۔
+## 🛠️ 2. MAIN HUB & SUB-PAGES MATRIX (iFRAME ENGINE)
+
+The primary domain `it.noorgee.com` acts as a central control panel that dynamically renders all secondary utility web apps within clean **iFrames**. The network consists of the following 10 specialized sub-pages:
+
+| Sub-page URL | Tool Name & Core Function |
+| :--- | :--- |
+| `it.noorgee.com/FU` | **Fuel Calculator:** Online ride-hailing tracking and fuel management tool for riders. |
+| `it.noorgee.com/FX` | **Screen Hand Gestures:** JavaScript-based hand gesture screen control and interaction. |
+| `it.noorgee.com/IN` | **InPage Online Editor:** Cloud-based Urdu InPage software and premium text editor. |
+| `it.noorgee.com/LW` | **Legal Case Evaluator:** Automated screening and evaluation system for legal cases. |
+| `it.noorgee.com/NM` | **Name Generator:** Smart name suggestion engine featuring complete meanings and details. |
+| `it.noorgee.com/NW` | **News Ticker Writer:** Live automated news ticker creator designed in official Geo News format. |
+| `it.noorgee.com/PA` | **IPA Phonetic Tool:** Advanced phonetic editor to generate precise text scripts for seamless AI voice generation. |
+| `it.noorgee.com/PM` | **AI Prompt Maker:** Advanced multi-genre prompt generation engine for artificial intelligence platforms. |
+| `it.noorgee.com/TW` | **Task Wheeler Selector:** Interactive spinner wheel for automated task distribution and team assignments. |
+| `it.noorgee.com/UR` | **Online Urdu Keyboard:** Full Urdu digital layout integrated with a local database text editor. |
+
+---
+
+## 📝 3. FEATURED TOOL FOCUS: INPAGE ONLINE EDITOR (`/IN`)
+
+The flagship deployment of this suite is the **InPage Online Editor** located at `it.noorgee.com/IN`.
+
+* **Core Utility:** Provides users with a fast, responsive, and completely cloud-hosted Urdu InPage environment, removing the need for local desktop software installations.
+* **SEO Target:** Highly optimized with dedicated Urdu meta structures, targeting organic searches from writers, journalists, and language professionals within Pakistan.
+* **Architecture:** Operates as a performance-isolated sub-page while maintaining full visual integration inside the primary hub's iFrame layout.
+
+---
+
+## 🛍️ 4. E-COMMERCE BLOG INTEGRATION (`blog.noorgee.pk`)
+
+As referenced in the official project document **"blogger ng pk_5"**, the digital network extends into a dedicated content-driven e-commerce strategy[cite: 1]:
+
+* **Target Store:** Designed to drive organic traffic, branding, and sales conversions for the primary store **`noorgee.pk`**[cite: 1].
+* **Platform Setup:** Hosted via Blogger on **`blog.noorgee.pk`** with a fully custom, high-performance XML theme layout[cite: 1].
+* **Localization:** Equipped with professional typography (Noto Naskh Arabic) and optimized with Right-to-Left formatting (`dir='rtl'`) to deliver an authentic Urdu user experience[cite: 1].
+
+---
+
+## 💰 5. GOOGLE ADSENSE & MONETIZATION STRATEGY
+
+Both platforms are structurally engineered to maximize revenue generation via Google AdSense integration[cite: 1]:
+
+### A. The Tools Portal (`it.noorgee.com`)
+* **AdSense Compliance:** To prevent "Low Value Content" flags caused by raw iFrames, the index page includes 250+ words of unique, high-quality descriptive copy and user instructions for each tool.
+* **SEO Placement:** Ad banners are mapped outside the interactive workspace of the tools to maximize standard Ad CTR (Click-Through Rate) without interrupting application workflows.
+
+### B. The E-Commerce Blog (`blog.noorgee.pk`)
+* **Ad Code Integration:** As verified via **"blogger ng pk_5"**, the custom header theme code contains the official verified script configuration[cite: 1]:
+  
+```html
+  <script async='async' crossorigin='anonymous' src='[https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8642920675439854'/](https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8642920675439854'/)>
