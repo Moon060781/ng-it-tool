@@ -255,7 +255,7 @@
     <header class="bg-white shadow-md p-3 flex items-center justify-between z-30">
         <div class="flex items-center space-x-4">
             <h1 class="text-xl font-bold text-blue-600 truncate cursor-pointer" onclick="location.reload()">it.noorgee.com</h1>
-            <button id="preview-tool-btn" class="flex items-center space-x-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition transform active:scale-95 hidden" title="Open current tool in new window">
+            <button id="preview-tool-btn" class="flex items-center space-x-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition transform active:scal[...]
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -272,7 +272,8 @@
             <a class="text-blue-600 hover:text-blue-700 transition font-semibold" href="https://noorgee.com" target="_blank">Partner Site</a>
         </nav>
         <button class="md:hidden p-2 text-gray-600 rounded-lg hover:bg-gray-100 transition" id="menu-toggle">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin=[...]
+            </svg>
         </button>
     </header>
 
@@ -291,13 +292,13 @@
             
             <!-- UPPER: ADS -->
             <div class="flex flex-col items-center w-full space-y-4">
-                <a href="https://buymeacoffee.com/grapheart365" target="_blank" class="flex flex-col items-center bg-[#FFDD00] rounded-lg p-2 shadow-sm border border-black/10 hover:scale-105 transition transform active:scale-95 cursor-pointer">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-1"><path d="M17 8H19C20.1046 8 21 8.89543 21 10V12C21 13.1046 20.1046 14 19 14H17M17 18C17 19.1046 16.1046 20 15 20H5C3.89543 20 3 19.1046 3 18V6C3 4.89543 3.89543 4 5 4H15C16.1046 4 17 4.89543 17 6V18Z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <a href="https://buymeacoffee.com/grapheart365" target="_blank" class="flex flex-col items-center bg-[#FFDD00] rounded-lg p-2 shadow-sm border border-black/10 hover:scale-105 tran[...]
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-1"><path d="M17 8H19C20.1046 8 21 8.89543 21 10V12C21 13.1046 20.1046 [...]
                     <div class="text-[10px] font-black text-black uppercase text-center leading-none" style="font-family: 'Cookie', cursive;">NG Coffee</div>
                 </a>
 
-                <a href="https://www.patreon.com/posts/write-right-via-146098926?source=storefront" target="_blank" class="flex flex-col items-center bg-blue-600 rounded-lg p-2 shadow-sm border border-white/20 hover:scale-105 transition transform active:scale-95 cursor-pointer w-full max-w-[50px]">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" class="mb-1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" fill="white"/><path d="M3 6h18M16 10a4 4 0 01-8 0" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <a href="https://www.patreon.com/posts/write-right-via-146098926?source=storefront" target="_blank" class="flex flex-col items-center bg-blue-600 rounded-lg p-2 shadow-sm border b[...]
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" class="mb-1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" fill="w[...]
                     <div class="text-[9px] font-bold text-white uppercase text-center leading-none">NG Shop</div>
                 </a>
             </div>
@@ -311,8 +312,8 @@
 
             <!-- LOWER: PATREON -->
             <div class="flex flex-col items-center w-full pb-4">
-                <a href="https://www.patreon.com/c/NoorGee" target="_blank" class="flex flex-col items-center bg-[#f96854] rounded-lg p-2 shadow-sm border border-black/10 hover:scale-105 transition transform active:scale-95 cursor-pointer w-full max-w-[50px]">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" class="mb-1"><circle cx="14.5" cy="9.5" r="5.5" fill="white"/><rect x="4" y="4" width="4" height="16" fill="white"/></svg>
+                <a href="https://www.patreon.com/c/NoorGee" target="_blank" class="flex flex-col items-center bg-[#f96854] rounded-lg p-2 shadow-sm border border-black/10 hover:scale-105 transiti[...]
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" class="mb-1"><circle cx="14.5" cy="9.5" r="5.5" fill="white"/><rect x="4" y="4"[...]
                     <div class="text-[9px] font-black text-white uppercase text-center leading-none">Patreon</div>
                 </a>
                 <div class="mt-2">
@@ -325,25 +326,25 @@
         <aside class="p-4" id="sidebar">
             <h2 class="text-xs font-bold mb-4 text-gray-500 uppercase tracking-widest sidebar-collapsed-text">Tools Suite</h2>
             <div class="space-y-2">
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white shadow-sm border border-gray-200 flex items-center" data-tool-url="/PM">
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
                     🤖<span class="tool-label ml-2 sidebar-collapsed-text">Prompt Writer</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white shadow-sm border border-gray-200 flex items-center" data-tool-url="/NW">
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
                     📰<span class="tool-label ml-2 sidebar-collapsed-text">News Format Writer</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white shadow-sm border border-gray-200 flex items-center" data-tool-url="/UR">
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
                     ⌨️<span class="tool-label ml-2 sidebar-collapsed-text">Urdu Keyboard</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white shadow-sm border border-gray-200 flex items-center" data-tool-url="/FX">
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
                     ✨<span class="tool-label ml-2 sidebar-collapsed-text">Control FX</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white shadow-sm border border-gray-200 flex items-center" data-tool-url="/NM">
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
                     🆔<span class="tool-label ml-2 sidebar-collapsed-text">Name Gen Tool</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white shadow-sm border border-gray-200 flex items-center" data-tool-url="/TW">
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
                     🎡<span class="tool-label ml-2 sidebar-collapsed-text">Task Assigner</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white shadow-sm border border-gray-200 flex items-center" data-tool-url="/FU">
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
                     📂<span class="tool-label ml-2 sidebar-collapsed-text">Fuel Consumption</span>
                 </button>
             </div>
@@ -393,6 +394,16 @@
                             <h3 class="text-xl font-bold text-gray-900 mb-2">Measure Fuel Expense </h3>
                             <p class="text-sm text-gray-500 leading-relaxed">For Calculate fuel consumption as online ride partner (like bykea, yango etc.).</p>
                         </div>
+                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/IN')">
+                            <div class="text-4xl mb-4 text-blue-600">🔧</div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">Online InPage Software</h3>
+                            <p class="text-sm text-gray-500 leading-relaxed">Web-based page editing and design tool for professional layouts.</p>
+                        </div>
+                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/AI')">
+                            <div class="text-4xl mb-4 text-blue-600">🎨</div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">AI Generator</h3>
+                            <p class="text-sm text-gray-500 leading-relaxed">Generate AI images, videos, and text content instantly.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -427,14 +438,14 @@
             <div class="flex-1 flex flex-col justify-center px-5 border-r border-slate-800/60 ngo-col">
                 <h5 class="text-blue-500 font-bold text-[10px] uppercase tracking-widest mb-3">Learn More</h5>
                 <div class="flex flex-col space-y-2">
-                    <a href="https://kwa.com.pk/about.html" target="_blank" class="text-[11px] text-slate-300 hover:text-white hover:translate-x-1 transition-all flex items-center group"><span class="text-blue-500 mr-2">→</span> About Us</a>
-                    <a href="https://kwa.com.pk/activities.html" target="_blank" class="text-[11px] text-slate-300 hover:text-white hover:translate-x-1 transition-all flex items-center group"><span class="text-blue-500 mr-2">→</span> Projects</a>
+                    <a href="https://kwa.com.pk/about.html" target="_blank" class="text-[11px] text-slate-300 hover:text-white hover:translate-x-1 transition-all flex items-center group"><span cl[...]
+                    <a href="https://kwa.com.pk/activities.html" target="_blank" class="text-[11px] text-slate-300 hover:text-white hover:translate-x-1 transition-all flex items-center group"><sp[...]
                 </div>
             </div>
             <!-- Col 4 -->
             <div class="flex-1 flex flex-col items-center justify-center px-4 bg-blue-900/30 ngo-col text-center">
                 <p class="text-[11px] font-bold text-blue-300 mb-3 italic">Join Our Cause</p>
-                <a href="https://kwa.com.pk/donation.html" target="_blank" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-[12px] font-black py-3 rounded shadow-xl border border-white/10 transition transform hover:scale-105 active:scale-95 uppercase">Donate Now</a>
+                <a href="https://kwa.com.pk/donation.html" target="_blank" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-[12px] font-black py-3 rounded shadow-xl border border-white[...]
                 <p class="text-[9px] text-slate-500 mt-3 leading-tight font-medium uppercase tracking-tighter">Small Acts, Big Impact</p>
             </div>
         </div>
@@ -520,7 +531,7 @@
 </script>
 
 <!-- Buy Me A Coffee Widget -->
-<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="grapheart365" data-description="Support me on Buy me a coffee!" data-message="Our mission is to give you smart strategies for $0." data-color="#FFDD00" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="grapheart365" data-description="Support me on Buy me a coffee!" data-mes[...]
 
 </body>
 </html>
