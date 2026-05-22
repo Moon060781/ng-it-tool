@@ -1,4 +1,4 @@
-# 📂 NOORGEE TOOLS & BLOGS NETWORK - OFFICIAL ARCHITECTURE
+# 📂 NOORGEE TOOLS  - OFFICIAL ARCHITECTURE
 
 This repository serves as the core documentation and configuration hub for the **NoorGee Digital Ecosystem**, developed using AI code assistants, synchronized via GitControl, and fully optimized for SEO and Google AdSense monetization.
 
@@ -26,6 +26,7 @@ The primary domain `it.noorgee.com` acts as a central control panel that dynamic
 | `it.noorgee.com/LW` | **Legal Case Evaluator:** Automated screening and evaluation system for legal cases. |
 | `it.noorgee.com/NM` | **Name Generator:** Smart name suggestion engine featuring complete meanings and details. |
 | `it.noorgee.com/NW` | **News Ticker Writer:** Live automated news ticker creator designed in official Geo News format. |
+| `it.noorgee.com/AI` | **AI Generator:** Generate Pic , Video & Text via select various model. |
 | `it.noorgee.com/PA` | **IPA Phonetic Tool:** Advanced phonetic editor to generate precise text scripts for seamless AI voice generation. |
 | `it.noorgee.com/PM` | **AI Prompt Maker:** Advanced multi-genre prompt generation engine for artificial intelligence platforms. |
 | `it.noorgee.com/TW` | **Task Wheeler Selector:** Interactive spinner wheel for automated task distribution and team assignments. |
@@ -33,7 +34,7 @@ The primary domain `it.noorgee.com` acts as a central control panel that dynamic
 
 ---
 
-## 📝 3. FEATURED TOOL FOCUS: INPAGE ONLINE EDITOR (`/IN`)
+## 📝 3. FEATURED TOOL FOCUS: INPAGE ONLINE EDITOR & AI Gen(`/IN` & `/AI` )
 
 The flagship deployment of this suite is the **InPage Online Editor** located at `it.noorgee.com/IN`.
 
@@ -43,9 +44,6 @@ The flagship deployment of this suite is the **InPage Online Editor** located at
 
 ---
 
-## 🛍️ 4. E-COMMERCE BLOG INTEGRATION (`blog.noorgee.pk`)
-
-As referenced in the official project document **"blogger ng pk_5"**, the digital network extends into a dedicated content-driven e-commerce strategy[cite: 1]:
 
 * **Target Store:** Designed to drive organic traffic, branding, and sales conversions for the primary store **`noorgee.pk`**[cite: 1].
 * **Platform Setup:** Hosted via Blogger on **`blog.noorgee.pk`** with a fully custom, high-performance XML theme layout[cite: 1].
@@ -61,8 +59,7 @@ Both platforms are structurally engineered to maximize revenue generation via Go
 * **AdSense Compliance:** To prevent "Low Value Content" flags caused by raw iFrames, the index page includes 250+ words of unique, high-quality descriptive copy and user instructions for each tool.
 * **SEO Placement:** Ad banners are mapped outside the interactive workspace of the tools to maximize standard Ad CTR (Click-Through Rate) without interrupting application workflows.
 
-### B. The E-Commerce Blog (`blog.noorgee.pk`)
-* **Ad Code Integration:** As verified via **"blogger ng pk_5"**, the custom header theme code contains the official verified script configuration[cite: 1]:
+
   
 ```html
   <script async='async' crossorigin='anonymous' src='[https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8642920675439854'/](https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8642920675439854'/)>
