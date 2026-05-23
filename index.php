@@ -8,22 +8,19 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Cookie&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Cookie&display=swap" rel="stylesheet" />
     
     <style type="text/css">
         body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; overflow: hidden; }
         
-        /* Ensure HTML and Body use full viewport height */
         html, body { height: 100%; }
         
-        /* Set main container height to fill the viewport */
         #app-container {
             display: flex;
             flex-direction: column;
             height: 100vh; 
         }
         
-        /* Container for the 3-column layout */
         #main-sections {
             flex-grow: 1; 
             display: flex;
@@ -31,17 +28,15 @@
             position: relative;
         }
 
-        /* Base styles for fixed layout parts */
         #ads-left, #content-area {
             height: 100%; 
             flex-shrink: 0; 
             overflow: hidden; 
         }
 
-        /* SIDEBAR OVERLAY LOGIC */
         #sidebar {
             position: absolute;
-            left: 8%; /* Default Desktop */
+            left: 8%;
             top: 0;
             height: 100%;
             z-index: 20;
@@ -54,7 +49,6 @@
             backdrop-filter: blur(4px);
         }
         
-        /* IFRAME ZOOM REDUCTION (90% Zoom = 0.9 Scale) */
         #tool-iframe {
             display: block; 
             width: 111.11%; 
@@ -74,7 +68,6 @@
         .tool-link { justify-content: start; }
         .sidebar-collapsed-text { display: block; }
 
-        /* Landing Page Grid Styles */
         #landing-page {
             width: 100%;
             height: 100%;
@@ -88,9 +81,8 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
-        /* NGO Ad Specific Constraints */
         #bottom-ad-bar {
-            height: 170px; /* Default Desktop Height */
+            height: 170px;
         }
         .ngo-ad-container {
             width: 700px; 
@@ -116,35 +108,27 @@
             display: block !important;
         }
 
-        /* --- RESPONSIVE ADJUSTMENTS START HERE --- */
-
-        /* 1. Compact Desktop / Tablet (Width < 1024px) */
         @media (max-width: 1024px) {
-            /* Reduce Left Ad Width */
             #ads-left {
                 width: 60px !important;
                 padding: 10px 2px !important;
             }
             
-            /* Align sidebar to new ad width */
             #sidebar {
                 left: 60px !important; 
             }
 
-            /* Expand content area to fill space */
             #content-area {
                 width: calc(100% - 60px) !important;
             }
 
-            /* === SINGLE LINE BOTTOM AD FIX === */
             #bottom-ad-bar {
-                height: 45px !important; /* Forced 1 line height */
+                height: 45px !important;
                 min-height: 45px !important;
                 padding: 0 !important;
                 background: #0f172a !important;
             }
 
-            /* Hide the container box effects to fit the strip */
             .ngo-ad-container {
                 width: 100% !important;
                 border-radius: 0 !important;
@@ -156,14 +140,12 @@
                 justify-content: center !important;
             }
             
-            /* Hide Columns 1, 2, 3 completely */
             .ngo-col:nth-child(1),
             .ngo-col:nth-child(2),
             .ngo-col:nth-child(3) {
                 display: none !important;
             }
             
-            /* Style Column 4 (CTA) as horizontal banner */
             .ngo-col:nth-child(4) {
                 flex: 1 !important;
                 display: flex !important;
@@ -176,7 +158,6 @@
                 height: 100% !important;
             }
 
-            /* Adjust CTA Text */
             .ngo-col:nth-child(4) p.text-blue-300 {
                 margin: 0 !important;
                 font-size: 11px !important;
@@ -184,7 +165,6 @@
                 display: inline-block !important;
             }
             
-            /* Adjust CTA Button */
             .ngo-col:nth-child(4) a {
                 width: auto !important;
                 padding: 4px 16px !important;
@@ -193,13 +173,11 @@
                 display: inline-block !important;
             }
 
-            /* Hide the small text below button */
             .ngo-col:nth-child(4) p.text-slate-500 {
                 display: none !important;
             }
         }
 
-        /* 2. Mobile (Width < 768px) */
         @media (max-width: 768px) {
             #main-sections { flex-direction: column; }
             
@@ -238,8 +216,6 @@
                 transform: none;
             }
 
-            /* Bottom Ad - Keep 1-line style from 1024px query by inheriting, or override if column stack preferred.
-               Given "reduce those both area" request, keeping it 1-line on mobile is safer for screen real estate. */
             #bottom-ad-bar {
                 height: 50px !important;
                 padding: 0.5rem !important;
@@ -255,7 +231,7 @@
     <header class="bg-white shadow-md p-3 flex items-center justify-between z-30">
         <div class="flex items-center space-x-4">
             <h1 class="text-xl font-bold text-blue-600 truncate cursor-pointer" onclick="location.reload()">it.noorgee.com</h1>
-            <button id="preview-tool-btn" class="flex items-center space-x-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition transform active:scal[...]
+            <button id="preview-tool-btn" class="flex items-center space-x-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition transform active:scale-95 hidden">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -272,7 +248,8 @@
             <a class="text-blue-600 hover:text-blue-700 transition font-semibold" href="https://noorgee.com" target="_blank">Partner Site</a>
         </nav>
         <button class="md:hidden p-2 text-gray-600 rounded-lg hover:bg-gray-100 transition" id="menu-toggle">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin=[...]
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
         </button>
     </header>
@@ -292,13 +269,17 @@
             
             <!-- UPPER: ADS -->
             <div class="flex flex-col items-center w-full space-y-4">
-                <a href="https://buymeacoffee.com/grapheart365" target="_blank" class="flex flex-col items-center bg-[#FFDD00] rounded-lg p-2 shadow-sm border border-black/10 hover:scale-105 tran[...]
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-1"><path d="M17 8H19C20.1046 8 21 8.89543 21 10V12C21 13.1046 20.1046 [...]
+                <a href="https://buymeacoffee.com/grapheart365" target="_blank" class="flex flex-col items-center bg-yellow-300 rounded-lg p-2 shadow-sm border border-black/10 hover:scale-105 transition">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-1">
+                        <path d="M17 8H19C20.1046 8 21 8.89543 21 10V12C21 13.1046 20.1046 14 19 14H17V8Z" fill="black"/>
+                    </svg>
                     <div class="text-[10px] font-black text-black uppercase text-center leading-none" style="font-family: 'Cookie', cursive;">NG Coffee</div>
                 </a>
 
-                <a href="https://www.patreon.com/posts/write-right-via-146098926?source=storefront" target="_blank" class="flex flex-col items-center bg-blue-600 rounded-lg p-2 shadow-sm border b[...]
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" class="mb-1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" fill="w[...]
+                <a href="https://www.patreon.com/c/NoorGee" target="_blank" class="flex flex-col items-center bg-blue-600 rounded-lg p-2 shadow-sm border border-blue-400/20 hover:scale-105 transition">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" class="mb-1">
+                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" fill="white"/>
+                    </svg>
                     <div class="text-[9px] font-bold text-white uppercase text-center leading-none">NG Shop</div>
                 </a>
             </div>
@@ -306,14 +287,16 @@
             <!-- MIDDLE: FAN TEXT -->
             <div class="flex-grow flex flex-col items-center justify-center space-y-8 my-4">
                 <span class="text-[9px] font-bold text-blue-600 vertical-text uppercase tracking-widest bg-blue-50 py-2 rounded-full px-1">To my amazing fans:</span>
-                <span class="text-[10px] font-medium text-gray-600 vertical-text text-center italic leading-relaxed">"Your support keeps the code running and the tools growing."</span>
+                <span class="text-[10px] font-medium text-gray-600 vertical-text text-center italic leading-relaxed">"Your support keeps the code running."</span>
                 <span class="text-[9px] font-bold text-gray-400 vertical-text uppercase tracking-tighter">Stay Inspired</span>
             </div>
 
             <!-- LOWER: PATREON -->
             <div class="flex flex-col items-center w-full pb-4">
-                <a href="https://www.patreon.com/c/NoorGee" target="_blank" class="flex flex-col items-center bg-[#f96854] rounded-lg p-2 shadow-sm border border-black/10 hover:scale-105 transiti[...]
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" class="mb-1"><circle cx="14.5" cy="9.5" r="5.5" fill="white"/><rect x="4" y="4"[...]
+                <a href="https://www.patreon.com/c/NoorGee" target="_blank" class="flex flex-col items-center bg-red-600 rounded-lg p-2 shadow-sm border border-red-400/20 hover:scale-105 transition">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" class="mb-1">
+                        <circle cx="14.5" cy="9.5" r="5.5" fill="white"/>
+                    </svg>
                     <div class="text-[9px] font-black text-white uppercase text-center leading-none">Patreon</div>
                 </a>
                 <div class="mt-2">
@@ -326,41 +309,39 @@
         <aside class="p-4" id="sidebar">
             <h2 class="text-xs font-bold mb-4 text-gray-500 uppercase tracking-widest sidebar-collapsed-text">Tools Suite</h2>
             <div class="space-y-2">
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/PM">
                     🤖<span class="tool-label ml-2 sidebar-collapsed-text">Prompt Writer</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/NW">
                     📰<span class="tool-label ml-2 sidebar-collapsed-text">News Format Writer</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/UR">
                     ⌨️<span class="tool-label ml-2 sidebar-collapsed-text">Urdu Keyboard</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/FX">
                     ✨<span class="tool-label ml-2 sidebar-collapsed-text">Control FX</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/NM">
                     🆔<span class="tool-label ml-2 sidebar-collapsed-text">Name Gen Tool</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/TW">
                     🎡<span class="tool-label ml-2 sidebar-collapsed-text">Task Assigner</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/FU">
                     📂<span class="tool-label ml-2 sidebar-collapsed-text">Fuel Consumption</span>
                 </button>
-
-<button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/LW">
-    ⚖️<span class="tool-label ml-2 sidebar-collapsed-text">Legal Evaluator</span>
-</button>
-<button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/PA">
-    🎙️<span class="tool-label ml-2 sidebar-collapsed-text">IPA Phonetic</span>
-</button>
-<button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/IN">
-    🖊️<span class="tool-label ml-2 sidebar-collapsed-text">InPage Editor</span>
-</button>
-<button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/AI">
-    🎨<span class="tool-label ml-2 sidebar-collapsed-text">AI Generator</span>
-</button>
-                
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/IN">
+                    🖊️<span class="tool-label ml-2 sidebar-collapsed-text">InPage Editor</span>
+                </button>
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/LW">
+                    ⚖️<span class="tool-label ml-2 sidebar-collapsed-text">Legal Evaluator</span>
+                </button>
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/PA">
+                    🎙️<span class="tool-label ml-2 sidebar-collapsed-text">IPA Phonetic</span>
+                </button>
+                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/AI">
+                    🎨<span class="tool-label ml-2 sidebar-collapsed-text">AI Generator</span>
+                </button>
             </div>
         </aside>
 
@@ -405,26 +386,14 @@
                         </div>
                         <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/FU')">
                             <div class="text-4xl mb-4 text-blue-600">📂</div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">Measure Fuel Expense </h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">For Calculate fuel consumption as online ride partner (like bykea, yango etc.).</p>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">Measure Fuel Expense</h3>
+                            <p class="text-sm text-gray-500 leading-relaxed">Calculate fuel consumption for online ride partners.</p>
                         </div>
-                        
-                  <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/IN')">
-    <div class="text-4xl mb-4 text-blue-600">🖊️</div>
-    <h3 class="text-xl font-bold text-gray-900 mb-2">Online InPage Editor</h3>
-    <p class="text-sm text-gray-500 leading-relaxed">Web-based native Urdu publishing interface for professional layouts.</p>
-</div>
-<div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/LW')">
-    <div class="text-4xl mb-4 text-blue-600">⚖️</div>
-    <h3 class="text-xl font-bold text-gray-900 mb-2">Legal Evaluator</h3>
-    <p class="text-sm text-gray-500 leading-relaxed">Evaluate legal cases with structured scoring and metric analysis.</p>
-</div>
-<div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/PA')">
-    <div class="text-4xl mb-4 text-blue-600">🎙️</div>
-    <h3 class="text-xl font-bold text-gray-900 mb-2">IPA Phonetic Tool</h3>
-    <p class="text-sm text-gray-500 leading-relaxed">Write exact phonetic text for AI voice and audio synthesis.</p>
-</div>
-                        
+                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/IN')">
+                            <div class="text-4xl mb-4 text-blue-600">🖊️</div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">Online InPage Editor</h3>
+                            <p class="text-sm text-gray-500 leading-relaxed">Web-based Urdu publishing interface for layouts.</p>
+                        </div>
                         <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/AI')">
                             <div class="text-4xl mb-4 text-blue-600">🎨</div>
                             <h3 class="text-xl font-bold text-gray-900 mb-2">AI Generator</h3>
@@ -464,14 +433,20 @@
             <div class="flex-1 flex flex-col justify-center px-5 border-r border-slate-800/60 ngo-col">
                 <h5 class="text-blue-500 font-bold text-[10px] uppercase tracking-widest mb-3">Learn More</h5>
                 <div class="flex flex-col space-y-2">
-                    <a href="https://kwa.com.pk/about.html" target="_blank" class="text-[11px] text-slate-300 hover:text-white hover:translate-x-1 transition-all flex items-center group"><span cl[...]
-                    <a href="https://kwa.com.pk/activities.html" target="_blank" class="text-[11px] text-slate-300 hover:text-white hover:translate-x-1 transition-all flex items-center group"><sp[...]
+                    <a href="https://kwa.com.pk/about.html" target="_blank" class="text-[11px] text-slate-300 hover:text-white hover:translate-x-1 transition-all flex items-center group">
+                        <span class="mr-1">→</span> About Us
+                    </a>
+                    <a href="https://kwa.com.pk/activities.html" target="_blank" class="text-[11px] text-slate-300 hover:text-white hover:translate-x-1 transition-all flex items-center group">
+                        <span class="mr-1">→</span> Our Activities
+                    </a>
                 </div>
             </div>
             <!-- Col 4 -->
             <div class="flex-1 flex flex-col items-center justify-center px-4 bg-blue-900/30 ngo-col text-center">
                 <p class="text-[11px] font-bold text-blue-300 mb-3 italic">Join Our Cause</p>
-                <a href="https://kwa.com.pk/donation.html" target="_blank" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-[12px] font-black py-3 rounded shadow-xl border border-white[...]
+                <a href="https://kwa.com.pk/donation.html" target="_blank" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-[12px] font-black py-3 rounded shadow-xl border border-white/20">
+                    Donate Now
+                </a>
                 <p class="text-[9px] text-slate-500 mt-3 leading-tight font-medium uppercase tracking-tighter">Small Acts, Big Impact</p>
             </div>
         </div>
@@ -479,7 +454,7 @@
 
     <!-- FOOTER -->
     <footer class="bg-white border-t border-gray-200 text-gray-500 p-2 text-center text-[10px] uppercase tracking-tighter z-10">
-        it.noorgee.com &copy; <?php echo date('Y'); ?>. Professional Tools Infrastructure. updated: 22-May-2026
+        it.noorgee.com &copy; <?php echo date('Y'); ?>. Professional Tools Infrastructure. updated: 23-May-2026
     </footer>
 </div>
 
@@ -557,7 +532,7 @@
 </script>
 
 <!-- Buy Me A Coffee Widget -->
-<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="grapheart365" data-description="Support me on "Buy me a coffee!" " data-mes[...]
+<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="grapheart365" data-description="Support me on Buy me a coffee!" data-message="Thank you for visiting!" data-color="#FFDD00"></script>
 
 </body>
 </html>
