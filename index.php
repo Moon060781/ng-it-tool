@@ -347,6 +347,20 @@
                 <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-[...]
                     📂<span class="tool-label ml-2 sidebar-collapsed-text">Fuel Consumption</span>
                 </button>
+
+<button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/LW">
+    ⚖️<span class="tool-label ml-2 sidebar-collapsed-text">Legal Evaluator</span>
+</button>
+<button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/PA">
+    🎙️<span class="tool-label ml-2 sidebar-collapsed-text">IPA Phonetic</span>
+</button>
+<button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/IN">
+    🖊️<span class="tool-label ml-2 sidebar-collapsed-text">InPage Editor</span>
+</button>
+<button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/AI">
+    🎨<span class="tool-label ml-2 sidebar-collapsed-text">AI Generator</span>
+</button>
+                
             </div>
         </aside>
 
@@ -394,11 +408,23 @@
                             <h3 class="text-xl font-bold text-gray-900 mb-2">Measure Fuel Expense </h3>
                             <p class="text-sm text-gray-500 leading-relaxed">For Calculate fuel consumption as online ride partner (like bykea, yango etc.).</p>
                         </div>
-                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/IN')">
-                            <div class="text-4xl mb-4 text-blue-600">🔧</div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">Online InPage Software</h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">Web-based page editing and design tool for professional layouts.</p>
-                        </div>
+                        
+                  <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/IN')">
+    <div class="text-4xl mb-4 text-blue-600">🖊️</div>
+    <h3 class="text-xl font-bold text-gray-900 mb-2">Online InPage Editor</h3>
+    <p class="text-sm text-gray-500 leading-relaxed">Web-based native Urdu publishing interface for professional layouts.</p>
+</div>
+<div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/LW')">
+    <div class="text-4xl mb-4 text-blue-600">⚖️</div>
+    <h3 class="text-xl font-bold text-gray-900 mb-2">Legal Evaluator</h3>
+    <p class="text-sm text-gray-500 leading-relaxed">Evaluate legal cases with structured scoring and metric analysis.</p>
+</div>
+<div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/PA')">
+    <div class="text-4xl mb-4 text-blue-600">🎙️</div>
+    <h3 class="text-xl font-bold text-gray-900 mb-2">IPA Phonetic Tool</h3>
+    <p class="text-sm text-gray-500 leading-relaxed">Write exact phonetic text for AI voice and audio synthesis.</p>
+</div>
+                        
                         <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/AI')">
                             <div class="text-4xl mb-4 text-blue-600">🎨</div>
                             <h3 class="text-xl font-bold text-gray-900 mb-2">AI Generator</h3>
