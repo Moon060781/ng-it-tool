@@ -72,13 +72,17 @@
             width: 100%;
             height: 100%;
             overflow-y: auto;
-            padding: 2rem;
+            padding: 1.5rem;
             background: radial-gradient(circle at top right, #f8fafc, #f1f5f9);
         }
 
+        .tool-card {
+            transition: all 0.2s ease;
+        }
+
         .tool-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.08);
         }
 
         #bottom-ad-bar {
@@ -231,7 +235,7 @@
     <header class="bg-white shadow-md p-3 flex items-center justify-between z-30">
         <div class="flex items-center space-x-4">
             <h1 class="text-xl font-bold text-blue-600 truncate cursor-pointer" onclick="location.reload()">it.noorgee.com</h1>
-            <button id="preview-tool-btn" class="flex items-center space-x-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition transform active:scale-95 hidden">
+            <button id="preview-tool-btn" class="flex items-center space-x-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow transition transform active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -333,12 +337,6 @@
                 <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/IN">
                     🖊️<span class="tool-label ml-2 sidebar-collapsed-text">InPage Editor</span>
                 </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/LW">
-                    ⚖️<span class="tool-label ml-2 sidebar-collapsed-text">Legal Evaluator</span>
-                </button>
-                <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/PA">
-                    🎙️<span class="tool-label ml-2 sidebar-collapsed-text">IPA Phonetic</span>
-                </button>
                 <button class="tool-link w-full text-left p-3 rounded-lg font-medium bg-white hover:bg-blue-50 transition text-gray-700 data-[active='true']:bg-blue-600 data-[active='true']:text-white" data-tool-url="/AI">
                     🎨<span class="tool-label ml-2 sidebar-collapsed-text">AI Generator</span>
                 </button>
@@ -348,56 +346,56 @@
         <!-- CONTENT AREA -->
         <main class="p-0 bg-white overflow-hidden relative" id="content-area" style="width: 92%;">
             <div id="landing-page" class="z-10">
-                <div class="max-w-4xl mx-auto">
-                    <div class="text-center mb-10">
-                        <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">Online Tools Directory</h2>
-                        <p class="mt-4 text-lg text-gray-600">Select a tool below to get started. All tools are free to use.</p>
+                <div class="max-w-5xl mx-auto">
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-extrabold text-gray-900">Online Tools Directory</h2>
+                        <p class="mt-2 text-sm text-gray-600">Select a tool below to get started. All tools are free to use.</p>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/PM')">
-                            <div class="text-4xl mb-4 text-blue-600">🤖</div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">Prompt Writer</h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">Optimize your AI prompts for Gemini and ChatGPT.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-3">
+                        <div class="tool-card bg-white p-3 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md" onclick="loadTool('/PM')">
+                            <div class="text-3xl mb-2">🤖</div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1">Prompt Writer</h3>
+                            <p class="text-xs text-gray-500 leading-tight">Optimize your AI prompts for Gemini and ChatGPT.</p>
                         </div>
-                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/NW')">
-                            <div class="text-4xl mb-4 text-blue-600">📰</div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">News Writer</h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">Convert raw notes into professional news formats.</p>
+                        <div class="tool-card bg-white p-3 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md" onclick="loadTool('/NW')">
+                            <div class="text-3xl mb-2">📰</div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1">News Writer</h3>
+                            <p class="text-xs text-gray-500 leading-tight">Convert raw notes into professional news formats.</p>
                         </div>
-                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/UR')">
-                            <div class="text-4xl mb-4 text-blue-600">⌨️</div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">Urdu Keyboard</h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">Type in Urdu using phonetic English mapping.</p>
+                        <div class="tool-card bg-white p-3 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md" onclick="loadTool('/UR')">
+                            <div class="text-3xl mb-2">⌨️</div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1">Urdu Keyboard</h3>
+                            <p class="text-xs text-gray-500 leading-tight">Type in Urdu using phonetic English mapping.</p>
                         </div>
-                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/FX')">
-                            <div class="text-4xl mb-4 text-blue-600">✨</div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">Control FX</h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">Hand-tracking controls for experimental visual effects.</p>
+                        <div class="tool-card bg-white p-3 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md" onclick="loadTool('/FX')">
+                            <div class="text-3xl mb-2">✨</div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1">Control FX</h3>
+                            <p class="text-xs text-gray-500 leading-tight">Hand-tracking controls for experimental visual effects.</p>
                         </div>
-                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/NM')">
-                            <div class="text-4xl mb-4 text-blue-600">🆔</div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">Name Gen</h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">Generate creative business and project names.</p>
+                        <div class="tool-card bg-white p-3 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md" onclick="loadTool('/NM')">
+                            <div class="text-3xl mb-2">🆔</div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1">Name Gen</h3>
+                            <p class="text-xs text-gray-500 leading-tight">Generate creative business and project names.</p>
                         </div>
-                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/TW')">
-                            <div class="text-4xl mb-4 text-blue-600">🎡</div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">Task Assigner</h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">Fairly distribute tasks among team members.</p>
+                        <div class="tool-card bg-white p-3 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md" onclick="loadTool('/TW')">
+                            <div class="text-3xl mb-2">🎡</div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1">Task Assigner</h3>
+                            <p class="text-xs text-gray-500 leading-tight">Fairly distribute tasks among team members.</p>
                         </div>
-                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/FU')">
-                            <div class="text-4xl mb-4 text-blue-600">📂</div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">Measure Fuel Expense</h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">Calculate fuel consumption for online ride partners.</p>
+                        <div class="tool-card bg-white p-3 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md" onclick="loadTool('/FU')">
+                            <div class="text-3xl mb-2">📂</div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1">Measure Fuel Expense</h3>
+                            <p class="text-xs text-gray-500 leading-tight">Calculate fuel consumption for online ride partners.</p>
                         </div>
-                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/IN')">
-                            <div class="text-4xl mb-4 text-blue-600">🖊️</div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">Online InPage Editor</h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">Web-based Urdu publishing interface for layouts.</p>
+                        <div class="tool-card bg-white p-3 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md" onclick="loadTool('/IN')">
+                            <div class="text-3xl mb-2">🖊️</div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1">Online InPage Editor</h3>
+                            <p class="text-xs text-gray-500 leading-tight">Web-based Urdu publishing interface for layouts.</p>
                         </div>
-                        <div class="tool-card bg-white p-6 rounded-xl border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500" onclick="loadTool('/AI')">
-                            <div class="text-4xl mb-4 text-blue-600">🎨</div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">AI Generator</h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">Generate AI images, videos, and text content instantly.</p>
+                        <div class="tool-card bg-white p-3 rounded-lg border border-gray-200 cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md" onclick="loadTool('/AI')">
+                            <div class="text-3xl mb-2">🎨</div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1">AI Generator</h3>
+                            <p class="text-xs text-gray-500 leading-tight">Generate AI images, videos, and text content instantly.</p>
                         </div>
                     </div>
                 </div>
@@ -444,7 +442,7 @@
             <!-- Col 4 -->
             <div class="flex-1 flex flex-col items-center justify-center px-4 bg-blue-900/30 ngo-col text-center">
                 <p class="text-[11px] font-bold text-blue-300 mb-3 italic">Join Our Cause</p>
-                <a href="https://kwa.com.pk/donation.html" target="_blank" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-[12px] font-black py-3 rounded shadow-xl border border-white/20">
+                <a href="https://kwa.com.pk/donation.html" target="_blank" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-[12px] font-black py-3 rounded shadow-xl border border-white/20 transition">
                     Donate Now
                 </a>
                 <p class="text-[9px] text-slate-500 mt-3 leading-tight font-medium uppercase tracking-tighter">Small Acts, Big Impact</p>
@@ -532,7 +530,7 @@
 </script>
 
 <!-- Buy Me A Coffee Widget -->
-<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="grapheart365" data-description="Support me on Buy me a coffee!" data-message="Thank you for visiting!" data-color="#FFDD00"></script>
+<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="grapheart365" data-description="Support me on Buy me a coffee!" data-message="Thanks for visiting. Would you like to buy me a coffee?" data-color="#FF5F00"></script>
 
 </body>
 </html>
