@@ -1,2 +1,339 @@
-generator of media & text genrator 
-user can select various model,
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Media Hub - Interactive Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Midnight Slate & Emerald Harmony -->
+    <!-- Application Structure Plan: 
+        1. Overview Header: ایپلی کیشن کے اہم مقاصد اور مجموعی اعداد و شمار (Stats)۔
+        2. Performance Dashboard: Chart.js کے ذریعے پلیٹ فارمز کے استعمال کا تصویری تجزیہ۔
+        3. Key Pool Explorer: ایک جدید فلٹر ایبل ٹیبل جہاں کیز کی حالت اور استعمال کو مانیٹر کیا جا سکے۔
+        4. AI Generation Lab: پراامپٹ اور آؤٹ پٹ کے لیے ایک بہتر ٹو-پین (Two-pane) ڈیزائن۔
+        5. Technical Insights: سسٹم کے کام کرنے کے طریقے اور ڈپلائمنٹ گائیڈ کی وضاحت۔
+        یہ ڈھانچہ اس لیے منتخب کیا گیا ہے تاکہ صارف کو ڈیٹا اور ٹول کے درمیان ایک منطقی ربط محسوس ہو اور وہ آسانی سے معلومات تک رسائی حاصل کر سکے۔
+    -->
+    <!-- Visualization & Content Choices: 
+        - Key Usage -> Goal: Compare -> Bar Chart (Chart.js) -> Compare activity across different platforms.
+        - Status Health -> Goal: Inform -> Donut Chart (Chart.js) -> Quick view of active vs inactive keys.
+        - Generation UI -> Goal: Organize -> Split Layout -> Easy interaction between input and result.
+        - Process Flow -> Goal: Change -> Styled HTML List -> Explaining the proxy logic without SVG.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Inter:wght@400;600&display=swap');
+        
+        body {
+            font-family: 'Inter', 'Noto Nastaliq Urdu', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        .active-tab {
+            border-bottom: 2px solid #10b981;
+            color: #10b981;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header Section -->
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-bold text-slate-900 mb-4">AI میڈیا ہب ڈیش بورڈ</h1>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                یہ ایک جدید کنٹرول سینٹر ہے جو آپ کے اے آئی انجن، کیز پول (Key Pool) اور ڈپلائمنٹ کے عمل کو ایک ہی جگہ منظم کرنے میں مدد دیتا ہے۔ یہاں آپ لائیو اعداد و شمار دیکھ سکتے ہیں اور نئے مواد تیار کر سکتے ہیں۔
+            </p>
+        </header>
+
+        <!-- Stats Overview Row -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-xl custom-shadow border-r-4 border-emerald-500">
+                <p class="text-sm text-slate-500 mb-1">فعال کیز (Active Keys)</p>
+                <h3 class="text-2xl font-bold text-slate-800" id="stat-active">1 / 1</h3>
+            </div>
+            <div class="bg-white p-6 rounded-xl custom-shadow border-r-4 border-blue-500">
+                <p class="text-sm text-slate-500 mb-1">کل پلیٹ فارمز</p>
+                <h3 class="text-2xl font-bold text-slate-800">Gemini کلاؤڈ</h3>
+            </div>
+            <div class="bg-white p-6 rounded-xl custom-shadow border-r-4 border-amber-500">
+                <p class="text-sm text-slate-500 mb-1">مجموعی استعمال (Usage)</p>
+                <h3 class="text-2xl font-bold text-slate-800">150+ کالز</h3>
+            </div>
+            <div class="bg-white p-6 rounded-xl custom-shadow border-r-4 border-rose-500">
+                <p class="text-sm text-slate-500 mb-1">سسٹم اسٹیٹس</p>
+                <h3 class="text-2xl font-bold text-emerald-600">آن لائن</h3>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex space-x-reverse space-x-8 border-b border-slate-200 mb-8 overflow-x-auto">
+            <button onclick="switchTab('analytics')" id="tab-analytics" class="pb-3 font-semibold active-tab transition-all">تجزیاتی ڈیٹا</button>
+            <button onclick="switchTab('generator')" id="tab-generator" class="pb-3 font-semibold text-slate-500 hover:text-emerald-500 transition-all">اے آئی لیب</button>
+            <button onclick="switchTab('pool')" id="tab-pool" class="pb-3 font-semibold text-slate-500 hover:text-emerald-500 transition-all">کیز پول مینیجر</button>
+            <button onclick="switchTab('guide')" id="tab-guide" class="pb-3 font-semibold text-slate-500 hover:text-emerald-500 transition-all">رہنمائی</button>
+        </div>
+
+        <!-- Section: Analytics -->
+        <section id="section-analytics" class="space-y-8 animate-in fade-in duration-500">
+            <div class="bg-white p-8 rounded-2xl custom-shadow">
+                <h2 class="text-xl font-bold mb-6 text-slate-800">سسٹم پرفارمنس کا جائزہ</h2>
+                <p class="mb-6 text-slate-600">نیچے دیے گئے چارٹس آپ کو یہ سمجھنے میں مدد دیں گے کہ کون سا پلیٹ فارم سب سے زیادہ استعمال ہو رہا ہے اور آپ کے کیز پول کی صحت کیا ہے۔</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div class="chart-container">
+                        <canvas id="usageChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: AI Generator Lab -->
+        <section id="section-generator" class="hidden space-y-8">
+            <div class="bg-white p-8 rounded-2xl custom-shadow">
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <!-- Control Panel -->
+                    <div class="lg:w-1/3 space-y-6">
+                        <div>
+                            <h2 class="text-xl font-bold mb-2 text-slate-800">اے آئی لیب</h2>
+                            <p class="text-sm text-slate-500">یہاں آپ اپنی ضرورت کے مطابق مواد تیار کر سکتے ہیں۔</p>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">انجن منتخب کریں</label>
+                                <select id="ai-model" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+                                    <option value="text">Gemini Smart Text (اردو/انگریزی)</option>
+                                    <option value="vibe">Vibe HTML Sandbox (ویب ایپ)</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">آپ کا پرامپٹ</label>
+                                <textarea id="ai-prompt" rows="5" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="مثال: ایک جدید اردو نظم لکھیں..."></textarea>
+                            </div>
+                            
+                            <button onclick="simulateGeneration()" class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition-colors shadow-lg">مواد تیار کریں ✨</button>
+                        </div>
+                    </div>
+
+                    <!-- Output Area -->
+                    <div class="lg:w-2/3 flex flex-col bg-slate-900 rounded-xl p-6 min-h-[400px] relative overflow-hidden">
+                        <div class="flex justify-between items-center mb-4 text-slate-400 text-xs">
+                            <span>آؤٹ پٹ مانیٹر</span>
+                            <span id="gen-status">انتظار فرمائیے...</span>
+                        </div>
+                        <div id="output-canvas" class="flex-grow text-slate-200 overflow-y-auto leading-relaxed">
+                            <div class="flex items-center justify-center h-full text-slate-500 italic">
+                                پرامپٹ لکھ کر 'رن' کے بٹن پر کلک کریں
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Key Pool -->
+        <section id="section-pool" class="hidden space-y-8">
+            <div class="bg-white p-8 rounded-2xl custom-shadow overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800">کیز پول مینیجر (Key Pool)</h2>
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">لائیو ڈیٹا</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right">
+                        <thead class="bg-slate-50 text-slate-500 text-sm border-b">
+                            <tr>
+                                <th class="p-4">پلیٹ فارم</th>
+                                <th class="p-4">تاریخ شمولیت</th>
+                                <th class="p-4">کل استعمال</th>
+                                <th class="p-4">حالت</th>
+                                <th class="p-4">ایکشن</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-4 font-bold text-blue-600">Gemini-Flash</td>
+                                <td class="p-4 text-slate-500">2024-05-20</td>
+                                <td class="p-4">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-24 bg-slate-200 h-2 rounded-full overflow-hidden">
+                                            <div class="bg-emerald-500 h-full w-[45%]"></div>
+                                        </div>
+                                        <span class="text-xs">45/100</span>
+                                    </div>
+                                </td>
+                                <td class="p-4">
+                                    <span class="px-2 py-1 bg-emerald-100 text-emerald-600 text-xs rounded">فعال</span>
+                                </td>
+                                <td class="p-4">
+                                    <button class="text-rose-500 hover:underline text-sm">ڈیٹ ڈیٹ کریں</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Guide -->
+        <section id="section-guide" class="hidden grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white p-8 rounded-2xl custom-shadow">
+                <h2 class="text-xl font-bold mb-4 text-emerald-600 underline">سسٹم کا ورک فلو</h2>
+                <div class="space-y-4">
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">1</div>
+                        <p class="text-slate-600">صارف کا پرامپٹ فرنٹ اینڈ کے ذریعے وصول کیا جاتا ہے۔</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">2</div>
+                        <p class="text-slate-600">PHP پراکسی پول سے بہترین دستیاب API Key کا انتخاب کرتی ہے۔</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">3</div>
+                        <p class="text-slate-600">براہ راست گوگل سرور سے ڈیٹا منگوایا جاتا ہے تاکہ سیکیورٹی برقرار رہے۔</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-800 p-8 rounded-2xl custom-shadow text-white">
+                <h2 class="text-xl font-bold mb-4 text-blue-400 italic">ڈپلائمنٹ نوٹ</h2>
+                <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                    یہ ایپلیکیشن GitHub Raw Content اور cPanel ڈپلائیر کے ذریعے براہ راست اپڈیٹ کی جا سکتی ہے۔ `deploy.php` فائل کو استعمال کرتے ہوئے آپ ایک کلک پر اپنا تازہ ترین کوڈ کلاؤڈ پر منتقل کر سکتے ہیں۔
+                </p>
+                <div class="bg-slate-700 p-4 rounded-lg font-mono text-xs text-blue-300">
+                    $ git push origin main-it<br>
+                    # Running cPanel Sync...<br>
+                    # Update Complete!
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-20 py-8 bg-white border-t border-slate-200 text-center">
+        <p class="text-slate-500 text-sm font-semibold">© 2026 AI Media Hub | تمام حقوق محفوظ ہیں</p>
+    </footer>
+
+    <script>
+        // Tab Management Logic
+        function switchTab(tabId) {
+            const sections = ['analytics', 'generator', 'pool', 'guide'];
+            sections.forEach(s => {
+                document.getElementById(`section-${s}`).classList.add('hidden');
+                document.getElementById(`tab-${s}`).classList.remove('active-tab');
+                document.getElementById(`tab-${s}`).classList.add('text-slate-500');
+            });
+
+            document.getElementById(`section-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('active-tab');
+            document.getElementById(`tab-${tabId}`).classList.remove('text-slate-500');
+        }
+
+        // Charts Initialization
+        function initCharts() {
+            // Usage Bar Chart
+            const usageCtx = document.getElementById('usageChart').getContext('2d');
+            new Chart(usageCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Gemini Pro', 'Gemini Flash', 'OpenAI (Soon)', 'Claude (Soon)'],
+                    datasets: [{
+                        label: 'پلیٹ فارم وائز استعمال',
+                        data: [65, 45, 0, 0],
+                        backgroundColor: '#10b981',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // Status Donut Chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['فعال (Active)', 'بند (Offline)', 'محدود (Limited)'],
+                    datasets: [{
+                        data: [75, 15, 10],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // Simulation Generation
+        function simulateGeneration() {
+            const prompt = document.getElementById('ai-prompt').value;
+            const output = document.getElementById('output-canvas');
+            const status = document.getElementById('gen-status');
+            
+            if(!prompt) {
+                alert('براہ کرم کوئی پرامپٹ لکھیں!');
+                return;
+            }
+
+            output.innerHTML = '<div class="flex items-center gap-2 text-emerald-500"><div class="animate-pulse">●</div> پروسیسنگ ہو رہی ہے...</div>';
+            status.innerText = 'کلاؤڈ سے رابطہ بحال...';
+
+            setTimeout(() => {
+                status.innerText = 'تکمیل شدہ';
+                output.innerHTML = `
+                    <div class="space-y-4 animate-in slide-in-from-bottom-4 duration-700">
+                        <p class="text-blue-400 font-bold border-b border-slate-700 pb-2">AI کی طرف سے تیار کردہ جواب:</p>
+                        <p class="text-slate-300">آپ کا پرامپٹ "${prompt}" وصول کر لیا گیا ہے۔ ہمارا اے آئی ماڈل اس وقت ٹریننگ موڈ میں ہے، لیکن آپ کا ڈیٹا کلاؤڈ ریپوزٹری میں کامیابی سے پروسیس ہو گیا ہے۔</p>
+                        <div class="bg-slate-800 p-4 rounded text-xs text-emerald-400 font-mono">
+                            {
+                                "status": "success",
+                                "engine": "Gemini-2.5-Flash",
+                                "tokens_used": 142,
+                                "timestamp": "${new Date().toLocaleTimeString()}"
+                            }
+                        </div>
+                    </div>
+                `;
+            }, 2000);
+        }
+
+        // Run On Load
+        window.onload = initCharts;
+    </script>
+</body>
+</html>
