@@ -1,151 +1,262 @@
 <?php
-require_once('../cred/config.php');
+/**
+ * Project: AI Multi-Model Vault & Generator Hub (Text, Image, Video)
+ * Location: /home/noorgeec/it.noorgee.com/AI/index.php
+ * Reference Document: "NG Tool Site_20"
+ * Branch: main-it
+ */
 
-// ڈیٹا بیس سے لائیو فعال پلیٹ فارمز نکالنا تاکہ یوزر کو ڈراپ ڈاؤن میں دکھائے جا سکیں
-$platforms_query = mysqli_query($conn, "SELECT DISTINCT platform_name, model_target FROM ur_ai_keys");
+// سیکیورٹی پروٹیکول: مرکزی کریڈنشل فائل کو امپورٹ کرنا
+$config_file = __DIR__ . '/../cred/config.php';
+if (file_exists($config_file)) {
+    require_once($config_file);
+} else {
+    // فال بیک ڈیفینیشنز (اگر فائل مینیجر پاتھ آؤٹ آف سنک ہو)
+    define('DB_SERVER', 'localhost');
+    define('AI_DB_USER', 'noorgeec_ai');
+    define('AI_DB_PASS', 'AIabc123!@#');
+    define('AI_DB_NAME', 'noorgeec_it');
+    define('AI_TABLE_PREFIX', 'ai_');
+}
+
+// نوٹیفیکیشن میسیجز کے لیے ویریبل
+$status_msg = "";
+
+// نئے مینوئل یوزر اور ڈیفائنڈ کانسٹینٹس کے تحت ڈیٹا بیس کنکشن قائم کرنا
+$conn = new mysqli(
+    DB_SERVER, 
+    defined('AI_DB_USER') ? AI_DB_USER : 'noorgeec_ai', 
+    defined('AI_DB_PASS') ? AI_DB_PASS : 'AIabc123!@#', 
+    defined('AI_DB_NAME') ? AI_DB_NAME : 'noorgeec_it'
+);
+
+if ($conn->connect_error) {
+    $status_msg = "<div class='alert error'>ڈیٹا بیس کنکشن میں خرابی: " . $conn->connect_error . "</div>";
+} else {
+    mysqli_set_charset($conn, "utf8mb4");
+}
+
+$table_prefix = defined('AI_TABLE_PREFIX') ? AI_TABLE_PREFIX : 'ai_';
+$table_name = $table_prefix . "vault_keys";
+
+// فارم سبمٹ لاجک: کسٹم نام، نوٹس اور چابی محفوظ کرنا
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_key']) && !$conn->connect_error) {
+    $key_name = mysqli_real_escape_string($conn, $_POST['key_name']);
+    $platform_name = mysqli_real_escape_string($conn, $_POST['platform_name']);
+    $model_target = mysqli_real_escape_string($conn, $_POST['model_target']);
+    $api_key = mysqli_real_escape_string($conn, $_POST['api_key']);
+    $custom_notes = mysqli_real_escape_string($conn, $_POST['custom_notes']);
+
+    if (!empty($key_name) && !empty($api_key)) {
+        $sql = "INSERT INTO $table_name (key_name, platform_name, model_target, api_key, custom_notes) 
+                VALUES ('$key_name', '$platform_name', '$model_target', '$api_key', '$custom_notes')";
+        
+        if (mysqli_query($conn, $sql)) {
+            $status_msg = "<div class='alert success'>اے پی آئی کی پروفائل برائے \"$key_name\" کامیابی سے والٹ میں محفوظ کر دی گئی!</div>";
+        } else {
+            $status_msg = "<div class='alert error'>ڈیٹا بیس رائٹنگ میں خرابی: " . mysqli_error($conn) . "</div>";
+        }
+    } else {
+        $status_msg = "<div class='alert error'>براہ کرم شناختی نام اور اے پی آئی کلید لازمی درج کریں۔</div>";
+    }
+}
+
+// والٹ سے فعال کیز لوڈ کرنا
+$saved_profiles = null;
+if (!$conn->connect_error) {
+    $saved_profiles = mysqli_query($conn, "SELECT id, key_name, platform_name, model_target FROM $table_name WHERE is_active = 1 ORDER BY id DESC");
+}
 ?>
 <!DOCTYPE html>
 <html lang="ur" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI جنریٹر حب - Online Tools NG</title>
+    <title>AI Multi-Model Engine - Online Tools NG</title>
     <style>
-        body { font-family: 'Calibri', 'Segoe UI', sans-serif; background-color: #f7f9fc; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        .container { display: flex; justify-content: space-between; width: 100%; max-width: 1440px; margin: 0 auto; flex-grow: 1; }
-        .ads-sidebar { width: 160px; background-color: #eaeaea; display: flex; align-items: center; justify-content: center; color: #7f8c8d; font-size: 12px; text-align: center; }
-        .main-card { flex-grow: 1; max-width: 850px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); box-sizing: border-box; }
-        h2 { text-align: center; color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; margin-top: 0; }
-        .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; color: #34495e; }
-        select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 15px; }
-        textarea { height: 100px; resize: vertical; }
-        .btn-generate { background-color: #3498db; color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; }
-        .btn-generate:hover { background-color: #2980b9; }
-        .output-box { margin-top: 20px; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; position: relative; min-height: 80px; }
-        .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; color: #2c3e50; }
-        .btn-copy { background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-        .btn-copy:hover { background: #27ae60; }
-        #outputContent img { max-width: 100%; border-radius: 6px; margin-top: 10px; }
-        .admin-link { text-align: center; margin-top: 15px; font-size: 13px; }
-        .admin-link a { color: #e67e22; text-decoration: none; font-weight: bold; }
-        footer { background: #2c3e50; color: white; text-align: center; padding: 15px; font-size: 13px; margin-top: auto; }
-        .footer-ad { max-width: 728px; height: 90px; background: #34495e; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; color: #bdc3c7; }
-        .loading { color: #e67e22; font-weight: bold; text-align: center; display: none; }
-        @media(max-width: 1024px) { .ads-sidebar { display: none; } }
+        body { font-family: 'Calibri', 'Segoe UI', Tahoma, sans-serif; background-color: #f1f5f9; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; color: #1e293b; }
+        
+        /* مین ہب ایڈسینس لے آؤٹ اسٹرکچر */
+        .main-dashboard-wrapper { display: flex; width: 100%; max-width: 1440px; margin: 0 auto; flex-grow: 1; }
+        
+        /* گوگل ایڈسینس سائیڈ بینرز (Left/Right) */
+        .adsense-column { width: 160px; background-color: #e2e8f0; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 12px; text-align: center; font-weight: bold; }
+        
+        /* مرکزی کام کی جگہ (Compact & Clean) */
+        .workspace-container { flex-grow: 1; padding: 20px; max-width: 850px; margin: 10px auto; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 8px; box-sizing: border-box; }
+        
+        h2 { text-align: center; color: #0f172a; margin-top: 0; padding-bottom: 10px; border-bottom: 3px solid #3b82f6; font-size: 22px; }
+        h3 { color: #2563eb; border-right: 4px solid #3b82f6; padding-right: 8px; font-size: 16px; margin-top: 20px; margin-bottom: 10px; }
+        
+        .form-group-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px; color: #475569; }
+        input, select, textarea { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px; background-color: #f8fafc; }
+        input:focus, select:focus, textarea:focus { border-color: #3b82f6; outline: none; background-color: #ffffff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        .btn-action { color: #ffffff; border: none; padding: 10px 16px; font-size: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: all 0.2s; display: inline-block; text-align: center; }
+        .btn-green { background-color: #10b981; width: 100%; }
+        .btn-green:hover { background-color: #059669; }
+        .btn-blue { background-color: #2563eb; width: 100%; font-size: 15px; margin-top: 10px; }
+        .btn-blue:hover { background-color: #1d4ed8; }
+        
+        .alert { padding: 12px; margin-bottom: 15px; border-radius: 6px; font-size: 13px; text-align: center; font-weight: bold; }
+        .success { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        
+        /* لائیو آؤٹ پٹ ویو پورٹ */
+        .output-viewport { margin-top: 15px; padding: 15px; background-color: #0f172a; color: #f8fafc; border-radius: 6px; min-height: 120px; font-family: 'Consolas', 'Courier New', monospace; direction: ltr; text-align: left; white-space: pre-wrap; overflow-x: auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+        .processing-indicator { text-align: center; color: #2563eb; font-weight: bold; margin: 10px 0; display: none; font-size: 14px; }
+        
+        footer { background-color: #0f172a; color: #94a3b8; text-align: center; padding: 15px; font-size: 12px; margin-top: auto; }
+        .adsense-footer-block { max-width: 728px; height: 90px; background-color: #1e293b; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; color: #475569; border: 1px solid #334155; }
+        
+        @media (max-width: 1024px) { .adsense-column { display: none; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="ads-sidebar">AdSense Vertical Banner<br>(160x600)</div>
+<div class="main-dashboard-wrapper">
+    <!-- Left AdSense Slot -->
+    <div class="adsense-column">AdSense Vertical Banner<br>(160x600)</div>
 
-    <div class="main-card">
-        <h2>🤖 سمارٹ ملٹی اے آئی جنریٹر حب</h2>
+    <!-- Central Engine Workspace -->
+    <div class="workspace-container">
+        <h2>🛠️ ملٹی ماڈل AI انجن اور کیز والٹ مینیجر (/AI)</h2>
         
-        <div class="control-row">
+        <?php echo $status_msg; ?>
+
+        <!-- کیز مینجمنٹ سیکشن -->
+        <details <?php echo (empty($status_msg)) ? '' : 'open'; ?> style="background: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 20px;">
+            <summary style="font-weight: bold; color: #2563eb; cursor: pointer; font-size: 14px;">🔑 کسٹم نام اور نوٹس کے ساتھ نئی فری/پیڈ اے پی آئی کی محفوظ کریں</summary>
+            <form method="POST" action="" style="margin-top: 12px;">
+                <div class="form-group-grid">
+                    <div>
+                        <label>چابی کا نام / یادداشت (Custom Key Identifier):</label>
+                        <input type="text" name="key_name" placeholder="مثلاً: جیو نیوز اسکرپٹنگ یا پرسنل ٹیسٹنگ کلید" required>
+                    </div>
+                    <div>
+                        <label>اے پی آئی پرووائیڈر پلیٹ فارم (Platform):</label>
+                        <select name="platform_name">
+                            <option value="Google Gemini">Google Gemini</option>
+                            <option value="OpenAI">OpenAI</option>
+                            <option value="Groq Cloud">Groq Cloud</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group-grid">
+                    <div>
+                        <label>ٹارگٹ ماڈل اسٹرنگ (Model Name):</label>
+                        <input type="text" name="model_target" value="gemini-2.5-flash" placeholder="مثلاً: gemini-2.5-flash" required>
+                    </div>
+                    <div>
+                        <label>خفیہ ٹوکن / کلید (Secret API Key):</label>
+                        <input type="password" name="api_key" placeholder="یہاں اپنی خفیہ چابی درج کریں" required>
+                    </div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label>اضافی ڈسکرپشن یا یادداشت (Optional Notes):</label>
+                    <textarea name="custom_notes" rows="2" placeholder="اس چابی کے استعمال کا دائرہ کار یا کوٹہ یادداشت کے لیے لکھیں..."></textarea>
+                </div>
+                <button type="submit" name="action_save_key" class="btn btn-action btn-green">والٹ پروفائل محفوظ کریں 💾</button>
+            </form>
+        </details>
+
+        <!-- مواد تخلیق پینل -->
+        <h3>🚀 لائیو اے آئی پروسیسنگ اور جنریٹر میٹرکس</h3>
+        <div class="form-group-grid">
             <div>
-                <label for="engineSelect">دستیاب اے آئی انجن کا انتخاب کریں:</label>
-                <select id="engineSelect">
-                    <?php 
-                    if(mysqli_num_rows($platforms_query) > 0) {
-                        while($p = mysqli_fetch_assoc($platforms_query)) {
-                            echo "<option value='".$p['platform_name']."|".$p['model_target']."'>".$p['platform_name']." (".$p['model_target'].")</option>";
+                <label>محفوظ شدہ فعال کلید منتخب کریں (Active Profiles):</label>
+                <select id="selectedProfileId">
+                    <?php
+                    if ($saved_profiles && mysqli_num_rows($saved_profiles) > 0) {
+                        while ($row = mysqli_fetch_assoc($saved_profiles)) {
+                            echo "<option value='".intval($row['id'])."'>".htmlspecialchars($row['key_name'])." [".htmlspecialchars($row['platform_name'])."]</option>";
                         }
                     } else {
-                        echo "<option value=''>کوئی انجن دستیاب نہیں (ایڈمن کیز شامل کریں)</option>";
+                        echo "<option value=''>کوئی محفوظ کلید نہیں ملی۔ براہ کرم اوپر جا کر شامل کریں۔</option>";
                     }
                     ?>
                 </select>
             </div>
             <div>
-                <label>آپ کو کیا تیار کرنا ہے؟</label>
-                <select id="contentType">
-                    <option value="text">ٹیکسٹ یا ریسرچ مواد</option>
-                    <option value="code">پروگرامنگ کوڈ (Code)</option>
-                    <option value="image">خوبصورت تصویر (Image)</option>
+                <label>تخلیق کا موڈ (Generation Mode):</label>
+                <select id="outputGenre">
+                    <option value="text">ٹیکسٹ اسکرپٹ جنریٹر (AI Text Engine)</option>
+                    <option value="image">تصویر پرامپٹ میٹرکس (AI Image Preview Prompt)</option>
+                    <option value="video">ویڈیو پاتھ ڈیزائنر (AI Video Workflow Layout)</option>
                 </select>
             </div>
         </div>
 
-        <div>
-            <label for="promptInput">اپنی ڈیمانڈ/پرامپٹ یہاں تفصیل سے لکھیں:</label>
-            <textarea id="promptInput" placeholder="جیو نیوز فارمیٹ کی خبر لکھیں یا ویب سائٹ کا لاگ ان پیج کوڈ لکھیں یا رئیلسٹک تصویر کا پرامپٹ دیں..."></textarea>
+        <div style="margin-bottom: 12px;">
+            <label>اپنی ہدایات یا پرامپٹ (Prompt Workspace):</label>
+            <textarea id="promptInput" rows="4" placeholder="اے آئی ماڈل کے لیے اپنی ہدایات یہاں واضح اردو یا انگریزی میں ٹائپ کریں..."></textarea>
         </div>
 
-        <button class="btn-generate" onclick="processAIRequest()">اے آئی جادو شروع کریں ✨</button>
+        <button type="button" class="btn btn-action btn-blue" onclick="processAIGeneration()">مواد تخلیق کریں ✨</button>
+        
+        <div class="processing-indicator" id="loader">محفوظ شدہ والٹ ٹوکن لوڈ کر کے ریموٹ سرور سے رابطہ قائم کیا جا رہا ہے...</div>
 
-        <div class="loading" id="loadingState">پروسیسنگ جاری ہے، براہ کرم انتظار کریں...</div>
-
-        <div class="output-box">
-            <div class="output-header">
-                <span>تخلیق شدہ نتیجہ (Output Result):</span>
-                <button class="btn-copy" onclick="copyResult()">نتیجہ کاپی کریں</button>
-            </div>
-            <div id="outputContent" style="color: #475569; font-size: 15px; white-space: pre-wrap;">آپ کا رزلٹ یہاں ظاہر ہوگا۔</div>
-        </div>
-
-        <div class="admin-link">
-            <a href="admin_vault.php">🔐 ایڈمن پینل والٹ (صرف ڈویلپر لاگ ان)</a>
-        </div>
+        <h3>📦 لائیو آؤٹ پٹ ونڈو</h3>
+        <div class="output-viewport" id="responseViewport">تخلیق کردہ نتائج کا لائیو آؤٹ پٹ رینڈر یہاں ظاہر ہوگا۔</div>
     </div>
 
-    <div class="ads-sidebar">AdSense Vertical Banner<br>(160x600)</div>
+    <!-- Right AdSense Slot -->
+    <div class="adsense-column">AdSense Vertical Banner<br>(160x600)</div>
 </div>
 
 <footer>
-    <div class="footer-ad">AdSense Leaderboard (728x90)</div>
-    <div>© 2026 Online Tools NG — آخری اپڈیٹ: 2026-05-23 22:24:14 | <a href="../deploy.php" style="color:#3498db; text-decoration:none;">deploy.php</a></div>
+    <div class="adsense-footer-block">AdSense Leaderboard Horizontal (728x90)</div>
+    <div>© 2026 Online Tools NG — تمام حقوق محفوظ ہیں۔</div>
+    <div style="font-size: 11px; color: #64748b; margin-top: 5px;">
+        آخری اپڈیٹ: 2026-05-24 00:16:56 | <a href="../deploy.php" style="color: #3b82f6; text-decoration: none;">deploy.php</a>
+    </div>
 </footer>
 
 <script>
-async function processAIRequest() {
-    const engineData = document.getElementById('engineSelect').value;
-    const contentType = document.getElementById('contentType').value;
+async function processAIGeneration() {
+    const profileId = document.getElementById('selectedProfileId').value;
+    const genre = document.getElementById('outputGenre').value;
     const prompt = document.getElementById('promptInput').value.trim();
-    
-    if(!engineData || !prompt) {
-        alert('براہ کرم پرامپٹ لکھیں اور انجن منتخب کریں!');
+
+    if (!profileId || !prompt) {
+        alert('براہ کرم پرامپٹ درج کریں اور لسٹ سے والٹ کی پروفائل منتخب کریں!');
         return;
     }
 
-    const [platform, target] = engineData.split('|');
-    
-    document.getElementById('loadingState').style.display = 'block';
-    document.getElementById('outputContent').innerText = 'اے آئی سرور سے رابطہ قائم کیا جا رہا ہے...';
+    const loader = document.getElementById('loader');
+    const viewport = document.getElementById('responseViewport');
+
+    loader.style.display = 'block';
+    viewport.innerText = 'پروسیسنگ مائیکرو راؤٹر کے پاس جا رہی ہے...';
+    viewport.style.direction = 'ltr';
+    viewport.style.textAlign = 'left';
 
     try {
-        // بیک اینڈ برج پر ریکویسٹ بھیجنا تاکہ کیز پبلک ایکسپوز نہ ہوں
-        const response = await fetch('ai_bridge.php', {
+        const response = await fetch('ai_processor.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `platform=${encodeURIComponent(platform)}&target=${encodexl(target)}&contentType=${encodeURIComponent(contentType)}&prompt=${encodeURIComponent(prompt)}`
+            body: `profile_id=${encodeURIComponent(profileId)}&genre=${encodeURIComponent(genre)}&prompt=${encodeURIComponent(prompt)}`
         });
-        
-        const data = await response.json();
-        document.getElementById('loadingState').style.display = 'none';
 
-        if(data.success) {
-            if(contentType === 'image') {
-                document.getElementById('outputContent').innerHTML = `<img src="${data.result}" alt="Generated Image">`;
-            } else {
-                document.getElementById('outputContent').innerText = data.result;
+        const data = await response.json();
+        loader.style.display = 'none';
+
+        if (data.success) {
+            viewport.innerText = data.result;
+            // اگر متن میں اردو حروف موجود ہوں تو سمت دائیں سے بائیں کریں
+            if(/[ا-ی]/.test(data.result)) {
+                viewport.style.direction = 'rtl';
+                viewport.style.textAlign = 'right';
             }
         } else {
-            document.getElementById('outputContent').innerText = "خرابی: " + data.message;
+            viewport.innerText = "خرابی: " + data.message;
         }
     } catch (error) {
-        document.getElementById('loadingState').style.display = 'none';
-        document.getElementById('outputContent').innerText = "سرور سائیڈ کنکشن میں کوئی مسئلہ پیش آیا ہے۔";
+        loader.style.display = 'none';
+        viewport.innerText = "بیک اینڈ مائیکرو پروسیسر راؤٹر (ai_processor.php) سے جواب موصول نہیں ہوا۔";
     }
 }
-
-function copyResult() {
-    const contentText = document.getElementById('outputContent').innerText;
-    navigator.clipboard.writeText(contentText);
-    alert('مواد کامیابی سے کاپی کر لیا گیا ہے!');
-}
-function encodexl(str) { return encodeURIComponent(str); }
 </script>
 </body>
 </html>
