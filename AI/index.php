@@ -2,7 +2,7 @@
 /**
  * Project : AI Multi-Model Vault & Generator Hub
  * Location: /AI/index.php
- * Fixed   : PRG pattern, platform select dropdown, model JS router
+ * Fixed   : PRG pattern, Edit/Delete features, platform select dropdown, model JS router
  */
 
 $status_msg    = "";
@@ -35,42 +35,78 @@ if (!isset($pdo_ai)) {
 $table_name = (defined('AI_TABLE_PREFIX') ? AI_TABLE_PREFIX : 'ai_') . "vault_keys";
 
 // ── PRG: POST handler ──────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_key']) && isset($pdo_ai)) {
-    $key_name      = trim(filter_input(INPUT_POST, 'key_name',      FILTER_DEFAULT));
-    $platform_name = trim(filter_input(INPUT_POST, 'platform_name', FILTER_DEFAULT));
-    $model_target  = trim(filter_input(INPUT_POST, 'model_target',  FILTER_DEFAULT));
-    $api_key       = trim(filter_input(INPUT_POST, 'api_key',       FILTER_DEFAULT));
-    $custom_notes  = trim(filter_input(INPUT_POST, 'custom_notes',  FILTER_DEFAULT));
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($pdo_ai)) {
+    
+    // --- SAVE / UPDATE ACTION ---
+    if (isset($_POST['action_save_key'])) {
+        $key_id        = filter_input(INPUT_POST, 'key_id',        FILTER_SANITIZE_NUMBER_INT);
+        $key_name      = trim(filter_input(INPUT_POST, 'key_name',      FILTER_DEFAULT));
+        $platform_name = trim(filter_input(INPUT_POST, 'platform_name', FILTER_DEFAULT));
+        $model_target  = trim(filter_input(INPUT_POST, 'model_target',  FILTER_DEFAULT));
+        $api_key       = trim(filter_input(INPUT_POST, 'api_key',       FILTER_DEFAULT));
+        $custom_notes  = trim(filter_input(INPUT_POST, 'custom_notes',  FILTER_DEFAULT));
 
-    if (!empty($key_name) && !empty($api_key) && !empty($platform_name) && !empty($model_target)) {
-        try {
-            $stmt = $pdo_ai->prepare(
-                "INSERT INTO {$table_name}
-                 (key_name, platform_name, model_target, api_key, custom_notes)
-                 VALUES (?, ?, ?, ?, ?)"
-            );
-            $stmt->execute([$key_name, $platform_name, $model_target, $api_key, $custom_notes]);
-            // PRG redirect — browser POST بھول جاتا ہے
-            header("Location: index.php?saved=1");
-            exit();
-        } catch (PDOException $e) {
-            $status_msg = "<div class='alert error'>خرابی: " . htmlspecialchars($e->getMessage()) . "</div>";
+        if (!empty($key_name) && !empty($api_key) && !empty($platform_name) && !empty($model_target)) {
+            try {
+                if (!empty($key_id)) {
+                    // UPDATE existing key
+                    $stmt = $pdo_ai->prepare(
+                        "UPDATE {$table_name} 
+                         SET key_name=?, platform_name=?, model_target=?, api_key=?, custom_notes=? 
+                         WHERE id=?"
+                    );
+                    $stmt->execute([$key_name, $platform_name, $model_target, $api_key, $custom_notes, $key_id]);
+                    $msg_type = "updated";
+                } else {
+                    // INSERT new key
+                    $stmt = $pdo_ai->prepare(
+                        "INSERT INTO {$table_name}
+                         (key_name, platform_name, model_target, api_key, custom_notes)
+                         VALUES (?, ?, ?, ?, ?)"
+                    );
+                    $stmt->execute([$key_name, $platform_name, $model_target, $api_key, $custom_notes]);
+                    $msg_type = "saved";
+                }
+                header("Location: index.php?msg=$msg_type");
+                exit();
+            } catch (PDOException $e) {
+                $status_msg = "<div class='alert error'>خرابی: " . htmlspecialchars($e->getMessage()) . "</div>";
+            }
+        } else {
+            $status_msg = "<div class='alert error'>تمام ضروری خانے پُر کریں۔</div>";
         }
-    } else {
-        $status_msg = "<div class='alert error'>تمام ضروری خانے پُر کریں۔</div>";
+    }
+
+    // --- DELETE ACTION ---
+    if (isset($_POST['action_delete_key'])) {
+        $del_id = filter_input(INPUT_POST, 'delete_id', FILTER_SANITIZE_NUMBER_INT);
+        if ($del_id) {
+            try {
+                $stmt = $pdo_ai->prepare("DELETE FROM {$table_name} WHERE id = ?");
+                $stmt->execute([$del_id]);
+                header("Location: index.php?msg=deleted");
+                exit();
+            } catch (PDOException $e) {
+                $status_msg = "<div class='alert error'>حذف کرنے میں خرابی: " . htmlspecialchars($e->getMessage()) . "</div>";
+            }
+        }
     }
 }
 
-// ── GET: success message ───────────────────────────────────────
-if (isset($_GET['saved']) && $_GET['saved'] == 1) {
-    $status_msg = "<div class='alert success'>API Key کامیابی سے والٹ میں محفوظ ہو گئی!</div>";
+// ── GET: messages ──────────────────────────────────────────────
+if (isset($_GET['msg'])) {
+    switch($_GET['msg']) {
+        case 'saved':   $status_msg = "<div class='alert success'>API Key کامیابی سے محفوظ ہو گئی!</div>"; break;
+        case 'updated': $status_msg = "<div class='alert success'>تفصیلات کامیابی سے اپ ڈیٹ ہو گئیں!</div>"; break;
+        case 'deleted': $status_msg = "<div class='alert success'>API Key کامیابی سے حذف کر دی گئی!</div>"; break;
+    }
 }
 
 // ── Keys load ─────────────────────────────────────────────────
-if (isset($pdo_ai) && empty($status_msg) || isset($_GET['saved'])) {
+if (isset($pdo_ai)) {
     try {
         $stmt_sel = $pdo_ai->prepare(
-            "SELECT id, key_name, platform_name FROM {$table_name} ORDER BY id DESC"
+            "SELECT * FROM {$table_name} ORDER BY id DESC"
         );
         $stmt_sel->execute();
         $saved_profiles = $stmt_sel->fetchAll();
@@ -175,6 +211,8 @@ $last_update = date('Y-m-d H:i:s');
         .btn:hover { opacity: .88; }
         .btn-blue   { background: #2563eb; color: #fff; margin-top: 10px; }
         .btn-orange { background: #d97706; color: #fff; }
+        .btn-sm { padding: 4px 8px; font-size: 12px; width: auto; display: inline-block; margin-left: 4px; }
+        .btn-red { background: #ef4444; color: #fff; }
 
         /* ── Alerts ── */
         .alert {
@@ -203,6 +241,16 @@ $last_update = date('Y-m-d H:i:s');
             border-bottom: 1px solid #fde68a; padding-bottom: 8px;
             font-family: 'Noto Nastaliq Urdu', serif;
         }
+
+        /* ── Table ── */
+        .vault-table {
+            width: 100%; border-collapse: collapse; margin-top: 15px;
+            font-size: 13px; background: #fff;
+        }
+        .vault-table th, .vault-table td {
+            padding: 10px; border: 1px solid #fde68a; text-align: right;
+        }
+        .vault-table th { background: #fef3c7; color: #92400e; }
 
         /* ── Output ── */
         .output-box {
@@ -253,12 +301,13 @@ $last_update = date('Y-m-d H:i:s');
 
             <!-- ══ Admin Vault ══ -->
             <div id="adminVault">
-                <h3>🔒 ایڈمن والٹ — نئی API Key شامل کریں</h3>
-                <form method="POST" action="index.php">
+                <h3 id="vaultFormTitle">🔒 ایڈمن والٹ — نئی API Key شامل کریں</h3>
+                <form method="POST" action="index.php" id="keyForm">
+                    <input type="hidden" name="key_id" id="formKeyId">
                     <div class="grid-2">
                         <div>
                             <label>چابی کا نام (یوزر کو دکھے گا):</label>
-                            <input type="text" name="key_name" placeholder="مثلاً: Gemini اردو انجن" required>
+                            <input type="text" name="key_name" id="formKeyName" placeholder="مثلاً: Gemini اردو انجن" required>
                         </div>
                         <div>
                             <label>پلیٹ فارم:</label>
@@ -280,15 +329,46 @@ $last_update = date('Y-m-d H:i:s');
                         </div>
                         <div>
                             <label>خفیہ API Key:</label>
-                            <input type="password" name="api_key" placeholder="یہاں key paste کریں" required>
+                            <input type="password" name="api_key" id="formApiKey" placeholder="یہاں key paste کریں" required>
                         </div>
                     </div>
                     <div style="margin-bottom:12px;">
                         <label>نوٹس (اختیاری):</label>
-                        <input type="text" name="custom_notes" placeholder="یاد دہانی کے لیے">
+                        <input type="text" name="custom_notes" id="formNotes" placeholder="یاد دہانی کے لیے">
                     </div>
-                    <button type="submit" name="action_save_key" class="btn btn-orange">والٹ میں محفوظ کریں 💾</button>
+                    <div class="grid-2">
+                        <button type="submit" name="action_save_key" id="submitBtn" class="btn btn-orange">والٹ میں محفوظ کریں 💾</button>
+                        <button type="button" onclick="resetVaultForm()" id="cancelBtn" class="btn btn-blue" style="display:none; background:#64748b;">کینسل کریں ✖</button>
+                    </div>
                 </form>
+
+                <!-- Vault Table -->
+                <table class="vault-table">
+                    <thead>
+                        <tr>
+                            <th>نام</th>
+                            <th>پلیٹ فارم</th>
+                            <th>ایکشن</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($saved_profiles)): foreach ($saved_profiles as $row): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($row['key_name']); ?></td>
+                            <td><?php echo htmlspecialchars($row['platform_name']); ?></td>
+                            <td>
+                                <button class="btn btn-sm btn-blue" onclick='editKey(<?php echo json_encode($row); ?>)'>ایڈٹ</button>
+                                <form method="POST" style="display:inline;" onsubmit="return confirm('کیا آپ واقعی اسے حذف کرنا چاہتے ہیں؟');">
+                                    <input type="hidden" name="delete_id" value="<?php echo $row['id']; ?>">
+                                    <button type="submit" name="action_delete_key" class="btn btn-sm btn-red">حذف</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; else: ?>
+                        <tr><td colspan="3" style="text-align:center;">کوئی چابی موجود نہیں۔</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
 
             <!-- ══ User Interface ══ -->
@@ -347,18 +427,19 @@ const MODELS = {
     "Groq Cloud":    ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
     "OpenAI":        ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"],
     "OpenRouter":    ["google/gemini-2.0-flash-exp:free", "meta-llama/llama-3.1-8b-instruct:free", "mistralai/mistral-7b-instruct:free"],
-    "Together AI":   ["stabilityai/stable-diffusion-xl-base-1.0", "black-forest-labs/FLUX.1-schnell-Free"],
+    "Together AI":   ["stabilityai/stable-diffusion-xl-base-1.0", "black-forest-labs/FLUX.1-schnell"],
     "Hugging Face":  ["runwayml/stable-diffusion-v1-5", "facebook/bart-large-cnn"],
     "Livepeer Studio": ["video-transcoding"]
 };
 
-function loadModels() {
+function loadModels(selectedModel = null) {
     const platform = document.getElementById('vaultPlatform').value;
     const sel      = document.getElementById('vaultModel');
     sel.innerHTML  = '';
     (MODELS[platform] || []).forEach(m => {
         const o = document.createElement('option');
         o.value = o.textContent = m;
+        if (selectedModel && m === selectedModel) o.selected = true;
         sel.appendChild(o);
     });
 }
@@ -370,6 +451,30 @@ function unlockVault() {
     } else if (pin !== null) {
         alert("غلط PIN!");
     }
+}
+
+function editKey(data) {
+    document.getElementById('vaultFormTitle').textContent = "🔒 ایڈمن والٹ — تفصیلات اپ ڈیٹ کریں";
+    document.getElementById('formKeyId').value = data.id;
+    document.getElementById('formKeyName').value = data.key_name;
+    document.getElementById('vaultPlatform').value = data.platform_name;
+    loadModels(data.model_target);
+    document.getElementById('formApiKey').value = data.api_key;
+    document.getElementById('formNotes').value = data.custom_notes;
+    document.getElementById('submitBtn').textContent = "اپ ڈیٹ کریں 💾";
+    document.getElementById('cancelBtn').style.display = "inline-block";
+    
+    // Scroll to form
+    document.getElementById('adminVault').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetVaultForm() {
+    document.getElementById('vaultFormTitle').textContent = "🔒 ایڈمن والٹ — نئی API Key شامل کریں";
+    document.getElementById('formKeyId').value = "";
+    document.getElementById('keyForm').reset();
+    loadModels();
+    document.getElementById('submitBtn').textContent = "والٹ میں محفوظ کریں 💾";
+    document.getElementById('cancelBtn').style.display = "none";
 }
 
 async function processAIGeneration() {
@@ -409,7 +514,7 @@ async function processAIGeneration() {
     }
 }
 
-// vault پلیٹ فارم کے مطابق models load کریں
+// Initial load
 loadModels();
 </script>
 </body>
