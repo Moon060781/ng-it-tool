@@ -2,7 +2,7 @@
 /**
  * Project: AI Multi-Model Vault & Generator Hub
  * Location: /AI/index.php
- * Updated: Force is_active = 1 on insertion to fix empty profile dropdown
+ * Updated: Failsafe query to fetch all keys regardless of is_active status
  * Author: manus ai & NG Architect
  */
 
@@ -34,7 +34,7 @@ $table_prefix = defined('AI_TABLE_PREFIX') ? AI_TABLE_PREFIX : 'ai_';
 $table_name = $table_prefix . "vault_keys";
 
 if (isset($pdo_ai) && empty($status_msg)) {
-    // فارم سبمٹ لاجک (محفوظ PDO انسرشن مع خودکار ایکٹو اسٹیٹس)
+    // فارم سبمٹ لاجک (محفوظ PDO انسرشن)
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_key'])) {
         $key_name = filter_input(INPUT_POST, 'key_name', FILTER_DEFAULT);
         $platform_name = filter_input(INPUT_POST, 'platform_name', FILTER_DEFAULT);
@@ -44,24 +44,25 @@ if (isset($pdo_ai) && empty($status_msg)) {
 
         if (!empty($key_name) && !empty($api_key)) {
             try {
-                // یہاں ہم نے 'is_active' کو مینوئلی 1 (Active) پر فورس کر دیا ہے
-                $stmt = $pdo_ai->prepare("INSERT INTO {$table_name} (key_name, platform_name, model_target, api_key, custom_notes, is_active) VALUES (?, ?, ?, ?, ?, 1)");
+                // یہاں ہم کالمز کی تعداد کو سادہ رکھ رہے ہیں تاکہ اگر کالم مکس ہو تو ایرر نہ آئے
+                $stmt = $pdo_ai->prepare("INSERT INTO {$table_name} (key_name, platform_name, model_target, api_key, custom_notes) VALUES (?, ?, ?, ?, ?)");
                 if ($stmt->execute([$key_name, $platform_name, $model_target, $api_key, $custom_notes])) {
-                    $status_msg = "<div class='alert success'>اے پی آئی کی پروفائل برائے \"" . htmlspecialchars($key_name) . "\" کامیابی سے ایکٹو حالت میں محفوظ ہو گئی!</div>";
+                    $status_msg = "<div class='alert success'>اے پی آئی کی پروفائل برائے \"" . htmlspecialchars($key_name) . "\" کامیابی سے محفوظ ہو گئی!</div>";
                 }
             } catch (PDOException $e) {
-                $status_msg = "<div class='alert error'>کیوری خرابی: " . htmlspecialchars($e->getMessage()) . "</div>";
+                $status_msg = "<div class='alert error'>کیوری خرابی (محفوظ کرتے وقت): " . htmlspecialchars($e->getMessage()) . "</div>";
             }
         }
     }
 
-    // لائیو پروفائلز لوڈ کرنا (یوزر مینیو کے لیے)
+    // 🎯 فکس: اب یہ کیوری 'is_active = 1' کی قید کے بغیر تمام کیز لوڈ کرے گی
     try {
-        $stmt_select = $pdo_ai->prepare("SELECT id, key_name, platform_name FROM {$table_name} WHERE is_active = 1 ORDER BY id DESC");
+        $stmt_select = $pdo_ai->prepare("SELECT id, key_name, platform_name FROM {$table_name} ORDER BY id DESC");
         $stmt_select->execute();
         $saved_profiles = $stmt_select->fetchAll();
     } catch (PDOException $e) {
-        $saved_profiles = [];
+        // اگر ٹیبل یا کالم کا کوئی مسئلہ ہے تو اسکرین پر لائیو ایرر دکھائے گا تاکہ ہمیں پتہ چلے
+        $status_msg = "<div class='alert error'>ڈیٹا لوڈنگ خرابی: " . htmlspecialchars($e->getMessage()) . "</div>";
     }
 }
 $last_update = date('Y-m-d H:i:s');
@@ -93,7 +94,6 @@ $last_update = date('Y-m-d H:i:s');
         .output-viewport { margin-top: 20px; padding: 15px; background-color: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px; min-height: 150px; font-size: 15px; line-height: 1.6; white-space: pre-wrap; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
         .processing-indicator { text-align: center; color: #2563eb; font-weight: bold; margin: 10px 0; display: none; font-size: 14px; }
         
-        /* Admin Vault Style - Hidden by default */
         #adminVault { display: none; background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
         .admin-btn { position: absolute; top: 10px; left: 10px; background: none; border: none; font-size: 16px; cursor: pointer; color: #94a3b8; }
         .admin-btn:hover { color: #334155; }
@@ -170,9 +170,8 @@ $last_update = date('Y-m-d H:i:s');
 </footer>
 
 <script>
-// ایڈمن والٹ کو کھولنے کا لاجک
 function unlockVault() {
-    let pin = prompt("ایڈمن پن کوڈ درج کریں (پاس ورڈ لکھیں):");
+    let pin = prompt("ایڈمن پن کوڈ درج کریں:");
     if (pin === "7860") {
         document.getElementById('adminVault').style.display = 'block';
         alert("ایڈمن پینل کھل گیا ہے!");
@@ -181,7 +180,6 @@ function unlockVault() {
     }
 }
 
-// اصل اے آئی پروسیسنگ (یوزر کے لیے)
 async function processAIGeneration() {
     const profileId = document.getElementById('selectedProfileId').value;
     const genre = document.getElementById('outputGenre').value;
