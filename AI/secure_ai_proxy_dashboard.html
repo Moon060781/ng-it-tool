@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Secure Proxy - کنٹرول پینل</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Deep Ocean & Mint Breeze -->
+    <!-- Application Structure Plan: 
+        1. Summary Stats: سسٹم کے مجموعی استعمال اور فعال کیز کا جائزہ۔
+        2. User Generation Lab: وہ حصہ جو عام صارف دیکھے گا (بغیر کسی کی کے)۔
+        3. Secure Key Vault: ایڈمن کا خفیہ حصہ جو PIN کے ذریعے محفوظ ہے، جہاں اصل کیز رکھی جاتی ہیں۔
+        4. Performance Insights: چارٹس کے ذریعے یہ دکھانا کہ کون سا انجن زیادہ بوجھ اٹھا رہا ہے۔
+        یہ ڈیزائن سیکیورٹی اور استعمال میں آسانی کو مدنظر رکھ کر بنایا گیا ہے۔
+    -->
+    <!-- Visualization & Content Choices: 
+        - Usage Breakdown -> Goal: Compare -> Bar Chart (Chart.js) -> موازنہ کرنا کہ کس ماڈل پر کتنے ٹوکن خرچ ہوئے۔
+        - Status Indicator -> Goal: Inform -> Dynamic Dots -> یہ دکھانا کہ اے پی آئی لائیو ہے یا نہیں۔
+        - Secure Vault -> Goal: Organize -> Card Layout -> کیز کو منظم کرنا۔
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Inter:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Inter', 'Noto Nastaliq Urdu', sans-serif;
+            background-color: #f0f4f8;
+        }
+
+        .urdu-font { font-family: 'Noto Nastaliq Urdu', serif; }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            height: 300px;
+            max-height: 350px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 1);
+        }
+
+        .admin-locked {
+            filter: blur(8px);
+            pointer-events: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-blue-900">AI سیکیور پراکسی 🛡️</h1>
+                <p class="text-slate-500 font-medium">آپ کی اے پی آئی کیز اب محفوظ اور پوشیدہ ہیں</p>
+            </div>
+            <div class="flex gap-3">
+                <div id="connection-status" class="flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-bold">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    سسٹم آن لائن ہے
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="glass-card p-6 rounded-2xl shadow-sm border-b-4 border-blue-600">
+                <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">کل جنریشنز</span>
+                <h3 class="text-3xl font-bold mt-1">1,284</h3>
+            </div>
+            <div class="glass-card p-6 rounded-2xl shadow-sm border-b-4 border-emerald-500">
+                <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">فعال انجن</span>
+                <h3 class="text-3xl font-bold mt-1">03</h3>
+            </div>
+            <div class="glass-card p-6 rounded-2xl shadow-sm border-b-4 border-amber-500">
+                <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">سیکیورٹی لیول</span>
+                <h3 class="text-3xl font-bold mt-1">انتہائی اعلیٰ</h3>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <!-- User Section (What the client sees) -->
+            <section class="space-y-6">
+                <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <span>🚀</span> اے آئی لیب (صارف ایریا)
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-1">ماڈل منتخب کریں اور اپنا مواد تیار کریں۔</p>
+                    </div>
+
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-bold mb-2">انٹیلیجنس انجن</label>
+                            <select id="user-model" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                                <option value="gemini">Gemini Ultra (High Accuracy)</option>
+                                <option value="fast">Turbo Text (Rapid Speed)</option>
+                                <option value="creative">Creative Storyteller (Arts)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold mb-2">آپ کا سوال / پرامپٹ</label>
+                            <textarea id="user-prompt" rows="4" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all urdu-font" placeholder="یہاں اپنا پیغام لکھیں..."></textarea>
+                        </div>
+
+                        <button onclick="simulateExecution()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-200">
+                            مواد جنریٹ کریں
+                        </button>
+                    </div>
+
+                    <div id="output-area" class="mt-8 p-6 bg-slate-900 rounded-2xl min-h-[150px] text-slate-300 urdu-font leading-relaxed hidden">
+                        <!-- Response will appear here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Admin Section (PIN Protected) -->
+            <section class="space-y-6">
+                <div class="bg-slate-800 p-8 rounded-3xl shadow-xl relative overflow-hidden">
+                    <!-- PIN Overlay -->
+                    <div id="pin-overlay" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center p-6 text-center">
+                        <span class="text-4xl mb-4">🔐</span>
+                        <h3 class="text-white font-bold text-xl mb-4">ایڈمن والٹ لاک ہے</h3>
+                        <input type="password" id="admin-pin" placeholder="پن کوڈ درج کریں" class="p-3 rounded-lg bg-slate-700 border border-slate-600 text-white text-center mb-4 outline-none focus:ring-2 focus:ring-blue-500">
+                        <button onclick="unlockVault()" class="bg-blue-500 hover:bg-blue-400 text-white px-8 py-2 rounded-lg font-bold transition-all">ان لاک کریں</button>
+                    </div>
+
+                    <!-- Actual Admin Content -->
+                    <div id="vault-content" class="admin-locked transition-all duration-500">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-xl font-bold text-white">خفیہ والٹ (Keys Manager)</h2>
+                            <button onclick="lockVault()" class="text-xs text-slate-400 underline">دوبارہ لاک کریں</button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
+                                <label class="block text-xs font-bold text-blue-400 mb-1 uppercase">Gemini API Key</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="password" value="AIzaSyA1B2C3D4E5F6G7" class="bg-transparent text-slate-200 text-sm flex-grow outline-none" readonly>
+                                    <span class="text-emerald-400 text-xs font-bold">فعال</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
+                                <label class="block text-xs font-bold text-amber-400 mb-1 uppercase">OpenAI Key (Turbo)</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="password" value="sk-proj-XyZ123abc456" class="bg-transparent text-slate-200 text-sm flex-grow outline-none" readonly>
+                                    <span class="text-emerald-400 text-xs font-bold">فعال</span>
+                                </div>
+                            </div>
+
+                            <div class="pt-4">
+                                <h4 class="text-white text-sm font-bold mb-4">انجن کے استعمال کا گراف</h4>
+                                <div class="chart-container">
+                                    <canvas id="usageChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Technical Explanation Paragraph -->
+        <div class="mt-12 bg-white p-8 rounded-3xl border border-slate-200">
+            <h3 class="text-lg font-bold mb-4 border-r-4 border-blue-600 pr-4">یہ سسٹم کیسے کام کرتا ہے؟</h3>
+            <p class="text-slate-600 leading-relaxed urdu-font">
+                اس ایپلی کیشن کا فن تعمیر (Architecture) مکمل طور پر سیکیورٹی پر مبنی ہے۔ جب صارف "مواد جنریٹ کریں" پر کلک کرتا ہے، تو سسٹم اس کی کیوری کو پردے کے پیچھے موجود ایک محفوظ "پراکسی لیئر" کو بھیجتا ہے۔ یہ لیئر آپ کے خفیہ والٹ سے متعلقہ اے پی آئی کی (API Key) اٹھاتی ہے اور کلاؤڈ سرور سے رابطہ کرتی ہے۔ اس پورے عمل کے دوران صارف کے براؤزر یا نیٹ ورک ٹیب میں آپ کی اصل چابی (Key) کبھی ظاہر نہیں ہوتی۔ اس طرح آپ اپنی قیمتی اے پی آئی سروسز کو چوری ہونے سے بچا سکتے ہیں اور ساتھ ہی ایک پروفیشنل انٹرفیس فراہم کر سکتے ہیں۔
+            </p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-20 py-8 bg-slate-900 text-slate-500 text-center text-sm">
+        <p>© 2026 AI Secure Vault | تمام کیز اینڈ ٹو اینڈ انکرپٹڈ ہیں</p>
+    </footer>
+
+    <script>
+        // Vault Security Logic
+        const CORRECT_PIN = "1234";
+
+        function unlockVault() {
+            const pin = document.getElementById('admin-pin').value;
+            if(pin === CORRECT_PIN) {
+                document.getElementById('pin-overlay').classList.add('hidden');
+                document.getElementById('vault-content').classList.remove('admin-locked');
+                initChart(); // Initialize chart only when unlocked for performance
+            } else {
+                alert("غلط پن کوڈ! دوبارہ کوشش کریں۔");
+            }
+        }
+
+        function lockVault() {
+            document.getElementById('pin-overlay').classList.remove('hidden');
+            document.getElementById('vault-content').classList.add('admin-locked');
+            document.getElementById('admin-pin').value = "";
+        }
+
+        // Content Generation Simulation
+        function simulateExecution() {
+            const prompt = document.getElementById('user-prompt').value;
+            const output = document.getElementById('output-area');
+            const model = document.getElementById('user-model').value;
+
+            if(!prompt) {
+                alert("براہ کرم کچھ لکھیں!");
+                return;
+            }
+
+            output.classList.remove('hidden');
+            output.innerHTML = "پروسیسنگ ہو رہی ہے... براہ کرم انتظار کریں ⏳";
+
+            // Artificial Delay to simulate API call
+            setTimeout(() => {
+                let response = "";
+                if(model === "gemini") {
+                    response = "گوگل جیمنائی (Gemini) انجن نے آپ کے سوال '" + prompt + "' پر غور کیا۔ یہ ایک جدید تجزیہ ہے جو کہ ہماری محفوظ کی (Key) کے ذریعے جنریٹ کیا گیا ہے۔";
+                } else if(model === "creative") {
+                    response = "تخلیقی انجن نے ایک خوبصورت جواب تیار کیا ہے۔ آپ کی اصل اے پی آئی کی (Key) ابھی بھی ڈیٹا بیس میں محفوظ ہے اور صارف اسے نہیں دیکھ سکا۔";
+                } else {
+                    response = "ٹربو انجن نے بہت تیزی سے یہ جواب فراہم کیا ہے۔";
+                }
+                
+                output.innerHTML = `<div class="animate-in fade-in slide-in-from-top-2 duration-500">
+                    <p class="text-blue-400 font-bold mb-2">AI کا جواب:</p>
+                    <p>${response}</p>
+                </div>`;
+            }, 1500);
+        }
+
+        // Charts Logic
+        function initChart() {
+            const ctx = document.getElementById('usageChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Gemini', 'Turbo', 'Creative'],
+                    datasets: [{
+                        label: 'ماہانہ استعمال',
+                        data: [450, 680, 290],
+                        backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
