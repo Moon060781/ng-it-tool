@@ -2,7 +2,8 @@
 /**
  * Project: AI Multi-Model Vault & Generator Hub
  * Location: /AI/index.php
- * Updated: Admin PIN Lock added for Key Management. User-facing side secured.
+ * Updated: Force is_active = 1 on insertion to fix empty profile dropdown
+ * Author: manus ai & NG Architect
  */
 
 $status_msg = "";
@@ -33,7 +34,7 @@ $table_prefix = defined('AI_TABLE_PREFIX') ? AI_TABLE_PREFIX : 'ai_';
 $table_name = $table_prefix . "vault_keys";
 
 if (isset($pdo_ai) && empty($status_msg)) {
-    // فارم سبمٹ لاجک (محفوظ PDO انسرشن)
+    // فارم سبمٹ لاجک (محفوظ PDO انسرشن مع خودکار ایکٹو اسٹیٹس)
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_key'])) {
         $key_name = filter_input(INPUT_POST, 'key_name', FILTER_DEFAULT);
         $platform_name = filter_input(INPUT_POST, 'platform_name', FILTER_DEFAULT);
@@ -43,9 +44,10 @@ if (isset($pdo_ai) && empty($status_msg)) {
 
         if (!empty($key_name) && !empty($api_key)) {
             try {
-                $stmt = $pdo_ai->prepare("INSERT INTO {$table_name} (key_name, platform_name, model_target, api_key, custom_notes) VALUES (?, ?, ?, ?, ?)");
+                // یہاں ہم نے 'is_active' کو مینوئلی 1 (Active) پر فورس کر دیا ہے
+                $stmt = $pdo_ai->prepare("INSERT INTO {$table_name} (key_name, platform_name, model_target, api_key, custom_notes, is_active) VALUES (?, ?, ?, ?, ?, 1)");
                 if ($stmt->execute([$key_name, $platform_name, $model_target, $api_key, $custom_notes])) {
-                    $status_msg = "<div class='alert success'>اے پی آئی کی پروفائل برائے \"" . htmlspecialchars($key_name) . "\" محفوظ ہو گئی!</div>";
+                    $status_msg = "<div class='alert success'>اے پی آئی کی پروفائل برائے \"" . htmlspecialchars($key_name) . "\" کامیابی سے ایکٹو حالت میں محفوظ ہو گئی!</div>";
                 }
             } catch (PDOException $e) {
                 $status_msg = "<div class='alert error'>کیوری خرابی: " . htmlspecialchars($e->getMessage()) . "</div>";
@@ -171,7 +173,7 @@ $last_update = date('Y-m-d H:i:s');
 // ایڈمن والٹ کو کھولنے کا لاجک
 function unlockVault() {
     let pin = prompt("ایڈمن پن کوڈ درج کریں (پاس ورڈ لکھیں):");
-    if (pin === "7860") { // <--- یہ آپ کا پن کوڈ ہے
+    if (pin === "7860") {
         document.getElementById('adminVault').style.display = 'block';
         alert("ایڈمن پینل کھل گیا ہے!");
     } else if(pin !== null) {
@@ -195,7 +197,6 @@ async function processAIGeneration() {
     viewport.innerText = '';
     
     try {
-        // یہ آپ کے اصل ai_processor.php کو ہٹ کرے گا اور اصل جواب لائے گا
         const response = await fetch('ai_processor.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -207,7 +208,6 @@ async function processAIGeneration() {
         
         if (data.success) {
             viewport.innerText = data.result;
-            // اگر جواب اردو میں ہے تو رائٹ ٹو لیفٹ کر دے گا
             viewport.style.direction = /[ا-ی]/.test(data.result) ? 'rtl' : 'ltr';
             viewport.style.textAlign = /[ا-ی]/.test(data.result) ? 'right' : 'left';
         } else { 
