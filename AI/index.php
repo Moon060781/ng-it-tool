@@ -259,6 +259,23 @@ $last_update = date('Y-m-d H:i:s');
             border-radius: 6px; min-height: 120px;
             font-size: 15px; line-height: 1.8;
             white-space: pre-wrap; color: #0f172a;
+            position: relative;
+        }
+        .output-actions {
+            display: flex; gap: 8px; margin-top: 12px;
+            flex-wrap: wrap; justify-content: center;
+        }
+        .btn-action {
+            padding: 8px 14px; font-size: 12px;
+            border: 1px solid #cbd5e1; border-radius: 4px;
+            background: #fff; color: #475569; cursor: pointer;
+            transition: all .2s; font-family: inherit;
+        }
+        .btn-action:hover {
+            background: #e2e8f0; border-color: #94a3b8;
+        }
+        .btn-action.active {
+            background: #3b82f6; color: #fff; border-color: #3b82f6;
         }
         .loader {
             text-align: center; color: #2563eb;
@@ -267,26 +284,104 @@ $last_update = date('Y-m-d H:i:s');
             font-family: 'Noto Nastaliq Urdu', serif;
         }
 
+        /* ── Navigation Menu ── */
+        nav {
+            background: #0f172a; color: #fff;
+            padding: 12px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            position: sticky; top: 0; z-index: 100;
+        }
+        nav ul {
+            list-style: none; display: flex;
+            justify-content: center; align-items: center;
+            flex-wrap: wrap; max-width: 1440px;
+            margin: 0 auto; padding: 0 16px;
+        }
+        nav li {
+            margin: 0 16px; position: relative;
+        }
+        nav a {
+            color: #60a5fa; text-decoration: none;
+            font-size: 13px; font-weight: 500;
+            transition: color .2s;
+        }
+        nav a:hover { color: #93c5fd; }
+        nav .dropdown {
+            position: relative; display: inline-block;
+        }
+        nav .dropdown-content {
+            display: none; position: absolute; top: 100%;
+            left: 0; background: #1e293b; min-width: 200px;
+            box-shadow: 0 4px 6px rgba(0,0,0,.2);
+            border-radius: 4px; z-index: 101;
+        }
+        nav .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        nav .dropdown-content a {
+            display: block; padding: 10px 16px;
+            color: #60a5fa; text-decoration: none;
+        }
+        nav .dropdown-content a:hover {
+            background: #0f172a; color: #93c5fd;
+        }
+
         /* ── Footer ── */
         footer {
             background: #0f172a; color: #94a3b8;
-            text-align: center; padding: 12px;
-            font-size: 11px; margin-top: auto;
+            text-align: center; padding: 16px;
+            font-size: 12px; margin-top: auto;
+            border-top: 1px solid #1e293b;
+        }
+        footer strong {
+            color: #60a5fa; font-weight: 600;
         }
         .ad-footer {
             max-width: 728px; height: 90px;
-            background: #1e293b; margin: 0 auto 10px;
+            background: #1e293b; margin: 0 auto 12px;
             display: flex; align-items: center;
             justify-content: center; font-size: 11px; color: #64748b;
             border: 1px dashed #334155;
         }
-        footer a { color: #60a5fa; text-decoration: none; }
+        footer a {
+            color: #60a5fa; text-decoration: none;
+            transition: color .2s;
+        }
+        footer a:hover {
+            color: #93c5fd; text-decoration: underline;
+        }
 
         @media (max-width: 1024px) { .ad-col { display: none; } }
-        @media (max-width: 600px)  { .grid-2 { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            nav ul { flex-direction: column; }
+            nav li { margin: 8px 0; }
+            footer { font-size: 11px; padding: 12px; }
+        }
     </style>
 </head>
 <body>
+
+<!-- Navigation Menu -->
+<nav>
+    <ul>
+        <li><a href="../">🏠 ہوم</a></li>
+        <li class="dropdown">
+            <a href="#">🌐 دوسری سائٹیں ▼</a>
+            <div class="dropdown-content">
+                <a href="https://noorgee.com" target="_blank">noorgee.com</a>
+                <a href="https://it.noorgee.com" target="_blank">it.noorgee.com</a>
+                <a href="https://blog.noorgee.com" target="_blank">blog.noorgee.com</a>
+                <a href="https://noorgee.pk" target="_blank">noorgee.pk</a>
+                <a href="https://noorgee.pk/Web" target="_blank">noorgee.pk/Web</a>
+            </div>
+        </li>
+        <li><a href="../help.php">❓ مدد</a></li>
+        <li><a href="../policy.php">📋 پالیسی</a></li>
+        <li><a href="../contact.php">📧 رابطہ</a></li>
+        <li><a href="../message.php">💬 پیغام</a></li>
+    </ul>
+</nav>
 
 <div class="dashboard-wrap">
     <div class="ad-col">AdSense<br>160×600</div>
@@ -407,6 +502,12 @@ $last_update = date('Y-m-d H:i:s');
 
             <div class="loader" id="loader">اے آئی سوچ رہا ہے، انتظار کریں...</div>
             <div class="output-box" id="responseViewport">اے آئی کا جواب یہاں ظاہر ہوگا۔</div>
+            <div class="output-actions" id="outputActions" style="display:none;">
+                <button class="btn-action" onclick="copyToClipboard()" title="نقل کریں">📋 کاپی کریں</button>
+                <button class="btn-action" onclick="downloadAsText()" title="ٹیکسٹ ڈاؤن لوڈ کریں">📄 ٹیکسٹ</button>
+                <button class="btn-action" onclick="downloadAsImage()" title="تصویر کے طور پر ڈاؤن لوڈ کریں">🖼️ تصویر</button>
+                <button class="btn-action" onclick="downloadAsJSON()" title="JSON ڈاؤن لوڈ کریں">📊 JSON</button>
+            </div>
         </div>
     </div>
 
@@ -415,9 +516,13 @@ $last_update = date('Y-m-d H:i:s');
 
 <footer>
     <div class="ad-footer">AdSense Leaderboard 728×90</div>
-    <div>© 2026 Online Tools NG &nbsp;|&nbsp;
+    <div>
+        © 2026 <strong>NoorGee Enterprise</strong> &nbsp;|&nbsp;
         Last Update: <?php echo $last_update; ?> PST &nbsp;|&nbsp;
-        <a href="../deploy.php">deploy.php</a>
+        🔒 Secured &nbsp;|&nbsp;
+        <a href="https://www.facebook.com/noorgee" target="_blank">📘 Facebook</a> &nbsp;|&nbsp;
+        <a href="../contact.php">📧 Contact</a> &nbsp;|&nbsp;
+        <a href="../policy.php">📋 Policy</a>
     </div>
 </footer>
 
@@ -505,13 +610,98 @@ async function processAIGeneration() {
             viewport.style.direction  = isUrdu ? 'rtl' : 'ltr';
             viewport.style.textAlign  = isUrdu ? 'right' : 'left';
             viewport.style.fontFamily = isUrdu ? "'Noto Nastaliq Urdu', serif" : "'Poppins', sans-serif";
+            document.getElementById('outputActions').style.display = 'flex';
         } else {
             viewport.textContent = "سسٹم ایرر: " + (data.message || "نامعلوم خرابی");
+            document.getElementById('outputActions').style.display = 'none';
         }
     } catch (err) {
         loader.style.display = 'none';
         viewport.textContent = "سرور سے رابطہ ٹوٹ گیا — دوبارہ کوشش کریں۔";
     }
+}
+
+// ── Copy to Clipboard ──
+function copyToClipboard() {
+    const text = document.getElementById('responseViewport').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('✅ متن کاپی ہو گیا!');
+    }).catch(() => {
+        alert('❌ کاپی میں خرابی!');
+    });
+}
+
+// ── Download as Text ──
+function downloadAsText() {
+    const text = document.getElementById('responseViewport').textContent;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'output_' + new Date().getTime() + '.txt';
+    link.click();
+}
+
+// ── Download as Image ──
+function downloadAsImage() {
+    const element = document.getElementById('responseViewport');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = 800;
+    canvas.height = 600;
+    
+    // Background
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Border
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+    
+    // Text
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '14px Poppins';
+    ctx.textAlign = 'left';
+    
+    const text = element.textContent;
+    const lines = text.split('\n');
+    let y = 40;
+    
+    lines.forEach(line => {
+        if (y < canvas.height - 20) {
+            ctx.fillText(line.substring(0, 80), 30, y);
+            y += 20;
+        }
+    });
+    
+    canvas.toBlob(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'output_' + new Date().getTime() + '.png';
+        link.click();
+    });
+}
+
+// ── Download as JSON ──
+function downloadAsJSON() {
+    const text = document.getElementById('responseViewport').textContent;
+    const genre = document.getElementById('outputGenre').value;
+    const profile = document.getElementById('selectedProfileId');
+    const profileText = profile.options[profile.selectedIndex].text;
+    
+    const jsonData = {
+        timestamp: new Date().toISOString(),
+        genre: genre,
+        profile: profileText,
+        output: text
+    };
+    
+    const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'output_' + new Date().getTime() + '.json';
+    link.click();
 }
 
 // Initial load
