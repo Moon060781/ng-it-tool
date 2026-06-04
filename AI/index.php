@@ -1,8 +1,7 @@
 <?php
 /**
- * Project: AI Vault & Generator — Enhanced with Ratings & Usage Tracking
+ * Project: AI Vault & Generator — Enhanced with Smart Custom Inputs
  * Location: /AI/index.php
- * Features: Admin reordered form, API key list, rating system, popup menus
  */
 
 $status_msg    = "";
@@ -39,8 +38,21 @@ $table_name = (defined('AI_TABLE_PREFIX') ? AI_TABLE_PREFIX : 'ai_') . "vault_ke
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_key']) && isset($pdo_ai)) {
     $output_type   = trim(filter_input(INPUT_POST, 'output_type',   FILTER_DEFAULT));
     $key_name      = trim(filter_input(INPUT_POST, 'key_name',      FILTER_DEFAULT));
+    
+    // Custom Platform Logic
     $platform_name = trim(filter_input(INPUT_POST, 'platform_name', FILTER_DEFAULT));
+    $custom_plat   = trim(filter_input(INPUT_POST, 'custom_platform_name', FILTER_DEFAULT));
+    if ($platform_name === 'Custom' && !empty($custom_plat)) {
+        $platform_name = $custom_plat;
+    }
+
+    // Custom Model Logic
     $model_target  = trim(filter_input(INPUT_POST, 'model_target',  FILTER_DEFAULT));
+    $custom_mod    = trim(filter_input(INPUT_POST, 'custom_model_name', FILTER_DEFAULT));
+    if ($model_target === 'custom-model' && !empty($custom_mod)) {
+        $model_target = $custom_mod;
+    }
+
     $api_key       = trim(filter_input(INPUT_POST, 'api_key',       FILTER_DEFAULT));
     $custom_notes  = trim(filter_input(INPUT_POST, 'custom_notes',  FILTER_DEFAULT));
 
@@ -110,8 +122,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_edit_key']) &&
     $edit_id       = intval($_POST['edit_id']);
     $output_type   = trim(filter_input(INPUT_POST, 'edit_output_type',   FILTER_DEFAULT));
     $key_name      = trim(filter_input(INPUT_POST, 'edit_key_name',      FILTER_DEFAULT));
+    
+    // Custom Platform Logic (Edit)
     $platform_name = trim(filter_input(INPUT_POST, 'edit_platform_name', FILTER_DEFAULT));
+    $custom_plat   = trim(filter_input(INPUT_POST, 'edit_custom_platform_name', FILTER_DEFAULT));
+    if ($platform_name === 'Custom' && !empty($custom_plat)) {
+        $platform_name = $custom_plat;
+    }
+
+    // Custom Model Logic (Edit)
     $model_target  = trim(filter_input(INPUT_POST, 'edit_model_target',  FILTER_DEFAULT));
+    $custom_mod    = trim(filter_input(INPUT_POST, 'edit_custom_model_name', FILTER_DEFAULT));
+    if ($model_target === 'custom-model' && !empty($custom_mod)) {
+        $model_target = $custom_mod;
+    }
+
     $api_key       = trim(filter_input(INPUT_POST, 'edit_api_key',       FILTER_DEFAULT));
     $custom_notes  = trim(filter_input(INPUT_POST, 'edit_custom_notes',  FILTER_DEFAULT));
 
@@ -279,188 +304,96 @@ $last_update = date('Y-m-d H:i:s');
         .success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
         .error   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
-        /* ── Top Menu Buttons ── */
+        /* ── Top Menu ── */
         .top-menu {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-            justify-content: center;
+            display: flex; gap: 8px; margin-bottom: 16px;
+            flex-wrap: wrap; justify-content: center;
         }
         .menu-btn {
-            padding: 8px 14px;
-            background: #f1f5f9;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            color: #475569;
-            transition: all .2s;
+            padding: 8px 14px; background: #f1f5f9;
+            border: 1px solid #cbd5e1; border-radius: 6px;
+            cursor: pointer; font-size: 13px; font-weight: 600;
+            color: #475569; transition: all .2s;
             font-family: 'Noto Nastaliq Urdu', serif;
         }
-        .menu-btn:hover {
-            background: #e2e8f0;
-            border-color: #94a3b8;
-        }
+        .menu-btn:hover { background: #e2e8f0; border-color: #94a3b8; }
 
         /* ── Admin Vault ── */
         .admin-btn {
             position: absolute; top: 12px; left: 14px;
-            background: none; border: none;
-            font-size: 18px; cursor: pointer; color: #94a3b8;
+            background: none; border: none; font-size: 18px;
+            cursor: pointer; color: #94a3b8;
         }
         .admin-btn:hover { color: #475569; }
         #adminVault {
-            display: none;
-            background: #fffbeb; border: 1px solid #fcd34d;
+            display: none; background: #fffbeb; border: 1px solid #fcd34d;
             border-radius: 8px; padding: 16px; margin-bottom: 18px;
         }
         #adminVault h3 {
             margin: 0 0 12px; color: #b45309; font-size: 15px;
-            border-bottom: 1px solid #fde68a; padding-bottom: 8px;
-            border-top: none;
+            border-bottom: 1px solid #fde68a; padding-bottom: 8px; border-top: none;
             font-family: 'Noto Nastaliq Urdu', serif;
         }
 
         /* ── API Key List ── */
-        .api-list {
-            margin-top: 20px;
-            border-top: 2px solid #e2e8f0;
-            padding-top: 16px;
-        }
+        .api-list { margin-top: 20px; border-top: 2px solid #e2e8f0; padding-top: 16px; }
         .api-list h3 { margin-top: 0; }
         .key-card {
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            font-size: 13px;
+            background: #f8fafc; border: 1px solid #cbd5e1;
+            border-radius: 8px; padding: 12px; margin-bottom: 10px; font-size: 13px;
         }
         .key-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin-bottom: 8px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px; margin-bottom: 8px;
         }
-        .key-field {
-            display: flex;
-            flex-direction: column;
-        }
-        .key-field strong {
-            color: #0f172a;
-            font-size: 12px;
-            margin-bottom: 2px;
-        }
-        .key-field span {
-            color: #475569;
-            font-family: monospace;
-            word-break: break-all;
-        }
-        .key-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .stars {
-            color: #f59e0b;
-            font-size: 14px;
-            letter-spacing: 2px;
-        }
+        .key-field { display: flex; flex-direction: column; }
+        .key-field strong { color: #0f172a; font-size: 12px; margin-bottom: 2px; }
+        .key-field span { color: #475569; font-family: monospace; word-break: break-all; }
+        .key-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .stars { color: #f59e0b; font-size: 14px; letter-spacing: 2px; }
 
         /* ── Output Section ── */
         .output-box {
-            margin-top: 16px; padding: 14px;
-            background: #f8fafc; border: 1px solid #cbd5e1;
-            border-radius: 6px; min-height: 120px;
-            font-size: 15px; line-height: 1.8;
-            white-space: pre-wrap; color: #0f172a;
+            margin-top: 16px; padding: 14px; background: #f8fafc;
+            border: 1px solid #cbd5e1; border-radius: 6px; min-height: 120px;
+            font-size: 15px; line-height: 1.8; white-space: pre-wrap; color: #0f172a;
         }
         .loader {
-            text-align: center; color: #2563eb;
-            font-weight: 600; margin: 10px 0;
-            display: none; font-size: 14px;
+            text-align: center; color: #2563eb; font-weight: 600;
+            margin: 10px 0; display: none; font-size: 14px;
             font-family: 'Noto Nastaliq Urdu', serif;
         }
-
-        /* ── Output Actions ── */
-        .output-actions {
-            display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;
-        }
+        .output-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
 
         /* ── Modal ── */
         .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            animation: fadeIn .2s;
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); animation: fadeIn .2s;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .modal-content {
-            background: #fff;
-            margin: 5% auto;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            background: #fff; margin: 5% auto; padding: 20px;
+            border-radius: 10px; max-width: 500px; max-height: 80vh;
+            overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
         .modal-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;
         }
-        .modal-head h2 {
-            border: none;
-            margin: 0;
-            font-size: 18px;
-            color: #0f172a;
-        }
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #94a3b8;
-        }
+        .modal-head h2 { border: none; margin: 0; font-size: 18px; color: #0f172a; }
+        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; }
         .close-btn:hover { color: #1e293b; }
-
-        /* ── Rating Form ── */
-        .star-rating {
-            display: flex;
-            gap: 8px;
-            font-size: 24px;
-            margin: 12px 0;
-        }
-        .star {
-            cursor: pointer;
-            color: #cbd5e1;
-            transition: color .2s;
-        }
-        .star:hover, .star.active {
-            color: #f59e0b;
-        }
 
         /* ── Footer ── */
         footer {
-            background: #0f172a; color: #94a3b8;
-            text-align: center; padding: 12px;
-            font-size: 11px; margin-top: auto;
+            background: #0f172a; color: #94a3b8; text-align: center;
+            padding: 12px; font-size: 11px; margin-top: auto;
         }
         .ad-footer {
-            max-width: 728px; height: 90px;
-            background: #1e293b; margin: 0 auto 10px;
-            display: flex; align-items: center;
-            justify-content: center; font-size: 11px; color: #64748b;
-            border: 1px dashed #334155;
+            max-width: 728px; height: 90px; background: #1e293b;
+            margin: 0 auto 10px; display: flex; align-items: center;
+            justify-content: center; font-size: 11px; color: #64748b; border: 1px dashed #334155;
         }
         footer a { color: #60a5fa; text-decoration: none; }
 
@@ -478,7 +411,6 @@ $last_update = date('Y-m-d H:i:s');
             <button class="admin-btn" onclick="unlockVault()" title="Admin">⚙️</button>
             <h2>✨ اسمارٹ اے آئی کنٹینٹ جنریٹر</h2>
 
-            <!-- ── Top Menu ── -->
             <div class="top-menu">
                 <button class="menu-btn" onclick="openModal('helpModal')">📖 مدد</button>
                 <button class="menu-btn" onclick="openModal('policyModal')">📋 پالیسی</button>
@@ -507,6 +439,7 @@ $last_update = date('Y-m-d H:i:s');
                             <input type="text" name="key_name" placeholder="Gemini اردو" required>
                         </div>
                     </div>
+                    
                     <div class="grid-2">
                         <div>
                             <label>پلیٹ فارم:</label>
@@ -520,26 +453,29 @@ $last_update = date('Y-m-d H:i:s');
                                 <option value="Hugging Face">Hugging Face</option>
                                 <option value="Custom">Custom Platform</option>
                             </select>
+                            <!-- Smart Input for Custom Platform -->
+                            <input type="text" id="customPlatformName" name="custom_platform_name" placeholder="پلیٹ فارم کا نام (جیسے Clod)" style="display:none; margin-top:8px;">
                         </div>
-                        <div id="customPlatformDiv" style="display:none;">
-                            <label>Custom نام:</label>
-                            <input type="text" id="customPlatformName" placeholder="Platform کا نام">
-                        </div>
-                    </div>
-                    <div class="grid-2">
                         <div>
                             <label>ٹارگٹ ماڈل:</label>
+                            <!-- Standard Dropdown -->
                             <select name="model_target" id="vaultModel" required></select>
+                            <!-- Smart Input for Custom Model -->
+                            <input type="text" id="customModelName" name="custom_model_name" placeholder="ماڈل آئی ڈی (جیسے trinity-mini)" style="display:none;">
                         </div>
+                    </div>
+
+                    <div class="grid-2">
                         <div>
                             <label>خفیہ API Key:</label>
                             <input type="password" name="api_key" placeholder="API Key" required>
                         </div>
+                        <div>
+                            <label>نوٹس (اختیاری):</label>
+                            <input type="text" name="custom_notes" placeholder="یاد دہانی">
+                        </div>
                     </div>
-                    <div style="margin-bottom:12px;">
-                        <label>نوٹس:</label>
-                        <input type="text" name="custom_notes" placeholder="یاد دہانی">
-                    </div>
+                    
                     <button type="submit" name="action_save_key" class="btn btn-orange">محفوظ کریں 💾</button>
                 </form>
             </div>
@@ -564,14 +500,13 @@ $last_update = date('Y-m-d H:i:s');
 
             <div style="margin-bottom:12px; margin-top:4px;">
                 <label>سوال یا پرامپٹ:</label>
-                <textarea id="promptInput" placeholder="مثال: زندگی کے بارے میں شعر..."></textarea>
+                <textarea id="promptInput" placeholder="مثال: ٹیکنالوجی کے فائدے اور نقصان..."></textarea>
             </div>
 
             <button class="btn btn-blue" onclick="processAIGeneration()">جواب حاصل کریں 🚀</button>
             <div class="loader" id="loader">اے آئی سوچ رہا ہے...</div>
             <div class="output-box" id="responseViewport">نتیجہ یہاں ظاہر ہوگا۔</div>
             
-            <!-- Result Output Actions -->
             <div class="output-actions">
                 <button class="btn btn-small" style="background:#475569; color:#fff;" onclick="copyOutput()">کاپي کریں 📋</button>
                 <button class="btn btn-small" style="background:#0f172a; color:#fff;" onclick="downloadOutput()">ڈاؤنلوڈ کریں 📥</button>
@@ -584,57 +519,32 @@ $last_update = date('Y-m-d H:i:s');
                     <?php foreach ($saved_profiles as $key): ?>
                         <div class="key-card">
                             <div class="key-row">
-                                <div class="key-field">
-                                    <strong>چابی کا نام</strong>
-                                    <span><?php echo htmlspecialchars($key['key_name']); ?></span>
-                                </div>
-                                <div class="key-field">
-                                    <strong>پلیٹ فارم</strong>
-                                    <span><?php echo htmlspecialchars($key['platform_name']); ?></span>
-                                </div>
-                                <div class="key-field">
-                                    <strong>ماڈل</strong>
-                                    <span><?php echo htmlspecialchars($key['model_target']); ?></span>
-                                </div>
-                                <div class="key-field">
-                                    <strong>آؤٹ پٹ</strong>
-                                    <span><?php echo htmlspecialchars($key['output_type']); ?></span>
-                                </div>
+                                <div class="key-field"><strong>چابی کا نام</strong><span><?php echo htmlspecialchars($key['key_name']); ?></span></div>
+                                <div class="key-field"><strong>پلیٹ فارم</strong><span><?php echo htmlspecialchars($key['platform_name']); ?></span></div>
+                                <div class="key-field"><strong>ماڈل</strong><span><?php echo htmlspecialchars($key['model_target']); ?></span></div>
+                                <div class="key-field"><strong>آؤٹ پٹ</strong><span><?php echo htmlspecialchars($key['output_type']); ?></span></div>
                             </div>
                             <div class="key-row">
-                                <div class="key-field">
-                                    <strong>API Key</strong>
+                                <div class="key-field"><strong>API Key</strong>
                                     <span><?php
                                         $k = $key['api_key'];
-                                        $len = strlen($k);
                                         $masked = substr($k, 0, 4) . "•••" . substr($k, -4);
                                         echo htmlspecialchars($masked);
                                     ?></span>
                                 </div>
-                                <div class="key-field">
-                                    <strong>نوٹس</strong>
-                                    <span><?php echo htmlspecialchars($key['custom_notes'] ?: '-'); ?></span>
-                                </div>
-                                <div class="key-field">
-                                    <strong>استعمال</strong>
-                                    <span><?php echo intval($key['usage_count']); ?> مرتبہ</span>
-                                </div>
-                                <div class="key-field">
-                                    <strong>ریٹنگ</strong>
+                                <div class="key-field"><strong>نوٹس</strong><span><?php echo htmlspecialchars($key['custom_notes'] ?: '-'); ?></span></div>
+                                <div class="key-field"><strong>استعمال</strong><span><?php echo intval($key['usage_count']); ?> مرتبہ</span></div>
+                                <div class="key-field"><strong>ریٹنگ</strong>
                                     <span class="stars" style="cursor:pointer;" onclick="viewComments(<?php echo intval($key['id']); ?>)" title="تبصرے دیکھیں"><?php
                                         $rating = floatval($key['rating_score']);
                                         $stars = round($rating);
-                                        for ($i = 0; $i < 5; $i++) {
-                                            echo ($i < $stars) ? '★' : '☆';
-                                        }
+                                        for ($i = 0; $i < 5; $i++) echo ($i < $stars) ? '★' : '☆';
                                         echo " (" . number_format($rating, 1) . ")";
                                     ?></span>
                                 </div>
                             </div>
                             <div class="key-actions">
-                                <button class="btn btn-small" onclick="openRatingModal(<?php echo intval($key['id']); ?>, '<?php echo htmlspecialchars(addslashes($key['key_name'])); ?>')">⭐ ریٹنگ دیں</button>
-                                <button class="btn btn-small" onclick="viewComments(<?php echo intval($key['id']); ?>)">💬 تبصرے</button>
-                                <button class="btn btn-small btn-orange" style="margin-top:0;" onclick="editKey(<?php echo htmlspecialchars(json_encode($key)); ?>)">✏️ ایڈٹ</button>
+                                <button class="btn btn-small btn-orange" onclick="editKey(<?php echo htmlspecialchars(json_encode($key)); ?>)">✏️ ایڈٹ</button>
                                 <button class="btn btn-small" style="background:#dc2626; color:#fff;" onclick="deleteKey(<?php echo intval($key['id']); ?>)">🗑️ حذف</button>
                             </div>
                         </div>
@@ -649,127 +559,6 @@ $last_update = date('Y-m-d H:i:s');
     <div class="ad-col">AdSense<br>160×600</div>
 </div>
 
-<!-- ══ MODALS ══ -->
-
-<!-- Help Modal -->
-<div id="helpModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-head">
-            <h2>📖 مدد</h2>
-            <button class="close-btn" onclick="closeModal('helpModal')">&times;</button>
-        </div>
-        <p style="line-height: 1.8; font-family: 'Noto Nastaliq Urdu', serif;">
-            <strong>کیسے استعمال کریں:</strong><br>
-            1. آؤٹ پٹ کی قسم منتخب کریں (مضمون، تصویر، یا کوڈ)<br>
-            2. اپنے لیے مناسب AI انجن منتخب کریں<br>
-            3. اپنا سوال یا پرامپٹ لکھیں<br>
-            4. "جواب حاصل کریں" بٹن دبائیں<br>
-            5. نتیجہ حاصل کریں<br><br>
-            <strong>ریٹنگ دینا:</strong> ہر API key کو استعمال کے بعد ریٹنگ دے سکتے ہیں تاکہ دوسرے صارفین کو بہتر engines معلوم ہوں۔
-        </p>
-    </div>
-</div>
-
-<!-- Policy Modal -->
-<div id="policyModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-head">
-            <h2>📋 پالیسی</h2>
-            <button class="close-btn" onclick="closeModal('policyModal')">&times;</button>
-        </div>
-        <p style="line-height: 1.8; font-family: 'Noto Nastaliq Urdu', serif;">
-            <strong>نوٹ کریں:</strong><br>
-            • یہ سروس مفت ہے<br>
-            • API keys محفوظ طریقے سے محفوظ کی جاتی ہیں<br>
-            • صارفین کی ذاتی معلومات محفوظ رہتی ہے<br>
-            • ہم کسی کے ڈیٹا کو تیسری پارٹی کو نہیں دیتے<br>
-            • ہر استعمال کو لاگ کیا جاتا ہے (فقط شمار کے لیے)
-        </p>
-    </div>
-</div>
-
-<!-- Contact Modal -->
-<div id="contactModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-head">
-            <h2>📞 رابطہ</h2>
-            <button class="close-btn" onclick="closeModal('contactModal')">&times;</button>
-        </div>
-        <p style="line-height: 2; font-family: 'Noto Nastaliq Urdu', serif;">
-            <strong>ہم سے رابطہ کریں:</strong><br><br>
-            📧 ای میل: grapheart365@gmail.com<br>
-            🌐 ویب: it.noorgee.com<br>
-            💬 سوالات: support@noorgee.com
-        </p>
-    </div>
-</div>
-
-<!-- Message Modal -->
-<div id="messageModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-head">
-            <h2>💬 پیغام بھیجیں</h2>
-            <button class="close-btn" onclick="closeModal('messageModal')">&times;</button>
-        </div>
-        <form onsubmit="sendMessage(event)">
-            <div style="margin-bottom: 12px;">
-                <label>نام:</label>
-                <input type="text" id="msgName" placeholder="آپ کا نام" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
-            </div>
-            <div style="margin-bottom: 12px;">
-                <label>ای میل:</label>
-                <input type="email" id="msgEmail" placeholder="ای میل" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
-            </div>
-            <div style="margin-bottom: 12px;">
-                <label>پیغام:</label>
-                <textarea id="msgText" placeholder="اپنا پیغام لکھیں..." style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; min-height:100px;"></textarea>
-            </div>
-            <button type="submit" class="btn btn-blue">بھیجیں ✉️</button>
-        </form>
-    </div>
-</div>
-
-<!-- Rating Modal -->
-<div id="ratingModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-head">
-            <h2 id="ratingTitle">⭐ ریٹنگ دیں</h2>
-            <button class="close-btn" onclick="closeModal('ratingModal')">&times;</button>
-        </div>
-        <form onsubmit="submitRating(event)">
-            <div style="margin-bottom: 16px;">
-                <label>درجہ بندی (تاریں):</label>
-                <div class="star-rating" id="starRating">
-                    <span class="star" onclick="selectStar(1)">☆</span>
-                    <span class="star" onclick="selectStar(2)">☆</span>
-                    <span class="star" onclick="selectStar(3)">☆</span>
-                    <span class="star" onclick="selectStar(4)">☆</span>
-                    <span class="star" onclick="selectStar(5)">☆</span>
-                </div>
-            </div>
-            <div style="margin-bottom: 12px;">
-                <label>تبصرہ (اختیاری):</label>
-                <textarea id="ratingComment" placeholder="اپنا تبصرہ لکھیں..." style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; min-height:80px;"></textarea>
-            </div>
-            <input type="hidden" id="ratingKeyId" value="">
-            <button type="submit" class="btn btn-blue">ریٹنگ محفوظ کریں</button>
-        </form>
-    </div>
-</div>
-
-<!-- Comments View Modal -->
-<div id="commentsModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-head">
-            <h2>💬 تبصرے</h2>
-            <button class="close-btn" onclick="closeModal('commentsModal')">&times;</button>
-        </div>
-        <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
-            لوڈ ہو رہا ہے...
-        </div>
-    </div>
-</div>
-
 <!-- Edit Key Modal -->
 <div id="editKeyModal" class="modal">
     <div class="modal-content">
@@ -781,36 +570,47 @@ $last_update = date('Y-m-d H:i:s');
             <input type="hidden" name="action_edit_key" value="1">
             <input type="hidden" name="edit_id" id="edit_id" value="">
             
-            <div style="margin-bottom:12px;">
-                <label>آؤٹ پٹ کی قسم:</label>
-                <select name="edit_output_type" id="edit_output_type" required>
-                    <option value="text">مضمون / تشریح / اسکرپٹ</option>
-                    <option value="image">تصویر پرامپٹ</option>
-                    <option value="code">کوڈ / تکنیکی</option>
-                </select>
+            <div class="grid-2">
+                <div>
+                    <label>آؤٹ پٹ کی قسم:</label>
+                    <select name="edit_output_type" id="edit_output_type" required>
+                        <option value="text">مضمون / تشریح / اسکرپٹ</option>
+                        <option value="image">تصویر پرامپٹ</option>
+                        <option value="code">کوڈ / تکنیکی</option>
+                    </select>
+                </div>
+                <div>
+                    <label>چابی کا نام:</label>
+                    <input type="text" name="edit_key_name" id="edit_key_name" required>
+                </div>
             </div>
-            <div style="margin-bottom:12px;">
-                <label>چابی کا نام:</label>
-                <input type="text" name="edit_key_name" id="edit_key_name" required>
+            
+            <div class="grid-2">
+                <div>
+                    <label>پلیٹ فارم:</label>
+                    <select name="edit_platform_name" id="edit_platform_name" onchange="loadModelsForEdit()" required>
+                        <option value="Google Gemini">Google Gemini</option>
+                        <option value="Groq Cloud">Groq Cloud</option>
+                        <option value="OpenAI">OpenAI</option>
+                        <option value="OpenRouter">OpenRouter</option>
+                        <option value="Together AI">Together AI</option>
+                        <option value="Hugging Face">Hugging Face</option>
+                        <option value="Custom">Custom Platform</option>
+                    </select>
+                    <!-- Smart Input for Edit Custom Platform -->
+                    <input type="text" name="edit_custom_platform_name" id="edit_custom_platform_name" placeholder="مثال: Clod" style="display:none; margin-top:8px;">
+                </div>
+                <div>
+                    <label>ٹارگٹ ماڈل:</label>
+                    <!-- Standard Dropdown -->
+                    <select name="edit_model_target" id="edit_model_target" required></select>
+                    <!-- Smart Input for Edit Custom Model -->
+                    <input type="text" name="edit_custom_model_name" id="edit_custom_model_name" placeholder="مثال: trinity-mini" style="display:none;">
+                </div>
             </div>
+
             <div style="margin-bottom:12px;">
-                <label>پلیٹ فارم:</label>
-                <select name="edit_platform_name" id="edit_platform_name" onchange="loadModelsForEdit()" required>
-                    <option value="Google Gemini">Google Gemini</option>
-                    <option value="Groq Cloud">Groq Cloud</option>
-                    <option value="OpenAI">OpenAI</option>
-                    <option value="OpenRouter">OpenRouter</option>
-                    <option value="Together AI">Together AI</option>
-                    <option value="Hugging Face">Hugging Face</option>
-                    <option value="Custom">Custom Platform</option>
-                </select>
-            </div>
-            <div style="margin-bottom:12px;">
-                <label>ٹارگٹ ماڈل:</label>
-                <select name="edit_model_target" id="edit_model_target" required></select>
-            </div>
-            <div style="margin-bottom:12px;">
-                <label>نئی خفیہ API Key (تبدیل کرنے کے لیے لکھیں ورنہ خالی چھوڑ دیں):</label>
+                <label>نئی خفیہ API Key:</label>
                 <input type="password" name="edit_api_key" id="edit_api_key" placeholder="خالی چھوڑنے سے پرانی Key برقرار رہے گی">
             </div>
             <div style="margin-bottom:16px;">
@@ -824,13 +624,7 @@ $last_update = date('Y-m-d H:i:s');
 
 <footer>
     <div class="ad-footer">AdSense 728×90</div>
-    <div style="margin-bottom: 10px; display:flex; justify-content:center; gap:20px; font-family: 'Noto Nastaliq Urdu', serif;">
-        <a href="#" onclick="openModal('policyModal'); return false;">📋 پالیسی</a>
-        <a href="#" onclick="openModal('helpModal'); return false;">📖 مدد</a>
-        <a href="#" onclick="openModal('contactModal'); return false;">📞 رابطہ</a>
-    </div>
-    <div>© 2026 Online Tools NG &nbsp;|&nbsp;
-        Last Update: <?php echo $last_update; ?> PST &nbsp;|&nbsp;
+    <div>© 2026 Online Tools NG &nbsp;|&nbsp; Last Update: <?php echo $last_update; ?> PST &nbsp;|&nbsp; 
         <a href="#" onclick="unlockVault(); return false;" title="Admin Vault" style="font-size:16px; text-decoration:none;">🔒</a>
     </div>
 </footer>
@@ -842,31 +636,87 @@ const MODELS = {
     "OpenAI":        ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"],
     "OpenRouter":    ["google/gemini-2.0-flash-exp:free", "meta-llama/llama-3.1-8b-instruct:free"],
     "Together AI":   ["stabilityai/stable-diffusion-xl-base-1.0"],
-    "Hugging Face":  ["runwayml/stable-diffusion-v1-5"],
-    "Custom":        ["custom-model"]
+    "Hugging Face":  ["runwayml/stable-diffusion-v1-5"]
 };
 
-let selectedRating = 0;
-
+// ── Smart Dynamic Inputs Logic ──
 function loadModels() {
     const platform = document.getElementById('vaultPlatform').value;
-    const customDiv = document.getElementById('customPlatformDiv');
     const sel = document.getElementById('vaultModel');
+    const platInput = document.getElementById('customPlatformName');
+    const modInput = document.getElementById('customModelName');
     
     if (platform === 'Custom') {
-        customDiv.style.display = 'block';
+        // Hide standard Dropdown, show Text Input
+        sel.style.display = 'none';
+        sel.removeAttribute('required');
+        sel.innerHTML = '<option value="custom-model" selected>Custom</option>';
+        
+        platInput.style.display = 'block';
+        platInput.setAttribute('required', 'required');
+        
+        modInput.style.display = 'block';
+        modInput.setAttribute('required', 'required');
     } else {
-        customDiv.style.display = 'none';
+        // Show standard Dropdown, hide Text Input
+        sel.style.display = 'block';
+        sel.setAttribute('required', 'required');
+        
+        platInput.style.display = 'none';
+        platInput.removeAttribute('required');
+        platInput.value = '';
+        
+        modInput.style.display = 'none';
+        modInput.removeAttribute('required');
+        modInput.value = '';
+        
+        sel.innerHTML = '';
+        (MODELS[platform] || []).forEach(m => {
+            const o = document.createElement('option');
+            o.value = o.textContent = m;
+            sel.appendChild(o);
+        });
     }
-    
-    sel.innerHTML = '';
-    (MODELS[platform] || []).forEach(m => {
-        const o = document.createElement('option');
-        o.value = o.textContent = m;
-        sel.appendChild(o);
-    });
 }
 
+function loadModelsForEdit() {
+    const platform = document.getElementById('edit_platform_name').value;
+    const sel = document.getElementById('edit_model_target');
+    const platInput = document.getElementById('edit_custom_platform_name');
+    const modInput = document.getElementById('edit_custom_model_name');
+    
+    if (platform === 'Custom') {
+        sel.style.display = 'none';
+        sel.removeAttribute('required');
+        sel.innerHTML = '<option value="custom-model" selected>Custom</option>';
+        
+        platInput.style.display = 'block';
+        platInput.setAttribute('required', 'required');
+        
+        modInput.style.display = 'block';
+        modInput.setAttribute('required', 'required');
+    } else {
+        sel.style.display = 'block';
+        sel.setAttribute('required', 'required');
+        
+        platInput.style.display = 'none';
+        platInput.removeAttribute('required');
+        platInput.value = '';
+        
+        modInput.style.display = 'none';
+        modInput.removeAttribute('required');
+        modInput.value = '';
+        
+        sel.innerHTML = '';
+        (MODELS[platform] || []).forEach(m => {
+            const o = document.createElement('option');
+            o.value = o.textContent = m;
+            sel.appendChild(o);
+        });
+    }
+}
+
+// Update Engine list logic
 function updateEngineList() {
     const outputType = document.getElementById('userOutputType').value;
     const select = document.getElementById('selectedProfileId');
@@ -892,84 +742,7 @@ function updateEngineList() {
         select.appendChild(o);
     });
 }
-
 document.getElementById('userOutputType').addEventListener('change', updateEngineList);
-
-function unlockVault() {
-    const pin = prompt("PIN:");
-    if (pin === "7860") {
-        document.getElementById('adminVault').style.display = 'block';
-    } else if (pin !== null) {
-        alert("غلط!");
-    }
-}
-
-function openModal(id) {
-    document.getElementById(id).style.display = 'block';
-}
-
-function closeModal(id) {
-    document.getElementById(id).style.display = 'none';
-}
-
-function openRatingModal(keyId, keyName) {
-    document.getElementById('ratingKeyId').value = keyId;
-    document.getElementById('ratingTitle').textContent = '⭐ ریٹنگ: ' + keyName;
-    selectedRating = 0;
-    document.querySelectorAll('#starRating .star').forEach(s => s.classList.remove('active'));
-    document.getElementById('ratingComment').value = '';
-    openModal('ratingModal');
-}
-
-function selectStar(num) {
-    selectedRating = num;
-    document.querySelectorAll('#starRating .star').forEach((s, i) => {
-        s.classList.toggle('active', i < num);
-    });
-}
-
-async function viewComments(keyId) {
-    const list = document.getElementById('commentsList');
-    list.innerHTML = 'لوڈ ہو رہا ہے...';
-    openModal('commentsModal');
-    
-    try {
-        const res = await fetch('index.php?fetch_comments=' + keyId);
-        const comments = await res.json();
-        
-        if (comments.length === 0) {
-            list.innerHTML = '<p style="text-align:center; color:#64748b; margin-top:20px;">کوئی تبصرہ موجود نہیں۔</p>';
-            return;
-        }
-        
-        list.innerHTML = comments.map(c => `
-            <div style="border-bottom:1px solid #e2e8f0; padding:12px 0;">
-                <div style="color:#f59e0b; font-size:14px; letter-spacing:2px;">
-                    ${'★'.repeat(c.rating_stars)}${'☆'.repeat(5 - c.rating_stars)}
-                </div>
-                <p style="margin:8px 0; font-size:14px; font-family: 'Noto Nastaliq Urdu', serif;">
-                    ${c.comment ? c.comment : '<em style="color:#94a3b8;">بغیر تبصرہ</em>'}
-                </p>
-            </div>
-        `).join('');
-    } catch(e) {
-        list.innerHTML = '<p style="color:red; text-align:center;">تبصرے لانے میں خرابی پیش آئی۔</p>';
-    }
-}
-
-function loadModelsForEdit() {
-    const platform = document.getElementById('edit_platform_name').value;
-    const sel = document.getElementById('edit_model_target');
-    sel.innerHTML = '';
-    (MODELS[platform] || []).forEach(m => {
-        const o = document.createElement('option');
-        o.value = o.textContent = m;
-        sel.appendChild(o);
-    });
-    if (platform === 'Custom') {
-        sel.innerHTML = '<option value="custom-model">custom-model</option>';
-    }
-}
 
 function editKey(keyData) {
     const pin = prompt("ایڈٹ کرنے کے لیے ایڈمن PIN درج کریں:");
@@ -977,21 +750,38 @@ function editKey(keyData) {
         document.getElementById('edit_id').value = keyData.id;
         document.getElementById('edit_output_type').value = keyData.output_type;
         document.getElementById('edit_key_name').value = keyData.key_name;
-        document.getElementById('edit_platform_name').value = keyData.platform_name;
         
-        loadModelsForEdit();
-        setTimeout(() => {
-            document.getElementById('edit_model_target').value = keyData.model_target;
-        }, 50);
+        if (MODELS[keyData.platform_name]) {
+            document.getElementById('edit_platform_name').value = keyData.platform_name;
+            loadModelsForEdit();
+            setTimeout(() => {
+                document.getElementById('edit_model_target').value = keyData.model_target;
+            }, 50);
+        } else {
+            document.getElementById('edit_platform_name').value = 'Custom';
+            loadModelsForEdit();
+            document.getElementById('edit_custom_platform_name').value = keyData.platform_name;
+            document.getElementById('edit_custom_model_name').value = keyData.model_target;
+        }
         
         document.getElementById('edit_custom_notes').value = keyData.custom_notes;
-        document.getElementById('edit_api_key').value = ''; // empty field for security
+        document.getElementById('edit_api_key').value = ''; 
         
         openModal('editKeyModal');
     } else if (pin !== null) {
         alert("غلط PIN!");
     }
 }
+
+function unlockVault() {
+    const pin = prompt("PIN:");
+    if (pin === "7860") {
+        document.getElementById('adminVault').style.display = 'block';
+    }
+}
+
+function openModal(id) { document.getElementById(id).style.display = 'block'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
 function deleteKey(id) {
     const pin = prompt("حذف کرنے کے لیے ایڈمن PIN درج کریں:");
@@ -1003,111 +793,9 @@ function deleteKey(id) {
             document.body.appendChild(form);
             form.submit();
         }
-    } else if (pin !== null) {
-        alert("غلط PIN!");
     }
 }
 
-function copyOutput() {
-    const text = document.getElementById('responseViewport').innerText;
-    if(text && text !== "نتیجہ یہاں ظاہر ہوگا۔") {
-        navigator.clipboard.writeText(text).then(() => {
-            alert("✅ ٹیکسٹ کامیابی سے کاپی ہو گیا!");
-        });
-    } else {
-        alert("کاپی کرنے کے لیے کوئی مواد موجود نہیں۔");
-    }
-}
-
-function downloadOutput() {
-    const text = document.getElementById('responseViewport').innerText;
-    if(text && text !== "نتیجہ یہاں ظاہر ہوگا۔") {
-        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'AI_Generated_Content_' + new Date().getTime() + '.txt';
-        link.click();
-    } else {
-        alert("ڈاؤنلوڈ کرنے کے لیے کوئی مواد موجود نہیں۔");
-    }
-}
-
-async function submitRating(e) {
-    e.preventDefault();
-    const keyId = document.getElementById('ratingKeyId').value;
-    const comment = document.getElementById('ratingComment').value;
-    
-    if (selectedRating === 0) {
-        alert('براہ کرم تارے منتخب کریں!');
-        return;
-    }
-    
-    const res = await fetch('index.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `action_save_rating=1&key_id=${keyId}&rating=${selectedRating}&comment=${encodeURIComponent(comment)}`
-    });
-    
-    if (res.ok) {
-        alert('ریٹنگ محفوظ ہو گئی!');
-        closeModal('ratingModal');
-        location.reload();
-    }
-}
-
-function viewComments(keyId) {
-    alert('تبصروں کی فعلیت جلد آئے گی');
-}
-
-function sendMessage(e) {
-    e.preventDefault();
-    alert('پیغام بھیجنے کی فعلیت جلد آئے گی');
-}
-
-async function processAIGeneration() {
-    const profileId = document.getElementById('selectedProfileId').value;
-    const genre = document.getElementById('userOutputType').value;
-    const prompt = document.getElementById('promptInput').value.trim();
-    const loader = document.getElementById('loader');
-    const viewport = document.getElementById('responseViewport');
-
-    if (!profileId) { alert('انجن منتخب کریں!'); return; }
-    if (!prompt) { alert('سوال لکھیں!'); return; }
-
-    loader.style.display = 'block';
-    viewport.textContent = '';
-
-    try {
-        const res = await fetch('ai_processor.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `profile_id=${encodeURIComponent(profileId)}&genre=${encodeURIComponent(genre)}&prompt=${encodeURIComponent(prompt)}`
-        });
-        const data = await res.json();
-        loader.style.display = 'none';
-
-        if (data.success) {
-            viewport.textContent = data.result;
-            const isUrdu = /[\u0600-\u06FF]/.test(data.result);
-            viewport.style.direction = isUrdu ? 'rtl' : 'ltr';
-            viewport.style.textAlign = isUrdu ? 'right' : 'left';
-            viewport.style.fontFamily = isUrdu ? "'Noto Nastaliq Urdu', serif" : "'Poppins', sans-serif";
-        } else {
-            viewport.textContent = "خرابی: " + (data.message || "نامعلوم");
-        }
-    } catch (err) {
-        loader.style.display = 'none';
-        viewport.textContent = "سرور سے رابطہ ٹوٹ گیا!";
-    }
-}
-
-window.onclick = function(e) {
-    if (e.target.classList.contains('modal')) {
-        e.target.style.display = 'none';
-    }
-}
-
-// Initialize
 loadModels();
 updateEngineList();
 </script>
