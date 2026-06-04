@@ -94,9 +94,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_rating'])
     }
 }
 
+// ── POST: Delete Key ──────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_delete_key']) && isset($pdo_ai)) {
+    $del_id = intval($_POST['delete_id']);
+    try {
+        $pdo_ai->prepare("DELETE FROM {$table_name} WHERE id = ?")->execute([$del_id]);
+        $pdo_ai->prepare("DELETE FROM ai_ratings WHERE key_id = ?")->execute([$del_id]);
+        header("Location: index.php?msg=deleted");
+        exit();
+    } catch(PDOException $e) {}
+}
+
+// ── POST: Edit Key ────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_edit_key']) && isset($pdo_ai)) {
+    $edit_id       = intval($_POST['edit_id']);
+    $output_type   = trim(filter_input(INPUT_POST, 'edit_output_type',   FILTER_DEFAULT));
+    $key_name      = trim(filter_input(INPUT_POST, 'edit_key_name',      FILTER_DEFAULT));
+    $platform_name = trim(filter_input(INPUT_POST, 'edit_platform_name', FILTER_DEFAULT));
+    $model_target  = trim(filter_input(INPUT_POST, 'edit_model_target',  FILTER_DEFAULT));
+    $api_key       = trim(filter_input(INPUT_POST, 'edit_api_key',       FILTER_DEFAULT));
+    $custom_notes  = trim(filter_input(INPUT_POST, 'edit_custom_notes',  FILTER_DEFAULT));
+
+    try {
+        $sql = "UPDATE {$table_name} SET output_type=?, key_name=?, platform_name=?, model_target=?, custom_notes=?";
+        $params = [$output_type, $key_name, $platform_name, $model_target, $custom_notes];
+        if (!empty($api_key)) {
+            $sql .= ", api_key=?";
+            $params[] = $api_key;
+        }
+        $sql .= " WHERE id=?";
+        $params[] = $edit_id;
+        
+        $stmt = $pdo_ai->prepare($sql);
+        $stmt->execute($params);
+        header("Location: index.php?msg=edited");
+        exit();
+    } catch(PDOException $e) {}
+}
+
+// ── GET: Fetch Comments ───────────────────────────
+if (isset($_GET['fetch_comments']) && isset($pdo_ai)) {
+    $kid = intval($_GET['fetch_comments']);
+    try {
+        $stmt = $pdo_ai->prepare("SELECT rating_stars, comment, user_ip FROM ai_ratings WHERE key_id = ? ORDER BY id DESC");
+        $stmt->execute([$kid]);
+        echo json_encode($stmt->fetchAll());
+    } catch(PDOException $e) {
+        echo json_encode([]);
+    }
+    exit();
+}
+
 // ── GET: Success message ──────────────────────────
 if (isset($_GET['saved']) && $_GET['saved'] == 1) {
     $status_msg = "<div class='alert success'>API Key کامیابی سے محفوظ ہو گئی!</div>";
+} elseif (isset($_GET['msg'])) {
+    if ($_GET['msg'] === 'deleted') $status_msg = "<div class='alert success'>API Key کامیابی سے حذف ہو گئی!</div>";
+    if ($_GET['msg'] === 'edited') $status_msg = "<div class='alert success'>API Key کی معلومات اپڈیٹ ہو گئیں!</div>";
 }
 
 // ── Load Keys ────────────────────────────────────
@@ -330,6 +384,11 @@ $last_update = date('Y-m-d H:i:s');
             font-family: 'Noto Nastaliq Urdu', serif;
         }
 
+        /* ── Output Actions ── */
+        .output-actions {
+            display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;
+        }
+
         /* ── Modal ── */
         .modal {
             display: none;
@@ -511,6 +570,12 @@ $last_update = date('Y-m-d H:i:s');
             <button class="btn btn-blue" onclick="processAIGeneration()">جواب حاصل کریں 🚀</button>
             <div class="loader" id="loader">اے آئی سوچ رہا ہے...</div>
             <div class="output-box" id="responseViewport">نتیجہ یہاں ظاہر ہوگا۔</div>
+            
+            <!-- Result Output Actions -->
+            <div class="output-actions">
+                <button class="btn btn-small" style="background:#475569; color:#fff;" onclick="copyOutput()">کاپي کریں 📋</button>
+                <button class="btn btn-small" style="background:#0f172a; color:#fff;" onclick="downloadOutput()">ڈاؤنلوڈ کریں 📥</button>
+            </div>
 
             <!-- ── API Key List ── -->
             <div class="api-list">
@@ -547,12 +612,16 @@ $last_update = date('Y-m-d H:i:s');
                                     ?></span>
                                 </div>
                                 <div class="key-field">
+                                    <strong>نوٹس</strong>
+                                    <span><?php echo htmlspecialchars($key['custom_notes'] ?: '-'); ?></span>
+                                </div>
+                                <div class="key-field">
                                     <strong>استعمال</strong>
                                     <span><?php echo intval($key['usage_count']); ?> مرتبہ</span>
                                 </div>
                                 <div class="key-field">
                                     <strong>ریٹنگ</strong>
-                                    <span class="stars"><?php
+                                    <span class="stars" style="cursor:pointer;" onclick="viewComments(<?php echo intval($key['id']); ?>)" title="تبصرے دیکھیں"><?php
                                         $rating = floatval($key['rating_score']);
                                         $stars = round($rating);
                                         for ($i = 0; $i < 5; $i++) {
@@ -563,8 +632,10 @@ $last_update = date('Y-m-d H:i:s');
                                 </div>
                             </div>
                             <div class="key-actions">
-                                <button class="btn btn-small" onclick="openRatingModal(<?php echo intval($key['id']); ?>, '<?php echo htmlspecialchars($key['key_name']); ?>')">⭐ ریٹنگ دیں</button>
+                                <button class="btn btn-small" onclick="openRatingModal(<?php echo intval($key['id']); ?>, '<?php echo htmlspecialchars(addslashes($key['key_name'])); ?>')">⭐ ریٹنگ دیں</button>
                                 <button class="btn btn-small" onclick="viewComments(<?php echo intval($key['id']); ?>)">💬 تبصرے</button>
+                                <button class="btn btn-small btn-orange" style="margin-top:0;" onclick="editKey(<?php echo htmlspecialchars(json_encode($key)); ?>)">✏️ ایڈٹ</button>
+                                <button class="btn btn-small" style="background:#dc2626; color:#fff;" onclick="deleteKey(<?php echo intval($key['id']); ?>)">🗑️ حذف</button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -693,15 +764,74 @@ $last_update = date('Y-m-d H:i:s');
             <h2>💬 تبصرے</h2>
             <button class="close-btn" onclick="closeModal('commentsModal')">&times;</button>
         </div>
-        <div id="commentsList" style="max-height: 300px; overflow-y: auto;"></div>
+        <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
+            لوڈ ہو رہا ہے...
+        </div>
+    </div>
+</div>
+
+<!-- Edit Key Modal -->
+<div id="editKeyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-head">
+            <h2>✏️ API Key ایڈٹ کریں</h2>
+            <button class="close-btn" onclick="closeModal('editKeyModal')">&times;</button>
+        </div>
+        <form method="POST" action="index.php">
+            <input type="hidden" name="action_edit_key" value="1">
+            <input type="hidden" name="edit_id" id="edit_id" value="">
+            
+            <div style="margin-bottom:12px;">
+                <label>آؤٹ پٹ کی قسم:</label>
+                <select name="edit_output_type" id="edit_output_type" required>
+                    <option value="text">مضمون / تشریح / اسکرپٹ</option>
+                    <option value="image">تصویر پرامپٹ</option>
+                    <option value="code">کوڈ / تکنیکی</option>
+                </select>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label>چابی کا نام:</label>
+                <input type="text" name="edit_key_name" id="edit_key_name" required>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label>پلیٹ فارم:</label>
+                <select name="edit_platform_name" id="edit_platform_name" onchange="loadModelsForEdit()" required>
+                    <option value="Google Gemini">Google Gemini</option>
+                    <option value="Groq Cloud">Groq Cloud</option>
+                    <option value="OpenAI">OpenAI</option>
+                    <option value="OpenRouter">OpenRouter</option>
+                    <option value="Together AI">Together AI</option>
+                    <option value="Hugging Face">Hugging Face</option>
+                    <option value="Custom">Custom Platform</option>
+                </select>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label>ٹارگٹ ماڈل:</label>
+                <select name="edit_model_target" id="edit_model_target" required></select>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label>نئی خفیہ API Key (تبدیل کرنے کے لیے لکھیں ورنہ خالی چھوڑ دیں):</label>
+                <input type="password" name="edit_api_key" id="edit_api_key" placeholder="خالی چھوڑنے سے پرانی Key برقرار رہے گی">
+            </div>
+            <div style="margin-bottom:16px;">
+                <label>نوٹس:</label>
+                <input type="text" name="edit_custom_notes" id="edit_custom_notes">
+            </div>
+            <button type="submit" class="btn btn-blue">تبدیلیاں محفوظ کریں</button>
+        </form>
     </div>
 </div>
 
 <footer>
     <div class="ad-footer">AdSense 728×90</div>
+    <div style="margin-bottom: 10px; display:flex; justify-content:center; gap:20px; font-family: 'Noto Nastaliq Urdu', serif;">
+        <a href="#" onclick="openModal('policyModal'); return false;">📋 پالیسی</a>
+        <a href="#" onclick="openModal('helpModal'); return false;">📖 مدد</a>
+        <a href="#" onclick="openModal('contactModal'); return false;">📞 رابطہ</a>
+    </div>
     <div>© 2026 Online Tools NG &nbsp;|&nbsp;
         Last Update: <?php echo $last_update; ?> PST &nbsp;|&nbsp;
-        <a href="../deploy.php">deploy.php</a>
+        <a href="#" onclick="unlockVault(); return false;" title="Admin Vault" style="font-size:16px; text-decoration:none;">🔒</a>
     </div>
 </footer>
 
@@ -796,6 +926,110 @@ function selectStar(num) {
     document.querySelectorAll('#starRating .star').forEach((s, i) => {
         s.classList.toggle('active', i < num);
     });
+}
+
+async function viewComments(keyId) {
+    const list = document.getElementById('commentsList');
+    list.innerHTML = 'لوڈ ہو رہا ہے...';
+    openModal('commentsModal');
+    
+    try {
+        const res = await fetch('index.php?fetch_comments=' + keyId);
+        const comments = await res.json();
+        
+        if (comments.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color:#64748b; margin-top:20px;">کوئی تبصرہ موجود نہیں۔</p>';
+            return;
+        }
+        
+        list.innerHTML = comments.map(c => `
+            <div style="border-bottom:1px solid #e2e8f0; padding:12px 0;">
+                <div style="color:#f59e0b; font-size:14px; letter-spacing:2px;">
+                    ${'★'.repeat(c.rating_stars)}${'☆'.repeat(5 - c.rating_stars)}
+                </div>
+                <p style="margin:8px 0; font-size:14px; font-family: 'Noto Nastaliq Urdu', serif;">
+                    ${c.comment ? c.comment : '<em style="color:#94a3b8;">بغیر تبصرہ</em>'}
+                </p>
+            </div>
+        `).join('');
+    } catch(e) {
+        list.innerHTML = '<p style="color:red; text-align:center;">تبصرے لانے میں خرابی پیش آئی۔</p>';
+    }
+}
+
+function loadModelsForEdit() {
+    const platform = document.getElementById('edit_platform_name').value;
+    const sel = document.getElementById('edit_model_target');
+    sel.innerHTML = '';
+    (MODELS[platform] || []).forEach(m => {
+        const o = document.createElement('option');
+        o.value = o.textContent = m;
+        sel.appendChild(o);
+    });
+    if (platform === 'Custom') {
+        sel.innerHTML = '<option value="custom-model">custom-model</option>';
+    }
+}
+
+function editKey(keyData) {
+    const pin = prompt("ایڈٹ کرنے کے لیے ایڈمن PIN درج کریں:");
+    if (pin === "7860") {
+        document.getElementById('edit_id').value = keyData.id;
+        document.getElementById('edit_output_type').value = keyData.output_type;
+        document.getElementById('edit_key_name').value = keyData.key_name;
+        document.getElementById('edit_platform_name').value = keyData.platform_name;
+        
+        loadModelsForEdit();
+        setTimeout(() => {
+            document.getElementById('edit_model_target').value = keyData.model_target;
+        }, 50);
+        
+        document.getElementById('edit_custom_notes').value = keyData.custom_notes;
+        document.getElementById('edit_api_key').value = ''; // empty field for security
+        
+        openModal('editKeyModal');
+    } else if (pin !== null) {
+        alert("غلط PIN!");
+    }
+}
+
+function deleteKey(id) {
+    const pin = prompt("حذف کرنے کے لیے ایڈمن PIN درج کریں:");
+    if (pin === "7860") {
+        if(confirm("کیا آپ واقعی یہ API Key حذف کرنا چاہتے ہیں؟")) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.innerHTML = `<input type="hidden" name="action_delete_key" value="1"><input type="hidden" name="delete_id" value="${id}">`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    } else if (pin !== null) {
+        alert("غلط PIN!");
+    }
+}
+
+function copyOutput() {
+    const text = document.getElementById('responseViewport').innerText;
+    if(text && text !== "نتیجہ یہاں ظاہر ہوگا۔") {
+        navigator.clipboard.writeText(text).then(() => {
+            alert("✅ ٹیکسٹ کامیابی سے کاپی ہو گیا!");
+        });
+    } else {
+        alert("کاپی کرنے کے لیے کوئی مواد موجود نہیں۔");
+    }
+}
+
+function downloadOutput() {
+    const text = document.getElementById('responseViewport').innerText;
+    if(text && text !== "نتیجہ یہاں ظاہر ہوگا۔") {
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'AI_Generated_Content_' + new Date().getTime() + '.txt';
+        link.click();
+    } else {
+        alert("ڈاؤنلوڈ کرنے کے لیے کوئی مواد موجود نہیں۔");
+    }
 }
 
 async function submitRating(e) {
