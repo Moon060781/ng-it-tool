@@ -586,6 +586,21 @@ $last_update = date('Y-m-d H:i:s');
             <button class="btn btn-blue" onclick="processAIGeneration()">جواب حاصل کریں 🚀</button>
             <div class="loader" id="loader">اے آئی سوچ رہا ہے...</div>
             <div class="output-box" id="responseViewport">نتیجہ یہاں ظاہر ہوگا۔</div>
+            
+            <!-- Post-Generation Rating -->
+            <div id="postGenRating" style="display:none; margin-top:14px; padding:12px; background:#f0fdf4; border:1px solid #86efac; border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:600; color:#15803d;">اس جواب کی ریٹنگ دیں؟</span>
+                    <div style="display:flex; gap:4px;">
+                        <button class="btn btn-small" onclick="quickRate(1)">⭐</button>
+                        <button class="btn btn-small" onclick="quickRate(2)">⭐⭐</button>
+                        <button class="btn btn-small" onclick="quickRate(3)">⭐⭐⭐</button>
+                        <button class="btn btn-small" onclick="quickRate(4)">⭐⭐⭐⭐</button>
+                        <button class="btn btn-small" onclick="quickRate(5)">⭐⭐⭐⭐⭐</button>
+                        <button class="btn btn-small" style="background:#e5e7eb; color:#1f2937;" onclick="closePostRating()">نہیں</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- ── API Key List (Collapsible) ── -->
             <div class="api-list">
@@ -735,7 +750,7 @@ $last_update = date('Y-m-d H:i:s');
         </div>
         <form onsubmit="submitRating(event)">
             <div style="margin-bottom: 16px;">
-                <label>درجہ بندی:</label>
+                <label>درجہ بندی (مختلف ستاروں کو دبائیں):</label>
                 <div class="star-rating" id="starRating">
                     <span class="star" onclick="selectStar(1)">☆</span>
                     <span class="star" onclick="selectStar(2)">☆</span>
@@ -745,11 +760,16 @@ $last_update = date('Y-m-d H:i:s');
                 </div>
             </div>
             <div style="margin-bottom: 12px;">
-                <label>تبصرہ:</label>
-                <textarea id="ratingComment" placeholder="تبصرہ..." style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; min-height:80px;"></textarea>
+                <label>تبصرہ (منتخب):</label>
+                <textarea id="ratingComment" placeholder="اپنا تبصرہ لکھیں یا خالی چھوڑیں..." style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; min-height:80px;"></textarea>
+                <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-small" style="background:#e5e7eb; color:#1f2937;" onclick="insertComment('بہترین نتیجہ!')">بہترین ✨</button>
+                    <button type="button" class="btn btn-small" style="background:#e5e7eb; color:#1f2937;" onclick="insertComment('جلدی کام کیا')">تیز ⚡</button>
+                    <button type="button" class="btn btn-small" style="background:#e5e7eb; color:#1f2937;" onclick="insertComment('سادہ لیکن اچھا')">ٹھیک ہے 👌</button>
+                </div>
             </div>
             <input type="hidden" id="ratingKeyId" value="">
-            <button type="submit" class="btn btn-blue">محفوظ کریں</button>
+            <button type="submit" class="btn btn-blue">ریٹنگ محفوظ کریں</button>
         </form>
     </div>
 </div>
@@ -771,6 +791,8 @@ const MODELS = {
 };
 
 let selectedRating = 0;
+let lastGeneratedProfileId = null;
+let lastGeneratedPrompt = null;
 
 function loadModels() {
     const platform = document.getElementById('vaultPlatform').value;
@@ -843,6 +865,12 @@ function selectStar(num) {
     });
 }
 
+function insertComment(text) {
+    const textarea = document.getElementById('ratingComment');
+    textarea.value = (textarea.value + ' ' + text).trim();
+    textarea.focus();
+}
+
 async function submitRating(e) {
     e.preventDefault();
     const keyId = document.getElementById('ratingKeyId').value;
@@ -856,8 +884,9 @@ async function submitRating(e) {
     });
     
     if (res.ok) {
-        alert('محفوظ!');
+        alert('شکریہ! ریٹنگ محفوظ ہو گئی!');
         closeModal('ratingModal');
+        closePostRating();
         location.reload();
     }
 }
@@ -878,6 +907,7 @@ async function processAIGeneration() {
 
     loader.style.display = 'block';
     viewport.textContent = '';
+    document.getElementById('postGenRating').style.display = 'none';
 
     try {
         const res = await fetch('ai_processor.php', {
@@ -893,12 +923,56 @@ async function processAIGeneration() {
             const isUrdu = /[\u0600-\u06FF]/.test(data.result);
             viewport.style.direction = isUrdu ? 'rtl' : 'ltr';
             viewport.style.textAlign = isUrdu ? 'right' : 'left';
+            
+            // Store for quick rating
+            lastGeneratedProfileId = profileId;
+            lastGeneratedPrompt = prompt;
+            
+            // Show quick rating option
+            setTimeout(() => {
+                document.getElementById('postGenRating').style.display = 'block';
+            }, 500);
         } else {
             viewport.textContent = "خرابی: " + (data.message || "نامعلوم");
         }
     } catch (err) {
         loader.style.display = 'none';
         viewport.textContent = "سرور سے رابطہ ٹوٹ گیا!";
+    }
+}
+
+function quickRate(stars) {
+    if (!lastGeneratedProfileId) return;
+    openQuickRatingModal(lastGeneratedProfileId, stars);
+}
+
+function closePostRating() {
+    document.getElementById('postGenRating').style.display = 'none';
+}
+
+function openQuickRatingModal(keyId, prefilledStars = 0) {
+    const opt = document.querySelector(`#selectedProfileId option[value="${keyId}"]`);
+    if (!opt) return;
+    
+    document.getElementById('ratingKeyId').value = keyId;
+    document.getElementById('ratingTitle').textContent = '⭐ تیز ریٹنگ: ' + opt.dataset.name;
+    selectedRating = prefilledStars;
+    
+    // Update star display
+    document.querySelectorAll('#starRating .star').forEach((s, i) => {
+        s.classList.toggle('active', i < prefilledStars);
+    });
+    
+    document.getElementById('ratingComment').value = '';
+    showModal('ratingModal');
+    
+    // Auto-submit if all 5 stars
+    if (prefilledStars === 5) {
+        setTimeout(() => {
+            document.querySelectorAll('#starRating .star').forEach((s, i) => {
+                s.classList.toggle('active', i < 5);
+            });
+        }, 100);
     }
 }
 
