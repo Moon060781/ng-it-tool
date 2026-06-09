@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_key']) &&
     $api_key       = trim(filter_input(INPUT_POST, 'api_key',       FILTER_DEFAULT));
     $custom_notes  = trim(filter_input(INPUT_POST, 'custom_notes',  FILTER_DEFAULT));
 
-    if (!empty($output_type) && !empty($key_name) && !empty($api_key) && !empty($platform_name) && !empty($model_target)) {
+    if (!empty($key_name) && !empty($api_key) && !empty($platform_name) && !empty($model_target)) {
         try {
             if ($edit_id > 0) {
                 $stmt = $pdo_ai->prepare(
@@ -509,19 +509,15 @@ $last_update = date('Y-m-d H:i:s');
                 <h3>🔒 ایڈمن والٹ — نئی API Key</h3>
                 <form method="POST" action="index.php" id="vaultForm">
                     <input type="hidden" name="edit_id" id="edit_id" value="0">
+                    <input type="hidden" name="output_type" id="vaultOutputType" value="text">
                     <div class="grid-2">
-                        <div>
-                            <label>آؤٹ پٹ کی قسم:</label>
-                            <select name="output_type" id="vaultOutputType" required>
-                                <option value="">— منتخب کریں —</option>
-                                <option value="text">مضمون / تشریح / اسکرپٹ</option>
-                                <option value="image">تصویر پرامپٹ</option>
-                                <option value="code">کوڈ / تکنیکی</option>
-                            </select>
-                        </div>
                         <div>
                             <label>چابی کا نام:</label>
                             <input type="text" name="key_name" id="vaultKeyName" placeholder="Gemini اردو" required>
+                        </div>
+                        <div>
+                            <label>براہ رابطہ ایمیل:</label>
+                            <input type="email" name="contact_email" id="vaultContactEmail" placeholder="admin@example.com">
                         </div>
                     </div>
                     <div class="grid-2">
@@ -615,6 +611,25 @@ $last_update = date('Y-m-d H:i:s');
             <div style="margin-bottom:12px; margin-top:16px;">
                 <label>سوال یا پرامپٹ:</label>
                 <textarea id="promptInput" placeholder="مثال: زندگی کے بارے میں شعر لکھیں..."></textarea>
+            </div>
+
+            <!-- Output Type Radio Buttons -->
+            <div style="margin-bottom:16px; padding:12px; background:#f0f9ff; border:1px solid #bfdbfe; border-radius:6px;">
+                <label style="display:block; margin-bottom:10px; font-weight:600; color:#1e40af;">📤 آؤٹ پٹ قسم منتخب کریں:</label>
+                <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:500;">
+                        <input type="radio" name="outputType" id="outputText" value="text" checked onchange="updateOutputType('text')" style="cursor:pointer;">
+                        <span>📄 متن</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:500;">
+                        <input type="radio" name="outputType" id="outputImage" value="image" onchange="updateOutputType('image')" style="cursor:pointer;">
+                        <span>🖼️ تصویر</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:500;">
+                        <input type="radio" name="outputType" id="outputVideo" value="video" onchange="updateOutputType('video')" style="cursor:pointer;">
+                        <span>🎞️ ویڈیو</span>
+                    </label>
+                </div>
             </div>
 
             <button class="btn btn-blue" onclick="processAIGeneration()">جواب حاصل کریں 🚀</button>
@@ -876,6 +891,12 @@ function cancelEdit() {
     loadModels();
 }
 
+function updateOutputType(type) {
+    // This function can be extended to update UI based on selected output type
+    console.log('Output type selected:', type);
+    // You can add conditional UI changes here if needed
+}
+
 function unlockVault() {
     const pin = prompt("PIN:");
     if (pin === "7860") {
@@ -978,11 +999,13 @@ async function processAIGeneration() {
     viewport.textContent = '';
     document.getElementById('postGenRating').style.display = 'none';
 
+    const outputType = document.querySelector('input[name="outputType"]:checked')?.value || 'text';
+    
     try {
         const res = await fetch('ai_processor.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `profile_id=${encodeURIComponent(profileId)}&genre=text&prompt=${encodeURIComponent(prompt)}`
+            body: `profile_id=${encodeURIComponent(profileId)}&genre=${encodeURIComponent(outputType)}&prompt=${encodeURIComponent(prompt)}`
         });
         const data = await res.json();
         loader.style.display = 'none';
