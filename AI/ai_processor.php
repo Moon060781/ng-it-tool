@@ -43,9 +43,10 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
 }
 
 // FIX: FILTER_SANITIZE_STRING → FILTER_DEFAULT (PHP 8.1+ safe)
-$profile_id = filter_input(INPUT_POST, "profile_id", FILTER_SANITIZE_NUMBER_INT);
-$genre      = filter_input(INPUT_POST, "genre",      FILTER_DEFAULT);
-$prompt     = filter_input(INPUT_POST, "prompt",     FILTER_DEFAULT);
+$profile_id    = filter_input(INPUT_POST, "profile_id",    FILTER_SANITIZE_NUMBER_INT);
+$genre         = filter_input(INPUT_POST, "genre",         FILTER_DEFAULT);
+$prompt        = filter_input(INPUT_POST, "prompt",        FILTER_DEFAULT);
+$selected_model = filter_input(INPUT_POST, "selected_model", FILTER_DEFAULT);
 
 if (empty($profile_id) || empty($prompt)) {
     echo json_encode(["success" => false, "message" => "ضروری ڈیٹا فارم پیرامیٹرز غائب ہیں۔"]);
@@ -74,7 +75,13 @@ if (!$key_data) {
 
 $apiKey   = $key_data["api_key"];
 $platform = $key_data["platform_name"];
-$model    = $key_data["model_target"];
+$model    = !empty($selected_model) ? $selected_model : $key_data["model_target"];
+
+// اگر ملٹی پل ماڈلز لسٹ ہے اور کوئی منتخب نہیں کیا گیا تو پہلا ماڈل لیں
+if (strpos($model, "\n") !== false) {
+    $models = explode("\n", $model);
+    $model = trim($models[0]);
+}
 
 $aiOutput = "";
 $success  = false;

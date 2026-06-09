@@ -541,28 +541,23 @@ $last_update = date('Y-m-d H:i:s');
                     </div>
                     <div class="grid-2">
                         <div>
-                            <label>ٹارگٹ ماڈل:</label>
-                            <div style="display: flex; gap: 8px; align-items: flex-end;">
-                                <div style="flex: 1;">
-                                    <select name="model_target" id="vaultModel" required></select>
-                                </div>
-                                <button type="button" class="btn btn-small" style="background:#3498db; color:white; white-space:nowrap; padding: 8px 12px;" onclick="showPlatformModels()" title="اس پلیٹ فارم کے ماڈلز دیکھیں">📋 ماڈلز</button>
-                            </div>
+                            <label>ٹارگٹ ماڈل (ہر لائن میں ایک ماڈل):</label>
+                            <textarea name="model_target" id="vaultModel" placeholder="مثال:\ngpt-4o\ngpt-4o-mini\ngemini-2.0-flash" style="width:100%; height:100px; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:monospace; font-size:13px; resize:vertical;" onchange="updateUserModelDropdown()" oninput="updateUserModelDropdown()" required></textarea>
                         </div>
                         <div>
                             <label>خفیہ API Key:</label>
                             <input type="password" name="api_key" id="vaultApiKey" placeholder="Key" required>
                         </div>
                     </div>
-                    <div class="grid-2">
-                        <div>
-                            <label>کسٹم ماڈل (اختیاری):</label>
-                            <input type="text" id="customModelInput" name="custom_model_name" placeholder="مثال: claude-3-opus" onchange="updateModelFromCustom()">
-                        </div>
-                    </div>
                     <div style="margin-bottom:12px;">
                         <label>نوٹس:</label>
                         <input type="text" name="custom_notes" id="vaultNotes" placeholder="یاد دہانی">
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <label>صارف کے لیے ماڈل ڈراپ ڈاؤن:</label>
+                        <select id="userModelDropdown" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                            <option value="">— منتخب کریں —</option>
+                        </select>
                     </div>
                     <button type="submit" name="action_save_key" id="saveBtn" class="btn btn-orange">محفوظ کریں 💾</button>
                     <button type="button" id="cancelEditBtn" class="btn btn-small" style="display:none; background:#94a3b8; color:white; margin-top:10px; width:100%;" onclick="cancelEdit()">کینسل ایڈٹ</button>
@@ -859,86 +854,36 @@ let lastGeneratedPrompt = null;
 function loadModels(selectedModel = null) {
     const platform = document.getElementById('vaultPlatform').value;
     const customDiv = document.getElementById('customPlatformDiv');
-    const sel = document.getElementById('vaultModel');
     customDiv.style.display = (platform === 'Custom') ? 'block' : 'none';
-    sel.innerHTML = '';
     
-    // اگر Custom پلیٹ فارم ہے تو custom input سے نام لیں
-    let actualPlatform = platform;
-    if (platform === 'Custom') {
-        const customName = document.getElementById('customPlatformNameInput').value.trim();
-        if (customName) {
-            actualPlatform = customName;
-        }
-    }
+    // یوزر ڈراپ ڈاؤن کو ماڈلز سے پور کریں
+    updateUserModelDropdown();
+}
+
+// نیا فنکشن: یوزر ڈراپ ڈاؤن میں ماڈلز اپڈیٹ کریں
+function updateUserModelDropdown() {
+    const textarea = document.getElementById('vaultModel');
+    const dropdown = document.getElementById('userModelDropdown');
     
-    let models = MODELS[platform] || [];
-    if (platform === 'Custom' && selectedModel && !models.includes(selectedModel)) {
-        models = [selectedModel];
-    }
+    // Textarea سے ماڈلز الگ کریں
+    const modelsText = textarea.value.trim();
+    const models = modelsText
+        .split('\n')
+        .map(m => m.trim())
+        .filter(m => m.length > 0);
     
+    // ڈراپ ڈاؤن کو رسےٹ کریں
+    dropdown.innerHTML = '<option value="">— منتخب کریں —</option>';
+    
+    // نیے ماڈلز شامل کریں
     models.forEach(m => {
-        const o = document.createElement('option');
-        o.value = o.textContent = m;
-        if (selectedModel && m === selectedModel) o.selected = true;
-        sel.appendChild(o);
+        const option = document.createElement('option');
+        option.value = option.textContent = m;
+        dropdown.appendChild(option);
     });
 }
 
-// نیا فنکشن: پلیٹ فارم کے ماڈلز دکھانے کے لیے
-function showPlatformModels() {
-    const platform = document.getElementById('vaultPlatform').value;
-    let platformName = platform;
-    let models = MODELS[platform] || [];
-    
-    // اگر Custom ہے تو custom input سے نام لیں
-    if (platform === 'Custom') {
-        const customName = document.getElementById('customPlatformNameInput').value.trim();
-        platformName = customName || 'Custom Platform';
-        // Custom کے لیے dropdown میں موجود models دکھائیں
-        const modelSelect = document.getElementById('vaultModel');
-        const options = modelSelect.querySelectorAll('option');
-        models = [];
-        options.forEach(opt => {
-            if (opt.value) models.push(opt.value);
-        });
-    }
-    
-    if (models.length === 0) {
-        alert('اس پلیٹ فارم کے لیے کوئی ماڈل دستیاب نہیں ہے۔');
-        return;
-    }
-    
-    // ماڈلز کو کاپی کے لیے تیار کریں
-    const modelsList = models.join('\n');
-    const message = `📋 ${platformName} کے ماڈلز:\n\n${modelsList}\n\n(کاپی کرنے کے لیے نیچے دیے گئے ٹیکسٹ کو منتخب کریں)`;
-    
-    // Modal میں دکھائیں
-    const modal = document.createElement('div');
-    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;direction:rtl;';
-    modal.innerHTML = `
-        <div style="background:white;padding:24px;border-radius:12px;max-width:500px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-            <h3 style="margin-top:0;color:#1f2937;">${platformName} کے ماڈلز</h3>
-            <div style="background:#f3f4f6;padding:12px;border-radius:8px;margin:12px 0;max-height:300px;overflow-y:auto;">
-                <textarea readonly style="width:100%;height:200px;border:1px solid #d1d5db;padding:8px;border-radius:6px;font-family:monospace;font-size:13px;resize:none;" id="modelsTextarea">${modelsList}</textarea>
-            </div>
-            <div style="display:flex;gap:8px;justify-content:flex-end;">
-                <button onclick="document.getElementById('modelsTextarea').select(); document.execCommand('copy'); alert('کاپی ہو گیا! ✓');" style="background:#3498db;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;">📋 کاپی کریں</button>
-                <button onclick="this.closest('div').parentElement.remove();" style="background:#94a3b8;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;">بند کریں</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
 
-// نیا فنکشن: کسٹم ماڈل سے ماڈل اپڈیٹ کریں
-function updateModelFromCustom() {
-    const customModel = document.getElementById('customModelInput').value.trim();
-    if (customModel) {
-        const modelSelect = document.getElementById('vaultModel');
-        modelSelect.value = customModel;
-    }
-}
 
 function editKey(data) {
     document.getElementById('adminVault').style.display = 'block';
@@ -952,11 +897,14 @@ function editKey(data) {
         document.getElementById('customPlatformNameInput').value = data.platform_name;
     }
     
-    loadModels(data.model_target);
+    // Textarea میں ماڈلز بھریں
+    document.getElementById('vaultModel').value = data.model_target || '';
+    
+    // یوزر ڈراپ ڈاؤن اپڈیٹ کریں
+    updateUserModelDropdown();
     
     document.getElementById('vaultApiKey').value = data.api_key;
     document.getElementById('vaultNotes').value = data.custom_notes || '';
-    document.getElementById('customModelInput').value = '';
     
     document.getElementById('saveBtn').innerHTML = 'اپڈیٹ کریں 🔄';
     document.getElementById('cancelEditBtn').style.display = 'block';
@@ -967,9 +915,8 @@ function editKey(data) {
 function cancelEdit() {
     document.getElementById('edit_id').value = '0';
     document.getElementById('vaultForm').reset();
-    document.getElementById('saveBtn').innerHTML = 'محفوظ کریں 📋';
+    document.getElementById('saveBtn').innerHTML = 'محفوظ کریں 💾';
     document.getElementById('cancelEditBtn').style.display = 'none';
-    document.getElementById('customModelInput').value = '';
     document.getElementById('customPlatformNameInput').value = '';
     loadModels();
 }
@@ -1012,7 +959,22 @@ function showEngineInfo() {
     }
     
     document.getElementById('infoType').textContent = opt.dataset.type;
-    document.getElementById('infoModel').textContent = opt.dataset.model;
+    
+    // ماڈلز کو پارس کریں اور ڈراپ ڈاؤن بنائیں
+    const modelsRaw = opt.dataset.model;
+    const models = modelsRaw.split('\n').map(m => m.trim()).filter(m => m.length > 0);
+    
+    let modelHtml = '';
+    if (models.length > 1) {
+        modelHtml = '<select id="userSelectedModel" style="padding:4px; border-radius:4px; border:1px solid #cbd5e1; font-size:12px; width:100%;">';
+        models.forEach(m => {
+            modelHtml += `<option value="${m}">${m}</option>`;
+        });
+        modelHtml += '</select>';
+    } else {
+        modelHtml = `<span id="userSelectedModel" data-value="${models[0] || '—'}">${models[0] || '—'}</span>`;
+    }
+    document.getElementById('infoModel').innerHTML = modelHtml;
     document.getElementById('infoUsage').textContent = opt.dataset.usage;
     document.getElementById('infoRating').innerHTML = Array(Math.round(parseFloat(opt.dataset.rating))).fill('★').join('') + 
                                                        Array(5 - Math.round(parseFloat(opt.dataset.rating))).fill('☆').join('') +
@@ -1084,11 +1046,22 @@ async function processAIGeneration() {
 
     const outputType = document.querySelector('input[name="outputType"]:checked')?.value || 'text';
     
+    // منتخب کردہ ماڈل حاصل کریں (اگر ڈراپ ڈاؤن ہے)
+    let selectedModel = "";
+    const modelEl = document.getElementById('userSelectedModel');
+    if (modelEl) {
+        if (modelEl.tagName === 'SELECT') {
+            selectedModel = modelEl.value;
+        } else {
+            selectedModel = modelEl.dataset.value;
+        }
+    }
+    
     try {
         const res = await fetch('ai_processor.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `profile_id=${encodeURIComponent(profileId)}&genre=${encodeURIComponent(outputType)}&prompt=${encodeURIComponent(prompt)}`
+            body: `profile_id=${encodeURIComponent(profileId)}&genre=${encodeURIComponent(outputType)}&prompt=${encodeURIComponent(prompt)}&selected_model=${encodeURIComponent(selectedModel)}`
         });
         const data = await res.json();
         loader.style.display = 'none';
