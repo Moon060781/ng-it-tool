@@ -34,8 +34,9 @@ if (!isset($pdo_ai)) {
 
 $table_name = (defined('AI_TABLE_PREFIX') ? AI_TABLE_PREFIX : 'ai_') . "vault_keys";
 
-// ── POST: Save Key ────────────────────────────────
+// ── POST: Save/Update Key ───────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_key']) && isset($pdo_ai)) {
+    $edit_id       = intval(filter_input(INPUT_POST, 'edit_id',      FILTER_SANITIZE_NUMBER_INT));
     $output_type   = trim(filter_input(INPUT_POST, 'output_type',   FILTER_DEFAULT));
     $key_name      = trim(filter_input(INPUT_POST, 'key_name',      FILTER_DEFAULT));
     $platform_name = trim(filter_input(INPUT_POST, 'platform_name', FILTER_DEFAULT));
@@ -45,19 +46,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_key']) &&
 
     if (!empty($output_type) && !empty($key_name) && !empty($api_key) && !empty($platform_name) && !empty($model_target)) {
         try {
-            $stmt = $pdo_ai->prepare(
-                "INSERT INTO {$table_name}
-                 (output_type, key_name, platform_name, model_target, api_key, custom_notes)
-                 VALUES (?, ?, ?, ?, ?, ?)"
-            );
-            $stmt->execute([$output_type, $key_name, $platform_name, $model_target, $api_key, $custom_notes]);
-            header("Location: index.php?saved=1");
+            if ($edit_id > 0) {
+                $stmt = $pdo_ai->prepare(
+                    "UPDATE {$table_name}
+                     SET output_type=?, key_name=?, platform_name=?, model_target=?, api_key=?, custom_notes=?
+                     WHERE id=?"
+                );
+                $stmt->execute([$output_type, $key_name, $platform_name, $model_target, $api_key, $custom_notes, $edit_id]);
+                header("Location: index.php?updated=1");
+            } else {
+                $stmt = $pdo_ai->prepare(
+                    "INSERT INTO {$table_name}
+                     (output_type, key_name, platform_name, model_target, api_key, custom_notes)
+                     VALUES (?, ?, ?, ?, ?, ?)"
+                );
+                $stmt->execute([$output_type, $key_name, $platform_name, $model_target, $api_key, $custom_notes]);
+                header("Location: index.php?saved=1");
+            }
             exit();
         } catch (PDOException $e) {
             $status_msg = "<div class='alert error'>خرابی: " . htmlspecialchars($e->getMessage()) . "</div>";
         }
     } else {
         $status_msg = "<div class='alert error'>تمام ضروری خانے پُر کریں!</div>";
+    }
+}
+
+// ── GET: Delete Key ─────────────────────────────────
+if (isset($_GET['action_delete_key']) && isset($pdo_ai)) {
+    $delete_id = intval($_GET['action_delete_key']);
+    if ($delete_id > 0) {
+        try {
+            $stmt = $pdo_ai->prepare("DELETE FROM {$table_name} WHERE id = ?");
+            $stmt->execute([$delete_id]);
+            header("Location: index.php?deleted=1");
+            exit();
+        } catch (PDOException $e) {
+            $status_msg = "<div class='alert error'>حذف کرنے میں خرابی!</div>";
+        }
     }
 }
 
@@ -94,6 +120,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_rating'])
 
 if (isset($_GET['saved']) && $_GET['saved'] == 1) {
     $status_msg = "<div class='alert success'>API Key کامیابی سے محفوظ ہو گئی!</div>";
+}
+if (isset($_GET['updated']) && $_GET['updated'] == 1) {
+    $status_msg = "<div class='alert success'>API Key کامیابی سے اپڈیٹ ہو گئی!</div>";
+}
+if (isset($_GET['deleted']) && $_GET['deleted'] == 1) {
+    $status_msg = "<div class='alert success'>API Key کامیابی سے حذف ہو گئی!</div>";
 }
 
 if (isset($pdo_ai)) {
@@ -475,11 +507,12 @@ $last_update = date('Y-m-d H:i:s');
             <!-- ══ Admin Vault ══ -->
             <div id="adminVault">
                 <h3>🔒 ایڈمن والٹ — نئی API Key</h3>
-                <form method="POST" action="index.php">
+                <form method="POST" action="index.php" id="vaultForm">
+                    <input type="hidden" name="edit_id" id="edit_id" value="0">
                     <div class="grid-2">
                         <div>
                             <label>آؤٹ پٹ کی قسم:</label>
-                            <select name="output_type" required>
+                            <select name="output_type" id="vaultOutputType" required>
                                 <option value="">— منتخب کریں —</option>
                                 <option value="text">مضمون / تشریح / اسکرپٹ</option>
                                 <option value="image">تصویر پرامپٹ</option>
@@ -488,7 +521,7 @@ $last_update = date('Y-m-d H:i:s');
                         </div>
                         <div>
                             <label>چابی کا نام:</label>
-                            <input type="text" name="key_name" placeholder="Gemini اردو" required>
+                            <input type="text" name="key_name" id="vaultKeyName" placeholder="Gemini اردو" required>
                         </div>
                     </div>
                     <div class="grid-2">
@@ -507,7 +540,7 @@ $last_update = date('Y-m-d H:i:s');
                         </div>
                         <div id="customPlatformDiv" style="display:none;">
                             <label>Custom نام:</label>
-                            <input type="text" id="customPlatformName" placeholder="نام">
+                            <input type="text" id="customPlatformNameInput" placeholder="نام">
                         </div>
                     </div>
                     <div class="grid-2">
@@ -517,14 +550,15 @@ $last_update = date('Y-m-d H:i:s');
                         </div>
                         <div>
                             <label>خفیہ API Key:</label>
-                            <input type="password" name="api_key" placeholder="Key" required>
+                            <input type="password" name="api_key" id="vaultApiKey" placeholder="Key" required>
                         </div>
                     </div>
                     <div style="margin-bottom:12px;">
                         <label>نوٹس:</label>
-                        <input type="text" name="custom_notes" placeholder="یاد دہانی">
+                        <input type="text" name="custom_notes" id="vaultNotes" placeholder="یاد دہانی">
                     </div>
-                    <button type="submit" name="action_save_key" class="btn btn-orange">محفوظ کریں 💾</button>
+                    <button type="submit" name="action_save_key" id="saveBtn" class="btn btn-orange">محفوظ کریں 💾</button>
+                    <button type="button" id="cancelEditBtn" class="btn btn-small" style="display:none; background:#94a3b8; color:white; margin-top:10px; width:100%;" onclick="cancelEdit()">کینسل ایڈٹ</button>
                 </form>
             </div>
 
@@ -650,6 +684,8 @@ $last_update = date('Y-m-d H:i:s');
                                 </div>
                                 <div class="key-actions">
                                     <button class="btn btn-small" onclick="openRatingModal(<?php echo intval($key['id']); ?>, '<?php echo htmlspecialchars($key['key_name']); ?>')">⭐ ریٹ کریں</button>
+                                    <button class="btn btn-small" style="background:#3498db; color:white;" onclick='editKey(<?php echo json_encode($key); ?>)'>📝 ایڈٹ</button>
+                                    <a href="index.php?action_delete_key=<?php echo intval($key['id']); ?>" class="btn btn-small" style="background:#e74c3c; color:white; text-decoration:none;" onclick="return confirm('کیا آپ واقعی یہ کی حذف کرنا چاہتے ہیں؟')">🗑️ حذف</a>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -794,17 +830,50 @@ let selectedRating = 0;
 let lastGeneratedProfileId = null;
 let lastGeneratedPrompt = null;
 
-function loadModels() {
+function loadModels(selectedModel = null) {
     const platform = document.getElementById('vaultPlatform').value;
     const customDiv = document.getElementById('customPlatformDiv');
     const sel = document.getElementById('vaultModel');
     customDiv.style.display = (platform === 'Custom') ? 'block' : 'none';
     sel.innerHTML = '';
-    (MODELS[platform] || []).forEach(m => {
+    
+    let models = MODELS[platform] || [];
+    if (platform === 'Custom' && selectedModel && !models.includes(selectedModel)) {
+        models = [selectedModel];
+    }
+    
+    models.forEach(m => {
         const o = document.createElement('option');
         o.value = o.textContent = m;
+        if (selectedModel && m === selectedModel) o.selected = true;
         sel.appendChild(o);
     });
+}
+
+function editKey(data) {
+    document.getElementById('adminVault').style.display = 'block';
+    document.getElementById('edit_id').value = data.id;
+    document.getElementById('vaultOutputType').value = data.output_type;
+    document.getElementById('vaultKeyName').value = data.key_name;
+    document.getElementById('vaultPlatform').value = data.platform_name;
+    
+    loadModels(data.model_target);
+    
+    document.getElementById('vaultApiKey').value = data.api_key;
+    document.getElementById('vaultNotes').value = data.custom_notes || '';
+    
+    document.getElementById('saveBtn').innerHTML = 'اپڈیٹ کریں 🔄';
+    document.getElementById('cancelEditBtn').style.display = 'block';
+    
+    window.scrollTo({ top: document.getElementById('adminVault').offsetTop - 20, behavior: 'smooth' });
+}
+
+function cancelEdit() {
+    document.getElementById('edit_id').value = '0';
+    document.getElementById('vaultForm').reset();
+    document.getElementById('saveBtn').innerHTML = 'محفوظ کریں 💾';
+    document.getElementById('cancelEditBtn').style.display = 'none';
+    loadModels();
 }
 
 function unlockVault() {
