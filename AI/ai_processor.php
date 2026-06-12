@@ -55,12 +55,12 @@ if (empty($profile_id) || empty($prompt)) {
 
 // FIX: is_active = 1 شرط ہٹائی گئی
 try {
-    $stmt = $pdo_ai->prepare(
-        "SELECT api_key, platform_name, model_target 
-         FROM {$table_name} 
-         WHERE id = ? 
-         LIMIT 1"
-    );
+	    $stmt = $pdo_ai->prepare(
+	        "SELECT api_key, platform_name, api_endpoint, model_target 
+	         FROM {$table_name} 
+	         WHERE id = ? 
+	         LIMIT 1"
+	    );
     $stmt->execute([$profile_id]);
     $key_data = $stmt->fetch();
 } catch (PDOException $e) {
@@ -73,9 +73,10 @@ if (!$key_data) {
     exit();
 }
 
-$apiKey   = $key_data["api_key"];
-$platform = $key_data["platform_name"];
-$model    = !empty($selected_model) ? $selected_model : $key_data["model_target"];
+	$apiKey      = $key_data["api_key"];
+	$platform    = $key_data["platform_name"];
+	$apiEndpoint = $key_data["api_endpoint"];
+	$model       = !empty($selected_model) ? $selected_model : $key_data["model_target"];
 
 // اگر ملٹی پل ماڈلز لسٹ ہے اور کوئی منتخب نہیں کیا گیا تو پہلا ماڈل لیں
 if (strpos($model, "\n") !== false) {
@@ -89,9 +90,13 @@ $message  = "";
 
 switch ($platform) {
 
-    case "Google Gemini":
-        $url     = "https://generativelanguage.googleapis.com/v1beta/models/" . $model . ":generateContent?key=" . $apiKey;
-        $payload = ["contents" => [["parts" => [["text" => $prompt]]]]];
+	    case "Google Gemini":
+	        $url     = !empty($apiEndpoint) ? $apiEndpoint : "https://generativelanguage.googleapis.com/v1beta/models/" . $model . ":generateContent?key=" . $apiKey;
+	        // If custom endpoint is used for Gemini, we might still need the key in the URL if it's not in the endpoint
+	        if (!empty($apiEndpoint) && strpos($url, 'key=') === false) {
+	            $url .= (strpos($url, '?') === false ? '?' : '&') . "key=" . $apiKey;
+	        }
+	        $payload = ["contents" => [["parts" => [["text" => $prompt]]]]];
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
@@ -120,15 +125,22 @@ switch ($platform) {
         }
         break;
 
-    case "OpenAI":
-    case "Groq Cloud":
-    case "OpenRouter":
-        $url_map = [
-            "OpenAI"     => "https://api.openai.com/v1/chat/completions",
-            "Groq Cloud" => "https://api.groq.com/openai/v1/chat/completions",
-            "OpenRouter" => "https://openrouter.ai/api/v1/chat/completions"
-        ];
-        $url = $url_map[$platform];
+	    case "OpenAI":
+	    case "Groq Cloud":
+	    case "OpenRouter":
+	    case "Custom":
+	        $url_map = [
+	            "OpenAI"     => "https://api.openai.com/v1/chat/completions",
+	            "Groq Cloud" => "https://api.groq.com/openai/v1/chat/completions",
+	            "OpenRouter" => "https://openrouter.ai/api/v1/chat/completions",
+	            "Custom"     => ""
+	        ];
+	        $url = !empty($apiEndpoint) ? $apiEndpoint : ($url_map[$platform] ?? "");
+	        
+	        if (empty($url)) {
+	            $message = "اینڈ پوائنٹ یو آر ایل غائب ہے۔";
+	            break;
+	        }
 
         $payload = [
             "model"      => $model,
@@ -166,8 +178,8 @@ switch ($platform) {
         }
         break;
 
-    case "Together AI":
-        $url = "https://api.together.xyz/v1/images/generations";
+	    case "Together AI":
+	        $url = !empty($apiEndpoint) ? $apiEndpoint : "https://api.together.xyz/v1/images/generations";
         $payload = [
             "model"  => $model,
             "prompt" => $prompt,
@@ -205,8 +217,8 @@ switch ($platform) {
         }
         break;
 
-    case "Hugging Face":
-        $url = "https://api-inference.huggingface.co/models/" . $model;
+	    case "Hugging Face":
+	        $url = !empty($apiEndpoint) ? $apiEndpoint : "https://api-inference.huggingface.co/models/" . $model;
         $payload = ["inputs" => $prompt];
 
         $ch = curl_init($url);

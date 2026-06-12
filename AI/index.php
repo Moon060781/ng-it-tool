@@ -44,23 +44,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_key']) &&
     $api_key       = trim(filter_input(INPUT_POST, 'api_key',       FILTER_DEFAULT));
     $custom_notes  = trim(filter_input(INPUT_POST, 'custom_notes',  FILTER_DEFAULT));
 
+    $api_endpoint  = trim(filter_input(INPUT_POST, 'api_endpoint',  FILTER_DEFAULT));
+
     if (!empty($key_name) && !empty($api_key) && !empty($platform_name) && !empty($model_target)) {
         try {
             if ($edit_id > 0) {
                 $stmt = $pdo_ai->prepare(
                     "UPDATE {$table_name}
-                     SET output_type=?, key_name=?, platform_name=?, model_target=?, api_key=?, custom_notes=?
+                     SET output_type=?, key_name=?, platform_name=?, api_endpoint=?, model_target=?, api_key=?, custom_notes=?
                      WHERE id=?"
                 );
-                $stmt->execute([$output_type, $key_name, $platform_name, $model_target, $api_key, $custom_notes, $edit_id]);
+                $stmt->execute([$output_type, $key_name, $platform_name, $api_endpoint, $model_target, $api_key, $custom_notes, $edit_id]);
                 header("Location: index.php?updated=1");
             } else {
                 $stmt = $pdo_ai->prepare(
                     "INSERT INTO {$table_name}
-                     (output_type, key_name, platform_name, model_target, api_key, custom_notes)
-                     VALUES (?, ?, ?, ?, ?, ?)"
+                     (output_type, key_name, platform_name, api_endpoint, model_target, api_key, custom_notes)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)"
                 );
-                $stmt->execute([$output_type, $key_name, $platform_name, $model_target, $api_key, $custom_notes]);
+                $stmt->execute([$output_type, $key_name, $platform_name, $api_endpoint, $model_target, $api_key, $custom_notes]);
                 header("Location: index.php?saved=1");
             }
             exit();
@@ -130,11 +132,11 @@ if (isset($_GET['deleted']) && $_GET['deleted'] == 1) {
 
 if (isset($pdo_ai)) {
     try {
-        $stmt_sel = $pdo_ai->prepare(
-            "SELECT id, key_name, platform_name, model_target, api_key, output_type,
-                    usage_count, rating_score, rating_count, custom_notes
-             FROM {$table_name} ORDER BY id DESC"
-        );
+	        $stmt_sel = $pdo_ai->prepare(
+	            "SELECT id, key_name, platform_name, api_endpoint, model_target, api_key, output_type,
+	                    usage_count, rating_score, rating_count, custom_notes
+	             FROM {$table_name} ORDER BY id DESC"
+	        );
         $stmt_sel->execute();
         $saved_profiles = $stmt_sel->fetchAll();
     } catch (PDOException $e) {
@@ -520,35 +522,42 @@ $last_update = date('Y-m-d H:i:s');
                             <input type="email" name="contact_email" id="vaultContactEmail" placeholder="admin@example.com">
                         </div>
                     </div>
-                    <div class="grid-2">
-                        <div>
-                            <label>پلیٹ فارم:</label>
-                            <select name="platform_name" id="vaultPlatform" onchange="loadModels()" required>
-                                <option value="">— منتخب کریں —</option>
-                                <option value="Google Gemini">Google Gemini</option>
-                                <option value="Groq Cloud">Groq Cloud</option>
-                                <option value="OpenAI">OpenAI</option>
-                                <option value="OpenRouter">OpenRouter</option>
-                                <option value="Together AI">Together AI</option>
-                                <option value="Hugging Face">Hugging Face</option>
-                                <option value="Custom">Custom</option>
-                            </select>
-                        </div>
-                        <div id="customPlatformDiv" style="display:none;">
-                            <label>Custom پلیٹ فارم کا نام:</label>
-                            <input type="text" id="customPlatformNameInput" name="custom_platform_name" placeholder="مثال: Claude AI" onchange="loadModels()">
-                        </div>
-                    </div>
-                    <div class="grid-2">
-                        <div>
-                            <label>ٹارگٹ ماڈل (ہر لائن میں ایک ماڈل):</label>
-                            <textarea name="model_target" id="vaultModel" placeholder="مثال:\ngpt-4o\ngpt-4o-mini\ngemini-2.0-flash" style="width:100%; height:100px; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:monospace; font-size:13px; resize:vertical;" onchange="updateUserModelDropdown()" oninput="updateUserModelDropdown()" required></textarea>
-                        </div>
-                        <div>
-                            <label>خفیہ API Key:</label>
-                            <input type="password" name="api_key" id="vaultApiKey" placeholder="Key" required>
-                        </div>
-                    </div>
+	                    <div class="grid-2">
+	                        <div>
+	                            <label>پلیٹ فارم:</label>
+	                            <div style="display:flex; gap:5px;">
+	                                <select name="platform_name" id="vaultPlatform" onchange="loadModels()" required style="flex-grow:1;">
+	                                    <option value="">— منتخب کریں —</option>
+	                                    <option value="Google Gemini">Google Gemini</option>
+	                                    <option value="Groq Cloud">Groq Cloud</option>
+	                                    <option value="OpenAI">OpenAI</option>
+	                                    <option value="OpenRouter">OpenRouter</option>
+	                                    <option value="Together AI">Together AI</option>
+	                                    <option value="Hugging Face">Hugging Face</option>
+	                                    <option value="Custom">Custom</option>
+	                                </select>
+	                                <button type="button" class="btn btn-small" style="width:auto; margin:0;" onclick="fetchPlatformModels()">ماڈلز دیکھیں 🔍</button>
+	                            </div>
+	                        </div>
+	                        <div id="customPlatformDiv" style="display:none;">
+	                            <label>Custom پلیٹ فارم کا نام:</label>
+	                            <input type="text" id="customPlatformNameInput" name="custom_platform_name" placeholder="مثال: Claude AI" onchange="loadModels()">
+	                        </div>
+	                    </div>
+	                    <div class="grid-2">
+	                        <div>
+	                            <label>اے پی آئی اینڈ پوائنٹ (API Endpoint URL):</label>
+	                            <input type="text" name="api_endpoint" id="vaultApiEndpoint" placeholder="https://api.openai.com/v1/chat/completions">
+	                        </div>
+	                        <div>
+	                            <label>خفیہ API Key:</label>
+	                            <input type="password" name="api_key" id="vaultApiKey" placeholder="Key" required>
+	                        </div>
+	                    </div>
+	                    <div style="margin-bottom:12px;">
+	                        <label>ٹارگٹ ماڈل (ہر لائن میں ایک ماڈل):</label>
+	                        <textarea name="model_target" id="vaultModel" placeholder="مثال:\ngpt-4o\ngpt-4o-mini\ngemini-2.0-flash" style="width:100%; height:100px; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:monospace; font-size:13px; resize:vertical;" onchange="updateUserModelDropdown()" oninput="updateUserModelDropdown()" required></textarea>
+	                    </div>
                     <div style="margin-bottom:12px;">
                         <label>نوٹس:</label>
                         <input type="text" name="custom_notes" id="vaultNotes" placeholder="یاد دہانی">
@@ -664,20 +673,24 @@ $last_update = date('Y-m-d H:i:s');
                     <?php if (!empty($saved_profiles)): ?>
                         <?php foreach ($saved_profiles as $key): ?>
                             <div class="key-card">
-                                <div class="key-row">
-                                    <div class="key-field">
-                                        <strong>چابی</strong>
-                                        <span><?php echo htmlspecialchars($key['key_name']); ?></span>
-                                    </div>
-                                    <div class="key-field">
-                                        <strong>پلیٹ فارم</strong>
-                                        <span><?php echo htmlspecialchars($key['platform_name']); ?></span>
-                                    </div>
-                                    <div class="key-field">
-                                        <strong>ماڈل</strong>
-                                        <span><?php echo htmlspecialchars($key['model_target']); ?></span>
-                                    </div>
-                                </div>
+	                                <div class="key-row">
+	                                    <div class="key-field">
+	                                        <strong>چابی</strong>
+	                                        <span><?php echo htmlspecialchars($key['key_name']); ?></span>
+	                                    </div>
+	                                    <div class="key-field">
+	                                        <strong>پلیٹ فارم</strong>
+	                                        <span><?php echo htmlspecialchars($key['platform_name']); ?></span>
+	                                    </div>
+	                                    <div class="key-field">
+	                                        <strong>اینڈ پوائنٹ</strong>
+	                                        <span style="font-size:10px;"><?php echo htmlspecialchars($key['api_endpoint'] ?? 'Default'); ?></span>
+	                                    </div>
+	                                    <div class="key-field">
+	                                        <strong>ماڈل</strong>
+	                                        <span><?php echo htmlspecialchars($key['model_target']); ?></span>
+	                                    </div>
+	                                </div>
                                 <div class="key-row">
                                     <div class="key-field">
                                         <strong>Key</strong>
@@ -843,9 +856,34 @@ const MODELS = {
     "OpenAI":        ["gpt-4o-mini", "gpt-4o"],
     "OpenRouter":    ["google/gemini-2.0-flash-exp:free"],
     "Together AI":   ["stabilityai/stable-diffusion-xl-base-1.0"],
-    "Hugging Face":  ["runwayml/stable-diffusion-v1-5"],
-    "Custom":        ["custom-model"]
-};
+	    "Hugging Face":  ["runwayml/stable-diffusion-v1-5"],
+	    "Custom":        ["custom-model"]
+	};
+
+	function fetchPlatformModels() {
+	    const platformSelect = document.getElementById('vaultPlatform');
+	    let platform = platformSelect.value;
+	    if (platform === 'Custom') {
+	        platform = document.getElementById('customPlatformNameInput').value;
+	    }
+	    
+	    if (!platform) {
+	        alert('براہ کرم پہلے پلیٹ فارم منتخب کریں یا نام لکھیں!');
+	        return;
+	    }
+	    
+	    const models = MODELS[platform] || MODELS[platformSelect.value] || [];
+	    if (models.length > 0) {
+	        const currentModels = document.getElementById('vaultModel').value.trim();
+	        const newModels = models.join('\n');
+	        if (confirm(`کیا آپ یہ ماڈلز شامل کرنا چاہتے ہیں؟\n\n${newModels}`)) {
+	            document.getElementById('vaultModel').value = (currentModels ? currentModels + '\n' : '') + newModels;
+	            updateUserModelDropdown();
+	        }
+	    } else {
+	        alert('اس پلیٹ فارم کے لیے کوئی پہلے سے محفوظ ماڈلز نہیں ملے، براہ کرم خود لکھیں۔');
+	    }
+	}
 
 let selectedRating = 0;
 let lastGeneratedProfileId = null;
@@ -889,13 +927,14 @@ function editKey(data) {
     document.getElementById('adminVault').style.display = 'block';
     document.getElementById('edit_id').value = data.id;
     document.getElementById('vaultOutputType').value = data.output_type;
-    document.getElementById('vaultKeyName').value = data.key_name;
-    document.getElementById('vaultPlatform').value = data.platform_name;
-    
-    // اگر Custom پلیٹ فارم ہے تو custom input میں بھریں
-    if (data.platform_name === 'Custom') {
-        document.getElementById('customPlatformNameInput').value = data.platform_name;
-    }
+	    document.getElementById('vaultKeyName').value = data.key_name;
+	    document.getElementById('vaultPlatform').value = data.platform_name;
+	    document.getElementById('vaultApiEndpoint').value = data.api_endpoint || '';
+	    
+	    // اگر Custom پلیٹ فارم ہے تو custom input میں بھریں
+	    if (data.platform_name === 'Custom') {
+	        document.getElementById('customPlatformNameInput').value = data.platform_name;
+	    }
     
     // Textarea میں ماڈلز بھریں
     document.getElementById('vaultModel').value = data.model_target || '';
