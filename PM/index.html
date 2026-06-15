@@ -1107,15 +1107,14 @@
                                                     <option value="Other Action">Other Action</option>
                                                 </select>
                                             </div>
-                                        </div>
-                                        <div class="mt-3">
-                                             <div class="flex items-center justify-between mb-1">
-                                                <label class="block text-xs font-semibold">Facial Expression (Action Unit)</label>
-                                                <button type="button" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-100 transition-colors" onclick="showAUTooltip(event)" title="Learn about Action Units">
-                                                    <i class="fas fa-info-circle mr-1"></i>Learn More
-                                                </button>
-                                             </div>
-                                             <select id="charExpression-1" class="charExpression w-full border border-slate-300 rounded p-2 text-sm mb-3">
+                                            <div>
+                                                <div class="flex items-center justify-between mb-1">
+                                                   <label class="block text-xs font-semibold">Facial Expression (Action Unit)</label>
+                                                   <button type="button" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-100 transition-colors" onclick="showAUTooltip(event)" title="Learn about Action Units">
+                                                       <i class="fas fa-info-circle mr-1"></i>Learn More
+                                                   </button>
+                                                </div>
+                                                <select id="charExpression-1" class="charExpression w-full border border-slate-300 rounded p-2 text-sm">
                                                 <option value="">Select Expression or Action Unit...</option>
                                                 <optgroup label="Primary Emotions">
                                                     <option value="Happiness (AU 6 + 12)">Happiness - Genuine Smile (AU 6 + 12)</option>
@@ -3156,17 +3155,19 @@
             let content = '<div class="au-tooltip-header"><i class="fas fa-face-smile"></i> Facial Action Units (FACS)</div>';
             content += `<div class="au-tooltip-content" style="font-size: 13px; line-height: 1.6;">
                 <p style="margin-bottom: 10px;">
-                    The <strong>Facial Action Coding System (FACS)</strong> is a comprehensive framework for analyzing facial expressions through individual Action Units (AUs). Each AU represents a specific micro-movement of facial muscles, and combinations of AUs create distinct emotions and expressions.
+                    The <strong>Facial Action Coding System (FACS)</strong> is the gold standard for classifying human facial movements. It breaks down expressions into individual <strong>Action Units (AUs)</strong>, which are the fundamental building blocks of every facial expression.
                 </p>
                 <p style="margin-bottom: 10px;">
-                    Use this dropdown to select either <strong>pre-defined emotions</strong> (which combine multiple AUs) or <strong>individual Action Units</strong> to precisely control character facial expressions in your video generation.
+                    By combining specific AUs, you can create highly realistic and nuanced emotions for AI-generated characters. For example, a genuine smile (Happiness) requires both AU 6 (Cheek Raiser) and AU 12 (Lip Corner Puller).
                 </p>
                 <p style="margin-bottom: 12px; font-size: 12px; color: #cbd5e1;">
-                    <strong>Primary Emotions:</strong> Pre-configured combinations of AUs that represent basic emotions like happiness, sadness, fear, anger, surprise, and disgust.
+                    For a complete visual reference of all Action Units, including photographic examples and anatomical details, please visit the official research database:
                 </p>
-                <p style="margin-bottom: 12px; font-size: 12px; color: #cbd5e1;">
-                    <strong>Individual Action Units:</strong> 32 distinct facial muscle movements you can combine to create custom expressions.
-                </p>
+                <div style="margin-bottom: 15px;">
+                    <a href="http://melab.psych.ac.cn/en/au.html" target="_blank" class="au-tooltip-link" style="display: block; text-align: center; background: #2563eb;">
+                        <i class="fas fa-external-link-alt mr-1"></i> View Official Visual Reference
+                    </a>
+                </div>
             </div>`;
             
             // Add emotion cards
@@ -3180,16 +3181,7 @@
                 `;
             });
             
-            content += `
-                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #475569;">
-                    <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px;">
-                        For detailed visual references, AU illustrations, and complete coding guidelines, visit the official MELAB reference:
-                    </p>
-                    <a href="http://melab.psych.ac.cn/en/au.html" target="_blank" class="au-tooltip-link">
-                        <i class="fas fa-external-link-alt mr-1"></i> MELAB - Action Units Guide
-                    </a>
-                </div>
-            `;
+
             
             tooltip.innerHTML = content;
             
