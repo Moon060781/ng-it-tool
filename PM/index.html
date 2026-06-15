@@ -175,6 +175,109 @@
 
         /* Rotate Chevron on Collapse */
         .rotate-180 { transform: rotate(180deg); }
+        
+        /* Action Unit Tooltip Styles */
+        .au-tooltip {
+            position: fixed;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: #f1f5f9;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            z-index: 1000;
+            border: 1px solid #475569;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .au-tooltip-header {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .au-tooltip-content {
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        
+        .au-tooltip-emotion {
+            background: #0f172a;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border-left: 3px solid #4f46e5;
+        }
+        
+        .au-tooltip-emotion-name {
+            font-weight: 600;
+            color: #60a5fa;
+            font-size: 13px;
+        }
+        
+        .au-tooltip-emotion-au {
+            color: #cbd5e1;
+            font-size: 12px;
+            margin-top: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .au-tooltip-emotion-desc {
+            color: #e2e8f0;
+            font-size: 12px;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+        
+        .au-tooltip-link {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #4f46e5;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+        
+        .au-tooltip-link:hover {
+            background: #4338ca;
+        }
+        
+        .au-tooltip-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+            transition: color 0.2s ease;
+        }
+        
+        .au-tooltip-close:hover {
+            color: #f1f5f9;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
@@ -1006,6 +1109,21 @@
                                             </div>
                                         </div>
                                         <div class="mt-3">
+                                             <div class="flex items-center justify-between mb-1">
+                                                <label class="block text-xs font-semibold">Facial Expression (Action Unit)</label>
+                                                <button type="button" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-100 transition-colors" onclick="showAUTooltip(event)" title="Learn about Action Units">
+                                                    <i class="fas fa-info-circle mr-1"></i>Learn More
+                                                </button>
+                                             </div>
+                                             <select id="charExpression-1" class="charExpression w-full border border-slate-300 rounded p-2 text-sm mb-3">
+                                                <option value="">Select Expression...</option>
+                                                <option value="Happiness (AU 6 + 12)">Happiness - Genuine Smile (AU 6 + 12)</option>
+                                                <option value="Sadness (AU 1 + 4 + 15)">Sadness - Sad Expression (AU 1 + 4 + 15)</option>
+                                                <option value="Fear (AU 1 + 2 + 4 + 5 + 20)">Fear - Fearful Expression (AU 1 + 2 + 4 + 5 + 20)</option>
+                                                <option value="Anger (AU 4 + 5 + 7 + 23)">Anger - Angry Expression (AU 4 + 5 + 7 + 23)</option>
+                                                <option value="Surprise (AU 1 + 2 + 5 + 26)">Surprise - Surprised Expression (AU 1 + 2 + 5 + 26)</option>
+                                                <option value="Disgust (AU 9 or AU 10)">Disgust - Disgusted Expression (AU 9 or AU 10)</option>
+                                             </select>
                                              <label class="block text-xs font-semibold mb-1">Additional Object Details</label>
                                              <textarea id="charDetail-1" rows="2" class="charDetail w-full border border-slate-300 rounded p-2 text-sm" placeholder="Hair color, clothing style, scars, specific features..."></textarea>
                                         </div>
@@ -2953,6 +3071,100 @@
             if(event.target.id === 'examples-modal-overlay') closeExamplesModal();
             if(event.target.id === 'blog-modal-overlay') closeBlogModal(); // Close blog on click outside
         }
+        
+        // Action Unit (FACS) Data
+        const actionUnitData = [
+            {
+                emotion: 'Happiness',
+                core_au_combination: 'AU 6 + 12',
+                visual_description: 'The lip corners pull up (AU 12), and the cheeks lift to narrow the eyes, creating "crow\'s feet" wrinkles (AU 6). This combo forms a genuine Duchenne smile.'
+            },
+            {
+                emotion: 'Sadness',
+                core_au_combination: 'AU 1 + 4 + 15',
+                visual_description: 'The inner eyebrows pull up (AU 1) and together (AU 4), creating a distinct triangular shape. Simultaneously, the lip corners pull downward (AU 15).'
+            },
+            {
+                emotion: 'Fear',
+                core_au_combination: 'AU 1 + 2 + 4 + 5 + 20',
+                visual_description: 'The entire brow is raised (AU 1+2) and drawn together (AU 4). The upper eyelid shoots up to expose the white of the eyes (AU 5), and the mouth stretches horizontally (AU 20).'
+            },
+            {
+                emotion: 'Anger',
+                core_au_combination: 'AU 4 + 5 + 7 + 23',
+                visual_description: 'The eyebrows are pulled down and together sharply (AU 4). The eyelids tense (AU 7) while wide open (AU 5), and the lips narrow or tighten into a firm line (AU 23).'
+            },
+            {
+                emotion: 'Surprise',
+                core_au_combination: 'AU 1 + 2 + 5 + 26',
+                visual_description: 'The brows arch high up (AU 1+2), the upper eyelids pull back (AU 5), and the jaw drops open naturally without force (AU 26). Unlike fear, the brows are not drawn together.'
+            },
+            {
+                emotion: 'Disgust',
+                core_au_combination: 'AU 9 or AU 10',
+                visual_description: 'The primary signal is a wrinkled nose (AU 9) or a sharply raised upper lip (AU 10), often accompanied by a narrowed squint to block out the unpleasant sight.'
+            }
+        ];
+        
+        // Show Action Unit Tooltip
+        window.showAUTooltip = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Remove existing tooltip if any
+            const existingTooltip = document.querySelector('.au-tooltip');
+            if (existingTooltip) existingTooltip.remove();
+            
+            // Create tooltip container
+            const tooltip = document.createElement('div');
+            tooltip.className = 'au-tooltip';
+            
+            let content = '<div class="au-tooltip-header"><i class="fas fa-face-smile"></i> Facial Action Units (FACS)</div>';
+            content += '<div class="au-tooltip-content">Select a facial expression to guide video generation. Each expression combines specific Action Units (AUs) that define micro-movements of facial muscles.</div>';
+            
+            // Add emotion cards
+            actionUnitData.forEach(item => {
+                content += `
+                    <div class="au-tooltip-emotion">
+                        <div class="au-tooltip-emotion-name">${item.emotion}</div>
+                        <div class="au-tooltip-emotion-au">Code: ${item.core_au_combination}</div>
+                        <div class="au-tooltip-emotion-desc">${item.visual_description}</div>
+                    </div>
+                `;
+            });
+            
+            content += `
+                <a href="http://melab.psych.ac.cn/en/au.html" target="_blank" class="au-tooltip-link">
+                    <i class="fas fa-external-link-alt mr-1"></i> Learn More About FACS
+                </a>
+            `;
+            
+            tooltip.innerHTML = content;
+            
+            // Add close button
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'au-tooltip-close';
+            closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            closeBtn.onclick = () => tooltip.remove();
+            tooltip.appendChild(closeBtn);
+            
+            // Position tooltip near the button
+            const rect = event.target.getBoundingClientRect();
+            tooltip.style.top = (rect.bottom + 10) + 'px';
+            tooltip.style.left = Math.min(rect.left, window.innerWidth - 420) + 'px';
+            
+            document.body.appendChild(tooltip);
+            
+            // Close tooltip when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', function closeTooltip(e) {
+                    if (!tooltip.contains(e.target) && e.target !== event.target) {
+                        tooltip.remove();
+                        document.removeEventListener('click', closeTooltip);
+                    }
+                });
+            }, 100);
+        };
     </script>
 
 <div style="text-align: center; padding: 10px; font-size: 10px; color: #64748b; font-family: sans-serif; opacity: 0.8;">
