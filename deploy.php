@@ -229,7 +229,7 @@ function showLogin($err) { ?>
 
 <div class="max-w-7xl mx-auto px-4 py-4 space-y-4">
 
-<!-- ── Quick Actions (NOW AT TOP) ────────────────────────── -->
+<!-- ── Quick Actions ────────────────────────────────────── -->
 <div class="glass rounded-lg p-3">
   <div class="section-title text-xs"><i class="fas fa-bolt text-yellow-400"></i> Quick Actions</div>
   <div class="flex flex-wrap items-center justify-between gap-3">
@@ -278,14 +278,6 @@ function showLogin($err) { ?>
   </div>
 </div>
 
-<!-- ── Terminal output (NOW BELOW QUICK ACTIONS) ──────────── -->
-<?php if ($output): ?>
-<div class="glass rounded-lg p-3">
-  <div class="section-title text-xs"><i class="fas fa-terminal text-green-400"></i> Terminal — <?=htmlspecialchars($action_done)?></div>
-  <div class="terminal" id="terminal-output"><?=colorize(htmlspecialchars($output))?></div>
-</div>
-<?php endif; ?>
-
 <!-- ── Two-Column Layout ─────────────────────────────────── -->
 <div class="compact-grid">
 
@@ -331,7 +323,7 @@ function showLogin($err) { ?>
     </select>
   </form>
 
-  <!-- Commit Details Area (REPLACED LIST) -->
+  <!-- Commit Details Area -->
   <div class="flex-1 space-y-3">
     <?php 
     $display = $selected_commit ?: [
@@ -366,6 +358,14 @@ function showLogin($err) { ?>
 </div>
 
 </div><!-- /compact-grid -->
+
+<!-- ── Terminal output (NOW AT BOTTOM) ──────────── -->
+<?php if ($output): ?>
+<div class="glass rounded-lg p-3">
+  <div class="section-title text-xs"><i class="fas fa-terminal text-green-400"></i> Terminal — <?=htmlspecialchars($action_done)?></div>
+  <div class="terminal" id="terminal-output"><?=colorize(htmlspecialchars($output))?></div>
+</div>
+<?php endif; ?>
 
 <!-- ── Footer Links ──────────────────────────────────────── -->
 <div class="glass rounded-lg p-3 flex flex-wrap gap-3 items-center justify-between text-xs">
