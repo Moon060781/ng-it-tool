@@ -297,7 +297,7 @@ function showLogin($err) { ?>
       <label class="block text-slate-400 text-xs font-semibold mb-1 uppercase">
         <i class="fas fa-align-left mr-1"></i> Description
       </label>
-      <textarea name="commit_desc" rows="5" placeholder="Describe changes in detail..."
+      <textarea name="commit_desc" rows="5" placeholder="Describe changes in detail.."
         style="line-height:1.5;font-size:0.9rem"><?=htmlspecialchars($last['body'])?></textarea>
     </div>
     <button type="submit" class="btn btn-green w-full justify-center py-2 text-sm">
