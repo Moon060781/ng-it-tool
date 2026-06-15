@@ -67,7 +67,7 @@ function time_since($ts) {
 }
 
 // ── Action handler ───────────────────────────────────────────
-$output = ''; $action_done = '';
+$output = ''; $action_done = ''; $selected_commit = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = $_POST['action'] ?? '';
 
@@ -106,6 +106,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $o  = git('fetch origin');
             $o .= git('checkout ' . $hash);
             $output = $o; $action_done = 'Restore Commit: ' . substr($hash, 0, 8);
+            
+            // Get details of the restored commit
+            $raw_info = git("log -1 --pretty=format:\"%s|%b\" $hash");
+            if ($raw_info) {
+                $parts = explode('|', $raw_info, 2);
+                $selected_commit = [
+                    'hash' => $hash,
+                    'subject' => $parts[0] ?? '',
+                    'body' => $parts[1] ?? ''
+                ];
+            }
         }
     }
 }
@@ -175,7 +186,7 @@ function showLogin($err) { ?>
   textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
   select{background:rgba(30,41,59,.9);border:1px solid rgba(100,116,139,.4);color:#e2e8f0;border-radius:.6rem;padding:.5rem 0.8rem;width:100%;font-size:0.9rem;cursor:pointer}
   select:focus{outline:none;border-color:var(--accent)}
-  .terminal{background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:0.8rem;padding:0.8rem;font-family:'Courier New',monospace;font-size:0.85rem;line-height:1.5;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+  .terminal{background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:0.8rem;padding:0.8rem;font-family:'Courier New',monospace;font-size:0.85rem;line-height:1.5;max-height:180px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
   .t-error{color:#f87171}.t-success{color:#4ade80}.t-blue{color:#60a5fa}.t-warn{color:#fbbf24}.t-dim{color:#64748b}
   .badge{display:inline-block;padding:.15rem .5rem;border-radius:9999px;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
   .badge-green{background:#14532d;color:#4ade80}
@@ -185,15 +196,11 @@ function showLogin($err) { ?>
   .dot-green{background:#22c55e;box-shadow:0 0 6px #22c55e}
   .dot-orange{background:#f59e0b;box-shadow:0 0 6px #f59e0b}
   .section-title{font-size:1rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:0.8rem;display:flex;align-items:center;gap:.4rem}
-  .commit-row{background:rgba(30,41,59,.5);border:1px solid rgba(100,116,139,.2);border-radius:.6rem;padding:0.7rem 0.9rem;margin-bottom:0.4rem;transition:border .2s;font-size:0.9rem}
-  .commit-row:hover{border-color:rgba(59,130,246,.4)}
-  .commit-hash{font-family:monospace;color:#94a3b8;font-size:0.8rem}
   .refresh-spin{animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
   .compact-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
   @media(max-width:1024px){.compact-grid{grid-template-columns:1fr}}
-  .history-dropdown-container{max-height:300px;overflow-y:auto}
 </style>
 </head>
 <body>
@@ -222,49 +229,10 @@ function showLogin($err) { ?>
 
 <div class="max-w-7xl mx-auto px-4 py-4 space-y-4">
 
-<!-- ── Status Bar ─────────────────────────────────────────── -->
-<div class="glass rounded-lg p-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-  <div class="flex items-center gap-3 flex-wrap">
-    <div class="flex items-center gap-1">
-      <span class="status-dot dot-green"></span>
-      <span class="text-white font-semibold">Branch:</span>
-      <span class="badge badge-blue"><?=BRANCH?></span>
-    </div>
-    <div class="text-slate-400 flex items-center gap-1">
-      <i class="fas fa-clock text-xs"></i>
-      <span id="last-update-time"><?=$time_ago?></span>
-    </div>
-    <div class="text-slate-400">
-      <i class="fas fa-calendar-alt text-xs"></i>
-      <span class="text-slate-300 ml-1"><?=$last_dt?></span>
-    </div>
-  </div>
-  <div class="flex items-center gap-2">
-    <div class="text-slate-400 bg-slate-800/50 rounded px-2 py-1 text-xs font-mono">
-      <i class="fas fa-code-commit text-xs mr-1"></i><?=substr($commits[0]['hash'] ?? 'unknown', 0, 8)?>
-    </div>
-    <button onclick="location.reload()" id="refresh-btn" title="Refresh"
-      class="btn btn-slate btn-sm"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
-  </div>
-</div>
-
-<!-- ── Terminal output (if action ran) ────────────────────── -->
-<?php if ($output): ?>
+<!-- ── Quick Actions (NOW AT TOP) ────────────────────────── -->
 <div class="glass rounded-lg p-3">
-  <div class="section-title text-xs"><i class="fas fa-terminal text-green-400"></i> Terminal — <?=htmlspecialchars($action_done)?></div>
-  <div class="terminal" id="terminal-output"><?=colorize(htmlspecialchars($output))?></div>
-</div>
-<?php endif; ?>
-
-<!-- ── Two-Column Compact Layout ──────────────────────────── -->
-<div class="compact-grid">
-
-<!-- LEFT COLUMN: Quick Actions & Push ────────────────────── -->
-<div class="space-y-3">
-
-  <!-- Quick Actions -->
-  <div class="glass rounded-lg p-3">
-    <div class="section-title text-xs"><i class="fas fa-bolt text-yellow-400"></i> Quick Actions</div>
+  <div class="section-title text-xs"><i class="fas fa-bolt text-yellow-400"></i> Quick Actions</div>
+  <div class="flex flex-wrap items-center justify-between gap-3">
     <div class="flex flex-wrap gap-2">
       <form method="POST" class="inline">
         <input type="hidden" name="action" value="pull">
@@ -294,78 +262,106 @@ function showLogin($err) { ?>
         </button>
       </form>
     </div>
-  </div>
-
-  <!-- Push Commit -->
-  <div class="glass rounded-lg p-3">
-    <div class="section-title text-xs"><i class="fas fa-upload text-blue-400"></i> Push Commit</div>
-    <form method="POST" class="space-y-2">
-      <input type="hidden" name="action" value="push">
-      <div>
-        <label class="block text-slate-400 text-xs font-semibold mb-1 uppercase">
-          <i class="fas fa-heading mr-1"></i> Highlight
-        </label>
-        <textarea name="commit_title" rows="2" placeholder="Short commit title (10 words max)"
-          style="line-height:1.6;font-size:0.9rem"><?=htmlspecialchars($last['subject'])?></textarea>
+    <div class="flex items-center gap-3 text-sm">
+      <div class="flex items-center gap-1">
+        <span class="status-dot dot-green"></span>
+        <span class="text-white font-semibold">Branch:</span>
+        <span class="badge badge-blue"><?=BRANCH?></span>
       </div>
-      <div>
-        <label class="block text-slate-400 text-xs font-semibold mb-1 uppercase">
-          <i class="fas fa-align-left mr-1"></i> Description
-        </label>
-        <textarea name="commit_desc" rows="4" placeholder="Describe changes in detail..."
-          style="line-height:1.5;font-size:0.9rem"><?=htmlspecialchars($last['body'])?></textarea>
+      <div class="text-slate-400 flex items-center gap-1">
+        <i class="fas fa-clock text-xs"></i>
+        <span id="last-update-time"><?=$time_ago?></span>
       </div>
-      <button type="submit" class="btn btn-green w-full justify-center py-2 text-sm">
-        <i class="fas fa-paper-plane"></i> Push
-      </button>
-    </form>
+      <button onclick="location.reload()" id="refresh-btn" title="Refresh"
+        class="btn btn-slate btn-sm"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
+    </div>
   </div>
+</div>
 
+<!-- ── Terminal output (NOW BELOW QUICK ACTIONS) ──────────── -->
+<?php if ($output): ?>
+<div class="glass rounded-lg p-3">
+  <div class="section-title text-xs"><i class="fas fa-terminal text-green-400"></i> Terminal — <?=htmlspecialchars($action_done)?></div>
+  <div class="terminal" id="terminal-output"><?=colorize(htmlspecialchars($output))?></div>
+</div>
+<?php endif; ?>
+
+<!-- ── Two-Column Layout ─────────────────────────────────── -->
+<div class="compact-grid">
+
+<!-- LEFT COLUMN: Push Commit ────────────────────────────── -->
+<div class="glass rounded-lg p-3">
+  <div class="section-title text-xs"><i class="fas fa-upload text-blue-400"></i> Push Commit</div>
+  <form method="POST" class="space-y-2">
+    <input type="hidden" name="action" value="push">
+    <div>
+      <label class="block text-slate-400 text-xs font-semibold mb-1 uppercase">
+        <i class="fas fa-heading mr-1"></i> Highlight
+      </label>
+      <textarea name="commit_title" rows="2" placeholder="Short commit title (10 words max)"
+        style="line-height:1.6;font-size:0.9rem"><?=htmlspecialchars($last['subject'])?></textarea>
+    </div>
+    <div>
+      <label class="block text-slate-400 text-xs font-semibold mb-1 uppercase">
+        <i class="fas fa-align-left mr-1"></i> Description
+      </label>
+      <textarea name="commit_desc" rows="5" placeholder="Describe changes in detail..."
+        style="line-height:1.5;font-size:0.9rem"><?=htmlspecialchars($last['body'])?></textarea>
+    </div>
+    <button type="submit" class="btn btn-green w-full justify-center py-2 text-sm">
+      <i class="fas fa-paper-plane"></i> Push to <?=BRANCH?>
+    </button>
+  </form>
 </div>
 
 <!-- RIGHT COLUMN: Commit History & Restore ─────────────── -->
-<div class="glass rounded-lg p-3">
+<div class="glass rounded-lg p-3 flex flex-col">
   <div class="section-title text-xs"><i class="fas fa-history text-purple-400"></i> Commit History & Restore</div>
 
   <!-- Dropdown Restore -->
-  <form method="POST" class="space-y-2">
+  <form method="POST" class="mb-3">
     <input type="hidden" name="action" value="checkout_commit">
-    <div>
-      <select name="commit_hash" onchange="this.form.submit()">
-        <option value="">— Select commit to restore —</option>
-        <?php foreach ($commits as $c): ?>
-        <option value="<?=htmlspecialchars($c['hash'])?>">
-          [<?=$c['dt']?>] <?=htmlspecialchars(mb_strimwidth($c['subject'], 0, 45, '…'))?>
-        </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
+    <select name="commit_hash" onchange="this.form.submit()">
+      <option value="">— Select commit to restore —</option>
+      <?php foreach ($commits as $c): ?>
+      <option value="<?=htmlspecialchars($c['hash'])?>" <?=($selected_commit && $selected_commit['hash'] === $c['hash']) ? 'selected' : ''?>>
+        [<?=$c['dt']?>] <?=htmlspecialchars(mb_strimwidth($c['subject'], 0, 50, '…'))?>
+      </option>
+      <?php endforeach; ?>
+    </select>
   </form>
 
-  <!-- Commit List (Scrollable) -->
-  <div class="history-dropdown-container space-y-1 mt-3">
-    <?php foreach ($commits as $i => $c): ?>
-    <div class="commit-row">
-      <div class="flex items-start justify-between gap-2 flex-wrap">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-1 flex-wrap mb-0.5">
-            <?php if ($i === 0): ?><span class="badge badge-green">Latest</span><?php endif; ?>
-            <span class="commit-hash text-xs"><?=htmlspecialchars(substr($c['hash'], 0, 8))?></span>
-            <span class="text-slate-500 text-xs"><i class="fas fa-clock mr-0.5"></i><?=$c['dt']?></span>
-          </div>
-          <div class="text-white font-semibold text-xs leading-snug"><?=htmlspecialchars(mb_strimwidth($c['subject'], 0, 50, '…'))?></div>
-        </div>
-        <form method="POST" class="shrink-0">
-          <input type="hidden" name="action" value="checkout_commit">
-          <input type="hidden" name="commit_hash" value="<?=htmlspecialchars($c['hash'])?>">
-          <button type="submit" class="btn btn-slate btn-sm text-xs"
-            onclick="return confirm('Restore to <?=htmlspecialchars(substr($c['hash'],0,8))?>?')">
-            <i class="fas fa-rotate-left"></i> Restore
-          </button>
-        </form>
+  <!-- Commit Details Area (REPLACED LIST) -->
+  <div class="flex-1 space-y-3">
+    <?php 
+    $display = $selected_commit ?: [
+        'hash' => $commits[0]['hash'],
+        'subject' => $commits[0]['subject'],
+        'body' => $commits[0]['body']
+    ];
+    ?>
+    <div class="bg-slate-800/40 rounded-lg p-3 border border-slate-700/50">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-slate-500 text-xs font-mono uppercase tracking-wider">Commit Message</span>
+        <span class="badge badge-blue text-[10px]"><?=substr($display['hash'], 0, 8)?></span>
+      </div>
+      <div class="text-white font-bold text-sm leading-snug">
+        <?=htmlspecialchars($display['subject'])?>
       </div>
     </div>
-    <?php endforeach; ?>
+
+    <div class="bg-slate-800/40 rounded-lg p-3 border border-slate-700/50 min-h-[120px]">
+      <div class="text-slate-500 text-xs font-mono uppercase tracking-wider mb-2">Extended Description</div>
+      <div class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+        <?= $display['body'] ? htmlspecialchars($display['body']) : '<span class="text-slate-600 italic">No extended description provided.</span>' ?>
+      </div>
+    </div>
+    
+    <?php if ($selected_commit): ?>
+    <div class="text-center">
+      <span class="text-green-400 text-xs font-semibold"><i class="fas fa-check-circle mr-1"></i> Version Restored Successfully</span>
+    </div>
+    <?php endif; ?>
   </div>
 </div>
 
