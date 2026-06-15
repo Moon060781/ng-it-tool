@@ -1116,13 +1116,47 @@
                                                 </button>
                                              </div>
                                              <select id="charExpression-1" class="charExpression w-full border border-slate-300 rounded p-2 text-sm mb-3">
-                                                <option value="">Select Expression...</option>
-                                                <option value="Happiness (AU 6 + 12)">Happiness - Genuine Smile (AU 6 + 12)</option>
-                                                <option value="Sadness (AU 1 + 4 + 15)">Sadness - Sad Expression (AU 1 + 4 + 15)</option>
-                                                <option value="Fear (AU 1 + 2 + 4 + 5 + 20)">Fear - Fearful Expression (AU 1 + 2 + 4 + 5 + 20)</option>
-                                                <option value="Anger (AU 4 + 5 + 7 + 23)">Anger - Angry Expression (AU 4 + 5 + 7 + 23)</option>
-                                                <option value="Surprise (AU 1 + 2 + 5 + 26)">Surprise - Surprised Expression (AU 1 + 2 + 5 + 26)</option>
-                                                <option value="Disgust (AU 9 or AU 10)">Disgust - Disgusted Expression (AU 9 or AU 10)</option>
+                                                <option value="">Select Expression or Action Unit...</option>
+                                                <optgroup label="Primary Emotions">
+                                                    <option value="Happiness (AU 6 + 12)">Happiness - Genuine Smile (AU 6 + 12)</option>
+                                                    <option value="Sadness (AU 1 + 4 + 15)">Sadness - Sad Expression (AU 1 + 4 + 15)</option>
+                                                    <option value="Fear (AU 1 + 2 + 4 + 5 + 20)">Fear - Fearful Expression (AU 1 + 2 + 4 + 5 + 20)</option>
+                                                    <option value="Anger (AU 4 + 5 + 7 + 23)">Anger - Angry Expression (AU 4 + 5 + 7 + 23)</option>
+                                                    <option value="Surprise (AU 1 + 2 + 5 + 26)">Surprise - Surprised Expression (AU 1 + 2 + 5 + 26)</option>
+                                                    <option value="Disgust (AU 9 or AU 10)">Disgust - Disgusted Expression (AU 9 or AU 10)</option>
+                                                </optgroup>
+                                                <optgroup label="Individual Action Units">
+                                                    <option value="AU 1">AU 1 - Inner Brow Raiser</option>
+                                                    <option value="AU 2">AU 2 - Outer Brow Raiser</option>
+                                                    <option value="AU 4">AU 4 - Brow Lowerer</option>
+                                                    <option value="AU 5">AU 5 - Upper Lid Raiser</option>
+                                                    <option value="AU 6">AU 6 - Cheek Raiser</option>
+                                                    <option value="AU 7">AU 7 - Lid Tightener</option>
+                                                    <option value="AU 9">AU 9 - Nose Wrinkler</option>
+                                                    <option value="AU 10">AU 10 - Upper Lip Raiser</option>
+                                                    <option value="AU 11">AU 11 - Nasolabial Deepener</option>
+                                                    <option value="AU 12">AU 12 - Lip Corner Puller</option>
+                                                    <option value="AU 13">AU 13 - Cheek Puffer</option>
+                                                    <option value="AU 14">AU 14 - Dimpler</option>
+                                                    <option value="AU 15">AU 15 - Lip Corner Depressor</option>
+                                                    <option value="AU 16">AU 16 - Lower Lip Depressor</option>
+                                                    <option value="AU 17">AU 17 - Chin Raiser</option>
+                                                    <option value="AU 18">AU 18 - Lip Puckerer</option>
+                                                    <option value="AU 20">AU 20 - Lip Stretcher</option>
+                                                    <option value="AU 22">AU 22 - Lip Funneler</option>
+                                                    <option value="AU 23">AU 23 - Lip Tightener</option>
+                                                    <option value="AU 24">AU 24 - Lip Pressor</option>
+                                                    <option value="AU 25">AU 25 - Lips Part</option>
+                                                    <option value="AU 26">AU 26 - Jaw Drop</option>
+                                                    <option value="AU 27">AU 27 - Mouth Stretch</option>
+                                                    <option value="AU 28">AU 28 - Lip Suck</option>
+                                                    <option value="AU 41">AU 41 - Lid Droop</option>
+                                                    <option value="AU 42">AU 42 - Slit</option>
+                                                    <option value="AU 43">AU 43 - Eyes Closed</option>
+                                                    <option value="AU 44">AU 44 - Squint</option>
+                                                    <option value="AU 45">AU 45 - Blink</option>
+                                                    <option value="AU 46">AU 46 - Wink</option>
+                                                </optgroup>
                                              </select>
                                              <label class="block text-xs font-semibold mb-1">Additional Object Details</label>
                                              <textarea id="charDetail-1" rows="2" class="charDetail w-full border border-slate-300 rounded p-2 text-sm" placeholder="Hair color, clothing style, scars, specific features..."></textarea>
@@ -3120,7 +3154,20 @@
             tooltip.className = 'au-tooltip';
             
             let content = '<div class="au-tooltip-header"><i class="fas fa-face-smile"></i> Facial Action Units (FACS)</div>';
-            content += '<div class="au-tooltip-content">Select a facial expression to guide video generation. Each expression combines specific Action Units (AUs) that define micro-movements of facial muscles.</div>';
+            content += `<div class="au-tooltip-content" style="font-size: 13px; line-height: 1.6;">
+                <p style="margin-bottom: 10px;">
+                    The <strong>Facial Action Coding System (FACS)</strong> is a comprehensive framework for analyzing facial expressions through individual Action Units (AUs). Each AU represents a specific micro-movement of facial muscles, and combinations of AUs create distinct emotions and expressions.
+                </p>
+                <p style="margin-bottom: 10px;">
+                    Use this dropdown to select either <strong>pre-defined emotions</strong> (which combine multiple AUs) or <strong>individual Action Units</strong> to precisely control character facial expressions in your video generation.
+                </p>
+                <p style="margin-bottom: 12px; font-size: 12px; color: #cbd5e1;">
+                    <strong>Primary Emotions:</strong> Pre-configured combinations of AUs that represent basic emotions like happiness, sadness, fear, anger, surprise, and disgust.
+                </p>
+                <p style="margin-bottom: 12px; font-size: 12px; color: #cbd5e1;">
+                    <strong>Individual Action Units:</strong> 32 distinct facial muscle movements you can combine to create custom expressions.
+                </p>
+            </div>`;
             
             // Add emotion cards
             actionUnitData.forEach(item => {
@@ -3134,9 +3181,14 @@
             });
             
             content += `
-                <a href="http://melab.psych.ac.cn/en/au.html" target="_blank" class="au-tooltip-link">
-                    <i class="fas fa-external-link-alt mr-1"></i> Learn More About FACS
-                </a>
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #475569;">
+                    <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px;">
+                        For detailed visual references, AU illustrations, and complete coding guidelines, visit the official MELAB reference:
+                    </p>
+                    <a href="http://melab.psych.ac.cn/en/au.html" target="_blank" class="au-tooltip-link">
+                        <i class="fas fa-external-link-alt mr-1"></i> MELAB - Action Units Guide
+                    </a>
+                </div>
             `;
             
             tooltip.innerHTML = content;
