@@ -288,14 +288,14 @@ function showLogin($err) { ?>
     <input type="hidden" name="action" value="push">
     <div>
       <label class="block text-slate-400 text-xs font-semibold mb-1 uppercase">
-        <i class="fas fa-heading mr-1"></i> Highlight
+        <i class="fas fa-heading mr-1"></i> Commit Message
       </label>
       <textarea name="commit_title" rows="2" placeholder="Short commit title (10 words max)"
         style="line-height:1.6;font-size:0.9rem"><?=htmlspecialchars($last['subject'])?></textarea>
     </div>
     <div>
       <label class="block text-slate-400 text-xs font-semibold mb-1 uppercase">
-        <i class="fas fa-align-left mr-1"></i> Description
+        <i class="fas fa-align-left mr-1"></i> Extended Description
       </label>
       <textarea name="commit_desc" rows="5" placeholder="Describe changes in detail.."
         style="line-height:1.5;font-size:0.9rem"><?=htmlspecialchars($last['body'])?></textarea>
