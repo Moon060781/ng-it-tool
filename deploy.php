@@ -45,6 +45,8 @@ function commit_list() {
     // hash|subject|timestamp|body
     $raw = git('log --pretty=format:"%H|%s|%ct|%b<ENDBODY>" -30');
     $entries = [];
+    if (!$raw) return $entries;
+    
     foreach (explode("<ENDBODY>", $raw) as $entry) {
         $entry = trim($entry);
         if (!$entry) continue;
@@ -67,7 +69,8 @@ function time_since($ts) {
 }
 
 // ── Action handler ───────────────────────────────────────────
-$output = ''; $action_done = ''; $selected_commit = null;
+$output = ''; $action_done = ''; $selected_commit = null; $view_only_commit = null;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = $_POST['action'] ?? '';
 
@@ -100,14 +103,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $o = git('revert HEAD --no-edit');
         $output = $o; $action_done = 'Revert Last Commit';
     }
+    elseif ($act === 'select_commit_details') {
+        // جب صارف صرف فہرست سے کسی کمٹ کو منتخب کرے گا تو تفصیل دکھائی جائے گی، رِسٹور نہیں کیا جائے گا
+        $hash = preg_replace('/[^a-f0-9]/i', '', $_POST['commit_hash'] ?? '');
+        if ($hash) {
+            $raw_info = git("log -1 --pretty=format:\"%s|%b\" $hash");
+            if ($raw_info) {
+                $parts = explode('|', $raw_info, 2);
+                $view_only_commit = [
+                    'hash' => $hash,
+                    'subject' => $parts[0] ?? '',
+                    'body' => $parts[1] ?? ''
+                ];
+            }
+        }
+    }
     elseif ($act === 'checkout_commit') {
+        // یہ بٹن کنفرم کرنے پر چلے گا اور ورژن کو بحال کرے گا
         $hash = preg_replace('/[^a-f0-9]/i', '', $_POST['commit_hash'] ?? '');
         if ($hash) {
             $o  = git('fetch origin');
             $o .= git('checkout ' . $hash);
             $output = $o; $action_done = 'Restore Commit: ' . substr($hash, 0, 8);
             
-            // Get details of the restored commit
+            // بحالی کے بعد تفصیلات دکھانے کے لیے دوبارہ ڈیٹا حاصل کریں
             $raw_info = git("log -1 --pretty=format:\"%s|%b\" $hash");
             if ($raw_info) {
                 $parts = explode('|', $raw_info, 2);
@@ -310,13 +329,14 @@ function showLogin($err) { ?>
 <div class="glass rounded-lg p-3 flex flex-col">
   <div class="section-title text-xs"><i class="fas fa-history text-purple-400"></i> Commit History & Restore</div>
 
-  <!-- Dropdown Restore -->
-  <form method="POST" class="mb-3">
-    <input type="hidden" name="action" value="checkout_commit">
-    <select name="commit_hash" onchange="this.form.submit()">
-      <option value="">— Select commit to restore —</option>
+  <!-- Selection Form: Shows Commit Details first instead of immediate apply -->
+  <form method="POST" class="mb-3" id="select-commit-form">
+    <input type="hidden" name="action" value="select_commit_details">
+    <select name="commit_hash" onchange="document.getElementById('select-commit-form').submit()">
+      <option value="">— Select commit to view details —</option>
       <?php foreach ($commits as $c): ?>
-      <option value="<?=htmlspecialchars($c['hash'])?>" <?=($selected_commit && $selected_commit['hash'] === $c['hash']) ? 'selected' : ''?>>
+      <option value="<?=htmlspecialchars($c['hash'])?>" 
+        <?= (($view_only_commit && $view_only_commit['hash'] === $c['hash']) || ($selected_commit && $selected_commit['hash'] === $c['hash'])) ? 'selected' : '' ?>>
         [<?=$c['dt']?>] <?=htmlspecialchars(mb_strimwidth($c['subject'], 0, 50, '…'))?>
       </option>
       <?php endforeach; ?>
@@ -326,12 +346,25 @@ function showLogin($err) { ?>
   <!-- Commit Details Area -->
   <div class="flex-1 space-y-3">
     <?php 
-    $display = $selected_commit ?: [
-        'hash' => $commits[0]['hash'],
-        'subject' => $commits[0]['subject'],
-        'body' => $commits[0]['body']
-    ];
+    // Determine which details to show (view target OR final processed target OR fallback to latest)
+    $display = null;
+    $is_preview_mode = false;
+    
+    if ($view_only_commit) {
+        $display = $view_only_commit;
+        $is_preview_mode = true;
+    } elseif ($selected_commit) {
+        $display = $selected_commit;
+    } else {
+        $display = isset($commits[0]) ? [
+            'hash' => $commits[0]['hash'],
+            'subject' => $commits[0]['subject'],
+            'body' => $commits[0]['body']
+        ] : null;
+    }
     ?>
+
+    <?php if ($display): ?>
     <div class="bg-slate-800/40 rounded-lg p-3 border border-slate-700/50">
       <div class="flex items-center justify-between mb-2">
         <span class="text-slate-500 text-xs font-mono uppercase tracking-wider">Commit Message</span>
@@ -349,9 +382,29 @@ function showLogin($err) { ?>
       </div>
     </div>
     
-    <?php if ($selected_commit): ?>
-    <div class="text-center">
+    <!-- Action Options based on Selection State -->
+    <?php if ($is_preview_mode): ?>
+    <div class="bg-slate-900/60 p-3 rounded-lg border border-yellow-500/30 text-center space-y-2">
+      <div class="text-xs text-yellow-400 font-semibold">
+        <i class="fas fa-exclamation-triangle mr-1"></i> Confirm Version Restoration
+      </div>
+      <form method="POST" class="inline-block w-full">
+        <input type="hidden" name="action" value="checkout_commit">
+        <input type="hidden" name="commit_hash" value="<?=htmlspecialchars($display['hash'])?>">
+        <button type="submit" class="w-full btn btn-purple justify-center py-2 text-sm shadow-lg shadow-purple-900/40">
+          <i class="fas fa-check-circle mr-1"></i> Restore this Version
+        </button>
+      </form>
+    </div>
+    <?php elseif ($selected_commit): ?>
+    <div class="text-center bg-green-950/20 p-2.5 rounded-lg border border-green-500/30">
       <span class="text-green-400 text-xs font-semibold"><i class="fas fa-check-circle mr-1"></i> Version Restored Successfully</span>
+    </div>
+    <?php endif; ?>
+
+    <?php else: ?>
+    <div class="text-slate-500 text-center py-8 italic">
+      No commit logs available.
     </div>
     <?php endif; ?>
   </div>
@@ -371,7 +424,7 @@ function showLogin($err) { ?>
 <div class="glass rounded-lg p-3 flex flex-wrap gap-3 items-center justify-between text-xs">
   <div class="text-slate-400 font-semibold uppercase">Quick Links</div>
   <div class="flex flex-wrap gap-2">
-    <a href="<?=SITE_URL?>" target="_blank" class="btn btn-blue btn-sm"><i class="fas fa-home"></i> Home</a>
+    <a href="<?=SITE_URL?>" target="_blank" class="btn btn-slate btn-sm"><i class="fas fa-home"></i> Home</a>
     <a href="<?=SITE_URL?>/#contact" target="_blank" class="btn btn-slate btn-sm"><i class="fas fa-envelope"></i> Contact</a>
     <a href="<?=REPO_URL?>" target="_blank" class="btn btn-slate btn-sm"><i class="fab fa-github"></i> Repo</a>
     <a href="<?=REPO_URL?>/commits/<?=BRANCH?>" target="_blank" class="btn btn-slate btn-sm"><i class="fas fa-list"></i> All Commits</a>
@@ -410,3 +463,4 @@ function colorize($text) {
         '<span class="t-warn">$1</span>', $text);
     return $text;
 }
+?>
