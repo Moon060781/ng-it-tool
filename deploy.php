@@ -441,7 +441,7 @@ function showLogin($err) { ?>
 
 <!-- ── Footer Links ──────────────────────────────────────── -->
 <div class="glass rounded-lg p-3 flex flex-wrap gap-3 items-center justify-between text-xs">
-  <div class="text-slate-400 font-semibold uppercase">Quick Links</div>
+  <div class="text-slate-400 font-semibold uppercase">Quick Link:</div>
   <div class="flex flex-wrap gap-2">
     <a href="<?=SITE_URL?>" target="_blank" class="btn btn-slate btn-sm"><i class="fas fa-home"></i> Home</a>
     <a href="<?=SITE_URL?>/#contact" target="_blank" class="btn btn-slate btn-sm"><i class="fas fa-envelope"></i> Contact</a>
