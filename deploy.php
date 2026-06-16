@@ -303,6 +303,25 @@ function showLogin($err) { ?>
 <!-- LEFT COLUMN: Push Commit ────────────────────────────── -->
 <div class="glass rounded-lg p-3">
   <div class="section-title text-xs"><i class="fas fa-upload text-blue-400"></i> Push Commit</div>
+  
+  <!-- Current Applied Version Status Block -->
+  <?php if (isset($commits[0])): ?>
+  <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 text-xs space-y-1.5 mb-3">
+    <div class="flex justify-between items-center">
+      <span class="text-slate-400">Current Commit ID:</span>
+      <span class="font-mono text-blue-400 bg-blue-950/40 border border-blue-900/30 px-1.5 py-0.5 rounded text-[10px]"><?=substr($commits[0]['hash'], 0, 8)?></span>
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="text-slate-400">Commit Date:</span>
+      <span class="text-slate-300"><?=htmlspecialchars($commits[0]['dt'])?></span>
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="text-slate-400">Applied Status:</span>
+      <span class="text-emerald-400 font-semibold"><i class="fas fa-check-circle text-[10px] mr-0.5"></i> Active (<?=$time_ago?>)</span>
+    </div>
+  </div>
+  <?php endif; ?>
+
   <form method="POST" class="space-y-2">
     <input type="hidden" name="action" value="push">
     <div>
