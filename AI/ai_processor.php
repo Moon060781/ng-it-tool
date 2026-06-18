@@ -2,8 +2,8 @@
 header("Content-Type: application/json");
 
 /**
- * Universal AI Processor (Dynamic Backend Router)
- * Supports OpenAI, Gemini, Apify, Clod.io, and Custom APIs
+ * Universal AI Processor V2 (Truly Dynamic Backend Router)
+ * Supports OpenAI, Gemini, Anthropic, Cohere, and any Custom API
  */
 
 require_once(__DIR__ . "/../cred/config.php");
@@ -15,7 +15,7 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
     );
 } catch (PDOException $e) {
-    echo json_encode(["success" => false, "message" => "DB Error"]); exit();
+    echo json_encode(["success" => false, "message" => "DB Error: " . $e->getMessage()]); exit();
 }
 
 $profile_id = filter_input(INPUT_POST, "profile_id", FILTER_SANITIZE_NUMBER_INT);
@@ -25,7 +25,7 @@ if (!$profile_id || !$prompt) {
     echo json_encode(["success" => false, "message" => "Missing data"]); exit();
 }
 
-// Fetch Profile with Universal Config
+// Fetch Profile with V2 Config
 $stmt = $pdo_ai->prepare("SELECT * FROM ai_vault_keys WHERE id = ? LIMIT 1");
 $stmt->execute([$profile_id]);
 $config = $stmt->fetch();
@@ -35,46 +35,79 @@ if (!$config) {
 }
 
 $apiKey      = $config["api_key"];
-$platform    = $config["platform_name"];
 $endpoint    = $config["api_endpoint"];
 $models      = explode("\n", $config["model_target"]);
 $model       = trim($models[0]);
 
-// Universal Logic
-$method      = $config["request_method"] ?: "POST";
-$format      = $config["request_format"] ?: "OpenAI";
-$template    = $config["request_template"];
-$path        = $config["response_path"] ?: "choices.0.message.content";
-$auth_header = $config["auth_header_template"] ?: "Authorization: Bearer {{KEY}}";
+// V2 Dynamic Config
+$auth_type     = $config["auth_type"] ?: 'bearer';
+$auth_header   = $config["auth_header"] ?: 'Authorization';
+$auth_prefix   = $config["auth_prefix"];
+$sys_msg       = $config["system_message"];
+$user_tpl      = $config["user_message_template"] ?: '{"role":"user","content":"{{PROMPT}}"}';
+$extra_fields  = $config["extra_body_fields"];
+$model_loc     = $config["model_location"] ?: 'body';
+$model_key     = $config["model_key_name"] ?: 'model';
+$method        = $config["request_method"] ?: "POST";
+$resp_path     = $config["response_path"];
 
-// 1. Prepare URL
+// 1. Prepare URL & Model Injection
 $url = $endpoint;
-if ($platform === "Google Gemini" && empty($endpoint)) {
-    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-} elseif ($platform === "OpenAI" && empty($endpoint)) {
-    $url = "https://api.openai.com/v1/chat/completions";
+if ($model_loc === 'query') {
+    $sep = (strpos($url, '?') === false) ? '?' : '&';
+    $url .= $sep . $model_key . "=" . urlencode($model);
 }
 
-// 2. Prepare Payload
+// Query-based Auth (e.g., Gemini)
+if ($auth_type === 'query') {
+    $sep = (strpos($url, '?') === false) ? '?' : '&';
+    $url .= $sep . $auth_header . "=" . urlencode($apiKey);
+}
+
+// 2. Prepare Payload (Body)
 $payload = [];
-if ($format === "OpenAI") {
-    $payload = [
-        "model" => $model,
-        "messages" => [["role" => "user", "content" => $prompt]]
-    ];
-} elseif ($format === "Custom" && !empty($template)) {
-    $json_str = str_replace(["{{PROMPT}}", "{{MODEL}}", "{{KEY}}"], [json_encode($prompt), json_encode($model), $apiKey], $template);
-    $payload = json_decode($json_str, true);
-} elseif ($platform === "Google Gemini") {
-    $payload = ["contents" => [["parts" => [["text" => $prompt]]]]];
-} elseif ($platform === "Apify") {
-    // Apify usually expects the prompt in an 'input' object
-    $payload = ["input" => ["prompt" => $prompt, "model" => $model]];
+
+// Inject Model in Body
+if ($model_loc === 'body') {
+    $payload[$model_key] = $model;
+}
+
+// Handle Messages (Chat Format)
+$messages = [];
+if (!empty($sys_msg)) {
+    $messages[] = ["role" => "system", "content" => $sys_msg];
+}
+
+// Map User Prompt to Template
+$user_msg_json = str_replace("{{PROMPT}}", addslashes($prompt), $user_tpl);
+$user_msg_data = json_decode($user_msg_json, true);
+
+// Check if provider uses a "messages" array (standard) or single prompt
+if (strpos($user_tpl, '"role"') !== false) {
+    $messages[] = $user_msg_data;
+    $payload["messages"] = $messages;
+} else {
+    // Single prompt field (e.g., Cohere or older models)
+    foreach ($user_msg_data as $k => $v) {
+        $payload[$k] = $v;
+    }
+}
+
+// Inject Extra Fields
+if (!empty($extra_fields)) {
+    $extras = json_decode($extra_fields, true);
+    if (is_array($extras)) {
+        $payload = array_merge($payload, $extras);
+    }
 }
 
 // 3. Prepare Headers
 $headers = ["Content-Type: application/json"];
-$headers[] = str_replace("{{KEY}}", $apiKey, $auth_header);
+if ($auth_type === 'bearer' || $auth_type === 'api-key') {
+    $headers[] = $auth_header . ": " . $auth_prefix . $apiKey;
+} elseif ($auth_type === 'basic') {
+    $headers[] = "Authorization: Basic " . base64_encode($apiKey);
+}
 
 // 4. Execute Request
 $ch = curl_init($url);
@@ -83,10 +116,12 @@ curl_setopt_array($ch, [
     CURLOPT_CUSTOMREQUEST  => $method,
     CURLOPT_POSTFIELDS     => json_encode($payload),
     CURLOPT_HTTPHEADER     => $headers,
-    CURLOPT_TIMEOUT        => 60
+    CURLOPT_TIMEOUT        => 60,
+    CURLOPT_SSL_VERIFYPEER => false
 ]);
 $response = curl_exec($ch);
 $err = curl_error($ch);
+$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 if ($err) {
@@ -95,8 +130,13 @@ if ($err) {
 
 $resData = json_decode($response, true);
 
+if ($http_code >= 400) {
+    echo json_encode(["success" => false, "message" => "API Error ($http_code)", "raw" => $resData]); exit();
+}
+
 // 5. Extract Result using Dot Notation Path
 function get_nested_value($data, $path) {
+    if (empty($path)) return null;
     $keys = explode('.', $path);
     foreach ($keys as $key) {
         if (isset($data[$key])) {
@@ -108,14 +148,14 @@ function get_nested_value($data, $path) {
     return $data;
 }
 
-$aiOutput = get_nested_value($resData, $path);
+$aiOutput = get_nested_value($resData, $resp_path);
 
-// Fallback for common platforms if path fails
+// Global Fallbacks if path is empty
 if (empty($aiOutput)) {
     if (isset($resData["choices"][0]["message"]["content"])) $aiOutput = $resData["choices"][0]["message"]["content"];
     elseif (isset($resData["candidates"][0]["content"]["parts"][0]["text"])) $aiOutput = $resData["candidates"][0]["content"]["parts"][0]["text"];
-    elseif (is_array($resData) && isset($resData[0]["text"])) $aiOutput = $resData[0]["text"]; // Apify dataset fallback
-    elseif (is_array($resData) && isset($resData[0]["generated_text"])) $aiOutput = $resData[0]["generated_text"]; // HF fallback
+    elseif (isset($resData["content"][0]["text"])) $aiOutput = $resData["content"][0]["text"]; // Anthropic
+    elseif (isset($resData["text"])) $aiOutput = $resData["text"]; // Cohere
 }
 
 if ($aiOutput) {
