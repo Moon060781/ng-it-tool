@@ -1,6 +1,7 @@
 <?php
 /**
- * Project: AI Vault & Generator — Universal API Connector V2
+ * Project: AI Vault & Generator — Universal API Connector V2.1
+ * Feature: Dynamic Model Selector & Injection
  * Location: /AI/index.php
  */
 
@@ -130,7 +131,7 @@ if (isset($pdo_ai)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Generator V2 — Universal Connector</title>
+    <title>AI Generator V2.1 — Universal Connector</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -182,12 +183,12 @@ if (isset($pdo_ai)) {
     <div class="workspace">
         <div class="main-card">
             <button class="admin-btn" onclick="unlockVault()" title="Admin">⚙️</button>
-            <h2>✨ یونیورسل اے آئی کنٹینٹ جنریٹر V2</h2>
+            <h2>✨ یونیورسل اے آئی کنٹینٹ جنریٹر V2.1</h2>
             <?php echo $status_msg; ?>
 
             <!-- ══ Admin Vault V2 ══ -->
             <div id="adminVault">
-                <h3>🔒 ایڈمن والٹ — یونیورسل اے پی آئی V2</h3>
+                <h3>🔒 ایڈمن والٹ — یونیورسل اے پی آئی V2.1</h3>
                 
                 <div style="margin-bottom:15px;">
                     <label>پری سیٹ منتخب کریں (Auto-Fill):</label>
@@ -225,8 +226,8 @@ if (isset($pdo_ai)) {
                             <input type="password" name="api_key" id="vaultApiKey" placeholder="sk-..." required>
                         </div>
                         <div>
-                            <label>ٹارگٹ ماڈل (Model ID):</label>
-                            <input type="text" name="model_target" id="vaultModel" placeholder="gpt-4o">
+                            <label>ٹارگٹ ماڈلز (ہر لائن میں ایک):</label>
+                            <textarea name="model_target" id="vaultModel" placeholder="gpt-4o\ngpt-3.5-turbo" style="height:60px;"></textarea>
                         </div>
                     </div>
 
@@ -305,17 +306,29 @@ if (isset($pdo_ai)) {
             </div>
 
             <!-- ══ User Interface ══ -->
-            <h3>📝 اے آئی انجن منتخب کریں اور سوال کریں</h3>
-            <div style="margin-bottom:12px;">
-                <select id="selectedProfileId">
-                    <option value="">— انجن منتخب کریں —</option>
-                    <?php foreach ($saved_profiles as $p): ?>
-                        <option value='<?php echo intval($p['id']); ?>'>
-                            <?php echo htmlspecialchars($p['key_name']); ?> (<?php echo htmlspecialchars($p['platform_name']); ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+            <h3>📝 اے آئی انجن اور ماڈل منتخب کریں</h3>
+            
+            <div class="grid-2">
+                <div>
+                    <label>انجن منتخب کریں:</label>
+                    <select id="selectedProfileId" onchange="updateModelSelector()">
+                        <option value="">— انجن منتخب کریں —</option>
+                        <?php foreach ($saved_profiles as $p): ?>
+                            <option value='<?php echo intval($p['id']); ?>' 
+                                    data-models='<?php echo htmlspecialchars($p['model_target']); ?>'>
+                                <?php echo htmlspecialchars($p['key_name']); ?> (<?php echo htmlspecialchars($p['platform_name']); ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label>ماڈل منتخب کریں:</label>
+                    <select id="selectedModelId">
+                        <option value="">— پہلے انجن منتخب کریں —</option>
+                    </select>
+                </div>
             </div>
+
             <div style="margin-bottom:12px;">
                 <textarea id="promptInput" placeholder="اپنا سوال یہاں لکھیں..."></textarea>
             </div>
@@ -332,7 +345,7 @@ if (isset($pdo_ai)) {
                             <div class="key-row">
                                 <div class="key-field"><strong>نام</strong><span><?php echo htmlspecialchars($key['key_name']); ?></span></div>
                                 <div class="key-field"><strong>پلیٹ فارم</strong><span><?php echo htmlspecialchars($key['platform_name']); ?></span></div>
-                                <div class="key-field"><strong>ماڈل</strong><span><?php echo htmlspecialchars($key['model_target']); ?></span></div>
+                                <div class="key-field"><strong>ماڈلز</strong><span><?php echo htmlspecialchars(str_replace("\n", ", ", $key['model_target'])); ?></span></div>
                             </div>
                             <div class="key-actions">
                                 <button class="btn btn-small" style="background:#3498db; color:white;" onclick='editKey(<?php echo json_encode($key); ?>)'>📝 ایڈٹ</button>
@@ -348,18 +361,18 @@ if (isset($pdo_ai)) {
 
 <script>
 const presets = {
-    openai: { platform: "OpenAI", endpoint: "https://api.openai.com/v1/chat/completions", model: "gpt-4o", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" },
-    gemini: { platform: "Google Gemini", endpoint: "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent", model: "gemini-pro", auth_type: "query", auth_header: "key", auth_prefix: "", user_tpl: '{"contents":[{"parts":[{"text":"{{PROMPT}}"}]}]}', resp_path: "candidates.0.content.parts.0.text", model_loc: "query", model_key: "model" },
-    anthropic: { platform: "Anthropic", endpoint: "https://api.anthropic.com/v1/messages", model: "claude-3-opus-20240229", auth_type: "api-key", auth_header: "x-api-key", auth_prefix: "", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "content.0.text", model_loc: "body", model_key: "model", extras: '{"max_tokens":1024, "anthropic-version":"2023-06-01"}' },
-    cohere: { platform: "Cohere", endpoint: "https://api.cohere.ai/v1/generate", model: "command", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"prompt":"{{PROMPT}}"}', resp_path: "text", model_loc: "body", model_key: "model" },
-    groq: { platform: "Groq", endpoint: "https://api.groq.com/openai/v1/chat/completions", model: "llama3-8b-8192", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" }
+    openai: { platform: "OpenAI", endpoint: "https://api.openai.com/v1/chat/completions", models: "gpt-4o\ngpt-4-turbo\ngpt-3.5-turbo", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" },
+    gemini: { platform: "Google Gemini", endpoint: "https://generativelanguage.googleapis.com/v1beta/models/{{MODEL}}:generateContent", models: "gemini-1.5-pro\ngemini-1.5-flash\ngemini-pro", auth_type: "query", auth_header: "key", auth_prefix: "", user_tpl: '{"contents":[{"parts":[{"text":"{{PROMPT}}"}]}]}', resp_path: "candidates.0.content.parts.0.text", model_loc: "body", model_key: "model" },
+    anthropic: { platform: "Anthropic", endpoint: "https://api.anthropic.com/v1/messages", models: "claude-3-5-sonnet-20240620\nclaude-3-opus-20240229\nclaude-3-haiku-20240307", auth_type: "api-key", auth_header: "x-api-key", auth_prefix: "", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "content.0.text", model_loc: "body", model_key: "model", extras: '{"max_tokens":1024, "anthropic-version":"2023-06-01"}' },
+    cohere: { platform: "Cohere", endpoint: "https://api.cohere.ai/v1/generate", models: "command-r-plus\ncommand-r\ncommand", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"prompt":"{{PROMPT}}"}', resp_path: "text", model_loc: "body", model_key: "model" },
+    groq: { platform: "Groq", endpoint: "https://api.groq.com/openai/v1/chat/completions", models: "llama3-70b-8192\nllama3-8b-8192\nmixtral-8x7b-32768", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" }
 };
 
 function applyPreset(id) {
     const p = presets[id];
     document.getElementById('vaultPlatform').value = p.platform;
     document.getElementById('vaultApiEndpoint').value = p.endpoint;
-    document.getElementById('vaultModel').value = p.model;
+    document.getElementById('vaultModel').value = p.models;
     document.getElementById('vaultAuthType').value = p.auth_type;
     document.getElementById('vaultAuthHeader').value = p.auth_header;
     document.getElementById('vaultAuthPrefix').value = p.auth_prefix;
@@ -373,6 +386,28 @@ function applyPreset(id) {
 function unlockVault() { const pin = prompt("PIN:"); if (pin === "7860") document.getElementById('adminVault').style.display = 'block'; }
 function toggleAdvanced() { const adv = document.getElementById('advancedSettings'); adv.style.display = (adv.style.display === 'block') ? 'none' : 'block'; }
 function toggleKeyList() { document.getElementById('keysList').classList.toggle('show'); }
+
+function updateModelSelector() {
+    const profileSelect = document.getElementById('selectedProfileId');
+    const modelSelect = document.getElementById('selectedModelId');
+    const selectedOption = profileSelect.options[profileSelect.selectedIndex];
+    
+    modelSelect.innerHTML = '<option value="">— ماڈل منتخب کریں —</option>';
+    
+    if (selectedOption && selectedOption.value) {
+        const models = selectedOption.getAttribute('data-models').split('\n');
+        models.forEach(m => {
+            if (m.trim()) {
+                const opt = document.createElement('option');
+                opt.value = m.trim();
+                opt.textContent = m.trim();
+                modelSelect.appendChild(opt);
+            }
+        });
+    } else {
+        modelSelect.innerHTML = '<option value="">— پہلے انجن منتخب کریں —</option>';
+    }
+}
 
 function editKey(data) {
     document.getElementById('adminVault').style.display = 'block';
@@ -401,13 +436,21 @@ function cancelEdit() { document.getElementById('edit_id').value = '0'; document
 
 async function processAIGeneration() {
     const profileId = document.getElementById('selectedProfileId').value;
+    const modelId = document.getElementById('selectedModelId').value;
     const prompt = document.getElementById('promptInput').value.trim();
     const loader = document.getElementById('loader');
     const viewport = document.getElementById('responseViewport');
+    
     if (!profileId || !prompt) { alert('انجن اور سوال ضروری ہیں!'); return; }
+    if (!modelId) { alert('براہِ کرم ایک ماڈل منتخب کریں!'); return; }
+    
     loader.style.display = 'block'; viewport.textContent = '';
     try {
-        const res = await fetch('ai_processor.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `profile_id=${profileId}&prompt=${encodeURIComponent(prompt)}` });
+        const res = await fetch('ai_processor.php', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+            body: `profile_id=${profileId}&model_id=${encodeURIComponent(modelId)}&prompt=${encodeURIComponent(prompt)}` 
+        });
         const data = await res.json();
         loader.style.display = 'none';
         if (data.success) { viewport.textContent = data.result; } 

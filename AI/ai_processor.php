@@ -2,8 +2,8 @@
 header("Content-Type: application/json");
 
 /**
- * Universal AI Processor V2 (Truly Dynamic Backend Router)
- * Supports OpenAI, Gemini, Anthropic, Cohere, and any Custom API
+ * Universal AI Processor V2.1 (Dynamic Model Injection)
+ * Supports User-Selected Models from Dropdown
  */
 
 require_once(__DIR__ . "/../cred/config.php");
@@ -18,8 +18,9 @@ try {
     echo json_encode(["success" => false, "message" => "DB Error: " . $e->getMessage()]); exit();
 }
 
-$profile_id = filter_input(INPUT_POST, "profile_id", FILTER_SANITIZE_NUMBER_INT);
-$prompt     = filter_input(INPUT_POST, "prompt",     FILTER_DEFAULT);
+$profile_id    = filter_input(INPUT_POST, "profile_id", FILTER_SANITIZE_NUMBER_INT);
+$user_model_id = filter_input(INPUT_POST, "model_id",   FILTER_DEFAULT);
+$prompt        = filter_input(INPUT_POST, "prompt",     FILTER_DEFAULT);
 
 if (!$profile_id || !$prompt) {
     echo json_encode(["success" => false, "message" => "Missing data"]); exit();
@@ -36,8 +37,9 @@ if (!$config) {
 
 $apiKey      = $config["api_key"];
 $endpoint    = $config["api_endpoint"];
-$models      = explode("\n", $config["model_target"]);
-$model       = trim($models[0]);
+
+// Use User-Selected Model if provided, else fallback to the first model in target list
+$model = !empty($user_model_id) ? trim($user_model_id) : trim(explode("\n", $config["model_target"])[0]);
 
 // V2 Dynamic Config
 $auth_type     = $config["auth_type"] ?: 'bearer';
@@ -51,8 +53,9 @@ $model_key     = $config["model_key_name"] ?: 'model';
 $method        = $config["request_method"] ?: "POST";
 $resp_path     = $config["response_path"];
 
-// 1. Prepare URL & Model Injection
-$url = $endpoint;
+// 1. Prepare URL & Model Injection (Dynamic URL replacement for Gemini-style endpoints)
+$url = str_replace("{{MODEL}}", $model, $endpoint);
+
 if ($model_loc === 'query') {
     $sep = (strpos($url, '?') === false) ? '?' : '&';
     $url .= $sep . $model_key . "=" . urlencode($model);
@@ -67,7 +70,7 @@ if ($auth_type === 'query') {
 // 2. Prepare Payload (Body)
 $payload = [];
 
-// Inject Model in Body
+// Inject Model in Body if specified
 if ($model_loc === 'body') {
     $payload[$model_key] = $model;
 }
@@ -88,8 +91,10 @@ if (strpos($user_tpl, '"role"') !== false) {
     $payload["messages"] = $messages;
 } else {
     // Single prompt field (e.g., Cohere or older models)
-    foreach ($user_msg_data as $k => $v) {
-        $payload[$k] = $v;
+    if (is_array($user_msg_data)) {
+        foreach ($user_msg_data as $k => $v) {
+            $payload[$k] = $v;
+        }
     }
 }
 
