@@ -198,6 +198,8 @@ if (isset($pdo_ai)) {
                         <span class="preset-badge" onclick="applyPreset('anthropic')">Anthropic</span>
                         <span class="preset-badge" onclick="applyPreset('cohere')">Cohere</span>
                         <span class="preset-badge" onclick="applyPreset('groq')">Groq</span>
+                        <span class="preset-btn" data-preset="zai">Z.AI GLM</span>
+
                     </div>
                 </div>
 
@@ -365,7 +367,20 @@ const presets = {
     gemini: { platform: "Google Gemini", endpoint: "https://generativelanguage.googleapis.com/v1beta/models/{{MODEL}}:generateContent", models: "gemini-1.5-pro\ngemini-1.5-flash\ngemini-pro", auth_type: "query", auth_header: "key", auth_prefix: "", user_tpl: '{"contents":[{"parts":[{"text":"{{PROMPT}}"}]}]}', resp_path: "candidates.0.content.parts.0.text", model_loc: "body", model_key: "model" },
     anthropic: { platform: "Anthropic", endpoint: "https://api.anthropic.com/v1/messages", models: "claude-3-5-sonnet-20240620\nclaude-3-opus-20240229\nclaude-3-haiku-20240307", auth_type: "api-key", auth_header: "x-api-key", auth_prefix: "", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "content.0.text", model_loc: "body", model_key: "model", extras: '{"max_tokens":1024, "anthropic-version":"2023-06-01"}' },
     cohere: { platform: "Cohere", endpoint: "https://api.cohere.ai/v1/generate", models: "command-r-plus\ncommand-r\ncommand", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"prompt":"{{PROMPT}}"}', resp_path: "text", model_loc: "body", model_key: "model" },
-    groq: { platform: "Groq", endpoint: "https://api.groq.com/openai/v1/chat/completions", models: "llama3-70b-8192\nllama3-8b-8192\nmixtral-8x7b-32768", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" }
+    groq: { platform: "Groq", endpoint: "https://api.groq.com/openai/v1/chat/completions", models: "llama3-70b-8192\nllama3-8b-8192\nmixtral-8x7b-32768", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" },
+    zai: {
+  platform:    'Z.AI (GLM)',
+  endpoint:    'https://api.z.ai/api/paas/v4/chat/completions',
+  models:      'glm-4.5,glm-4.5-air,glm-4-flash,glm-5.1,glm-5.2',
+  auth_type:   'bearer',
+  auth_header: 'Authorization',
+  auth_prefix: 'Bearer ',
+  user_tpl:    '{"model":"{{model}}","messages":[{"role":"user","content":"{{prompt}}"}],"temperature":0.7}',
+  resp_path:   'choices.0.message.content',
+  model_loc:   'body',
+  model_key:   'model',
+  extras:      ''
+}
 };
 
 function applyPreset(id) {
