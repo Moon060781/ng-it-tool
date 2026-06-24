@@ -198,7 +198,7 @@ if (isset($pdo_ai)) {
                         <span class="preset-badge" onclick="applyPreset('anthropic')">Anthropic</span>
                         <span class="preset-badge" onclick="applyPreset('cohere')">Cohere</span>
                         <span class="preset-badge" onclick="applyPreset('groq')">Groq</span>
-                        <span class="preset-btn" data-preset="zai">Z.AI GLM</span>
+                        <span class="preset-badge" onclick="applyPreset('zai')">Z.AI GLM</span>
 
                     </div>
                 </div>
