@@ -371,7 +371,7 @@ const presets = {
     zai: {
   platform:    'Z.AI (GLM)',
   endpoint:    'https://api.z.ai/api/paas/v4/chat/completions',
-  models:      'glm-4.5,glm-4.5-air,glm-4-flash,glm-5.1,glm-5.2',
+  models:      'glm-4.5\glm-4.5-air\glm-4-flash\glm-5.1\glm-5.2',
   auth_type:   'bearer',
   auth_header: 'Authorization',
   auth_prefix: 'Bearer ',
