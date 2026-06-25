@@ -364,7 +364,7 @@ if (isset($pdo_ai)) {
                                 <div class="key-field"><strong>پلیٹ فارم</strong><span><?php echo htmlspecialchars($key['platform_name']); ?></span></div>
                                 <div class="key-field"><strong>ماڈلز</strong><span><?php echo htmlspecialchars(str_replace("\n", ", ", $key['model_target'])); ?></span></div>
                             </div>
-                            <div class="key-actions">
+                            <div class="key-actions" id="adminActions_<?php echo $key['id']; ?>" style="display:none;">
                                 <button class="btn btn-small" style="background:#3498db; color:white;" onclick='editKey(<?php echo json_encode($key); ?>)'>📝 ایڈٹ</button>
                                 <a href="index.php?action_delete_key=<?php echo intval($key['id']); ?>" class="btn btn-small" style="background:#e74c3c; color:white; text-decoration:none;" onclick="return confirm('حذف کریں؟')">🗑️ حذف</a>
                             </div>
@@ -402,7 +402,7 @@ function applyPreset(id) {
     document.getElementById('vaultExtras').value = p.extras || '';
 }
 
-function unlockVault() { const pin = prompt("PIN:"); if (pin === "7860") document.getElementById('adminVault').style.display = 'block'; }
+function unlockVault() { const pin = prompt("PIN:"); if (pin === "7860") { document.getElementById('adminVault').style.display = 'block'; showAdminActions(); } }
 function toggleAdvanced() { const adv = document.getElementById('advancedSettings'); adv.style.display = (adv.style.display === 'block') ? 'none' : 'block'; }
 function toggleKeyList() { document.getElementById('keysList').classList.toggle('show'); }
 
@@ -536,6 +536,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         star.addEventListener('mouseleave', function() {
+        star.addEventListener('mouseleave', function() {
             // Reset to saved rating or clear
             const ctx = window.currentRatingContext;
             if (ctx) {
@@ -551,6 +552,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+function showAdminActions() {
+    document.querySelectorAll('[id^="adminActions_"]').forEach(el => {
+        el.style.display = 'flex';
+    });
+}
 </script>
 </body>
 </html>
