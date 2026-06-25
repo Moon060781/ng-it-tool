@@ -365,7 +365,7 @@ if (isset($pdo_ai)) {
                                 <div class="key-field"><strong>ماڈلز</strong><span><?php echo htmlspecialchars(str_replace("\n", ", ", $key['model_target'])); ?></span></div>
                             </div>
                             <div class="key-actions" id="adminActions_<?php echo $key['id']; ?>" style="display:none;">
-                                <button class="btn btn-small" style="background:#3498db; color:white;" onclick='editKey(<?php echo json_encode($key); ?>)'>📝 ایڈٹ</button>
+                                <button class="btn btn-small" style="background:#3498db; color:white;" onclick='editKey(<?php echo json_encode($key, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>📝 ایڈٹ</button>
                                 <a href="index.php?action_delete_key=<?php echo intval($key['id']); ?>" class="btn btn-small" style="background:#e74c3c; color:white; text-decoration:none;" onclick="return confirm('حذف کریں؟')">🗑️ حذف</a>
                             </div>
                         </div>
