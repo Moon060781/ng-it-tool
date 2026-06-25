@@ -1,6 +1,6 @@
 <?php
 /**
- * Project: AI Vault & Generator — Universal API Connector V2.1
+ * Project:  AI Vault & Generator — Universal API Connector V2.2
  * Feature: Dynamic Model Selector & Injection
  * Location: /AI/index.php
  */
