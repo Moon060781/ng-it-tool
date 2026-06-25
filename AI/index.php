@@ -174,6 +174,9 @@ if (isset($pdo_ai)) {
         .admin-btn { position: absolute; top: 12px; left: 14px; background: none; border: none; font-size: 18px; cursor: pointer; color: #94a3b8; }
         .preset-badge { display: inline-block; padding: 4px 8px; background: #e2e8f0; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px; margin-bottom: 5px; }
         .preset-badge:hover { background: #cbd5e1; }
+        .star { font-size: 24px; color: #cbd5e1; cursor: pointer; transition: color 0.2s; margin-right: 4px; }
+        .star.active, .star:hover { color: #f59e0b; }
+        #copyResultBtn.copied { background: #059669; }
     </style>
 </head>
 <body>
@@ -199,7 +202,7 @@ if (isset($pdo_ai)) {
                         <span class="preset-badge" onclick="applyPreset('cohere')">Cohere</span>
                         <span class="preset-badge" onclick="applyPreset('groq')">Groq</span>
                         <span class="preset-badge" onclick="applyPreset('zai')">Z.AI GLM</span>
-
+                        <span class="preset-badge" onclick="applyPreset('openrouter')">OpenRouter</span>
                     </div>
                 </div>
 
@@ -337,6 +340,18 @@ if (isset($pdo_ai)) {
             <button class="btn btn-blue" onclick="processAIGeneration()">جواب حاصل کریں 🚀</button>
             <div class="loader" id="loader">اے آئی سوچ رہا ہے...</div>
             <div class="output-box" id="responseViewport">نتیجہ یہاں ظاہر ہوگا۔</div>
+            
+            <!-- Copy Button & Rating Section -->
+            <div id="resultActions" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0;">
+                <button class="btn btn-small" id="copyResultBtn" onclick="copyResult()" style="background:#10b981; color:white;">📋 کاپی کریں</button>
+                <span style="margin-right:15px; font-size:13px; color:#64748b;">ریٹنگ دیں:</span>
+                <span class="star" data-value="1" onclick="rateModel(1)">★</span>
+                <span class="star" data-value="2" onclick="rateModel(2)">★</span>
+                <span class="star" data-value="3" onclick="rateModel(3)">★</span>
+                <span class="star" data-value="4" onclick="rateModel(4)">★</span>
+                <span class="star" data-value="5" onclick="rateModel(5)">★</span>
+                <span id="ratingMsg" style="font-size:12px; color:#64748b; margin-right:8px;"></span>
+            </div>
 
             <!-- ── API Key List ── -->
             <div class="api-list">
@@ -364,11 +379,12 @@ if (isset($pdo_ai)) {
 <script>
 const presets = {
     openai: { platform: "OpenAI", endpoint: "https://api.openai.com/v1/chat/completions", models: "gpt-4o\ngpt-4-turbo\ngpt-3.5-turbo", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" },
-    gemini: { platform: "Google Gemini", endpoint: "https://generativelanguage.googleapis.com/v1beta/models/{{MODEL}}:generateContent", models: "gemini-1.5-pro\ngemini-1.5-flash\ngemini-pro", auth_type: "query", auth_header: "key", auth_prefix: "", user_tpl: '{"contents":[{"parts":[{"text":"{{PROMPT}}"}]}]}', resp_path: "candidates.0.content.parts.0.text", model_loc: "body", model_key: "model" },
+    gemini: { platform: "Google Gemini", endpoint: "https://generativelanguage.googleapis.com/v1beta/models/{{MODEL}}:generateContent", models: "gemini-2.5-flash\ngemini-2.5-pro-preview-06-05\ngemini-2.0-flash\ngemini-1.5-pro", auth_type: "query", auth_header: "key", auth_prefix: "", user_tpl: '{"contents":[{"parts":[{"text":"{{PROMPT}}"}]}]}', resp_path: "candidates.0.content.parts.0.text", model_loc: "body", model_key: "model" },
     anthropic: { platform: "Anthropic", endpoint: "https://api.anthropic.com/v1/messages", models: "claude-3-5-sonnet-20240620\nclaude-3-opus-20240229\nclaude-3-haiku-20240307", auth_type: "api-key", auth_header: "x-api-key", auth_prefix: "", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "content.0.text", model_loc: "body", model_key: "model", extras: '{"max_tokens":1024, "anthropic-version":"2023-06-01"}' },
     cohere: { platform: "Cohere", endpoint: "https://api.cohere.ai/v1/generate", models: "command-r-plus\ncommand-r\ncommand", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"prompt":"{{PROMPT}}"}', resp_path: "text", model_loc: "body", model_key: "model" },
-    groq: { platform: "Groq", endpoint: "https://api.groq.com/openai/v1/chat/completions", models: "llama3-70b-8192\nllama3-8b-8192\nmixtral-8x7b-32768", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" },
-    zai: { platform: "Z.AI (GLM)", endpoint: "https://api.z.ai/api/paas/v4/chat/completions", models: "glm-4.5\nglm-4.5-air\nglm-4-flash\nglm-5.1\nglm-5.2", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" }
+    groq: { platform: "Groq", endpoint: "https://api.groq.com/openai/v1/chat/completions", models: "llama-3.3-70b-versatile\nllama-3.1-8b-instant\nmixtral-8x7b-32768", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" },
+    zai: { platform: "Z.AI (GLM)", endpoint: "https://api.z.ai/api/paas/v4/chat/completions", models: "glm-4.5\nglm-4.5-air\nglm-4-flash\nglm-5.1\nglm-5.2", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" },
+    openrouter: { platform: "OpenRouter", endpoint: "https://openrouter.ai/api/v1/chat/completions", models: "openai/gpt-4o\nmeta-llama/llama-3-8b-instruct\nanthropic/claude-3-haiku", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" }
 };
 
 function applyPreset(id) {
@@ -443,11 +459,13 @@ async function processAIGeneration() {
     const prompt = document.getElementById('promptInput').value.trim();
     const loader = document.getElementById('loader');
     const viewport = document.getElementById('responseViewport');
+    const resultActions = document.getElementById('resultActions');
     
     if (!profileId || !prompt) { alert('انجن اور سوال ضروری ہیں!'); return; }
     if (!modelId) { alert('براہِ کرم ایک ماڈل منتخب کریں!'); return; }
     
     loader.style.display = 'block'; viewport.textContent = '';
+    resultActions.style.display = 'none';
     try {
         const res = await fetch('ai_processor.php', { 
             method: 'POST', 
@@ -456,10 +474,83 @@ async function processAIGeneration() {
         });
         const data = await res.json();
         loader.style.display = 'none';
-        if (data.success) { viewport.textContent = data.result; } 
+        if (data.success) { 
+            viewport.textContent = data.result; 
+            resultActions.style.display = 'block';
+            // Store current model info for rating
+            window.currentRatingContext = { profileId, modelId };
+        } 
         else { viewport.innerHTML = "<span style='color:red;'>خرابی: " + data.message + "</span><br><small>" + JSON.stringify(data.raw || '') + "</small>"; }
     } catch (err) { loader.style.display = 'none'; viewport.textContent = "سرور سے رابطہ نہیں ہو سکا۔"; }
 }
+
+function copyResult() {
+    const text = document.getElementById('responseViewport').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyResultBtn');
+        btn.textContent = '✅ کاپی ہو گیا!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.textContent = '📋 کاپی کریں';
+            btn.classList.remove('copied');
+        }, 2000);
+    }).catch(err => {
+        alert('کاپی کرنے میں خرابی: ' + err);
+    });
+}
+
+function rateModel(stars) {
+    const ctx = window.currentRatingContext;
+    if (!ctx) { alert('پہلے کوئی جواب حاصل کریں!'); return; }
+    
+    // Update UI
+    document.querySelectorAll('.star').forEach((s, i) => {
+        s.classList.toggle('active', i < stars);
+    });
+    document.getElementById('ratingMsg').textContent = stars + ' ستارے محفوظ ہو رہے ہیں...';
+    
+    // Save rating to localStorage (simple client-side storage)
+    const ratingKey = `rating_${ctx.profileId}_${ctx.modelId}`;
+    localStorage.setItem(ratingKey, stars);
+    
+    // Also save aggregate ratings
+    const aggKey = `ratings_aggregate`;
+    let agg = JSON.parse(localStorage.getItem(aggKey) || '{}');
+    if (!agg[ratingKey]) agg[ratingKey] = { total: 0, count: 0 };
+    agg[ratingKey].total += parseInt(stars);
+    agg[ratingKey].count += 1;
+    agg[ratingKey].avg = (agg[ratingKey].total / agg[ratingKey].count).toFixed(1);
+    localStorage.setItem(aggKey, JSON.stringify(agg));
+    
+    document.getElementById('ratingMsg').textContent = 'شکریہ! آپ نے ' + stars + ' ستارے دیے۔ (اوسط: ' + agg[ratingKey].avg + ')';
+}
+
+// Load saved ratings on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effect for stars
+    document.querySelectorAll('.star').forEach(star => {
+        star.addEventListener('mouseenter', function() {
+            const val = parseInt(this.getAttribute('data-value'));
+            document.querySelectorAll('.star').forEach((s, i) => {
+                s.classList.toggle('active', i < val);
+            });
+        });
+        star.addEventListener('mouseleave', function() {
+            // Reset to saved rating or clear
+            const ctx = window.currentRatingContext;
+            if (ctx) {
+                const ratingKey = `rating_${ctx.profileId}_${ctx.modelId}`;
+                const saved = localStorage.getItem(ratingKey);
+                const savedVal = saved ? parseInt(saved) : 0;
+                document.querySelectorAll('.star').forEach((s, i) => {
+                    s.classList.toggle('active', i < savedVal);
+                });
+            } else {
+                document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
+            }
+        });
+    });
+});
 </script>
 </body>
 </html>
