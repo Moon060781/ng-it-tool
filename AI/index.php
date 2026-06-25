@@ -538,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 s.classList.toggle('active', i < val);
             });
         });
-        star.addEventListener('mouseleave', function() {
+        
         star.addEventListener('mouseleave', function() {
             // Reset to saved rating or clear
             const ctx = window.currentRatingContext;
