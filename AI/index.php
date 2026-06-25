@@ -430,6 +430,7 @@ function updateModelSelector() {
 
 function editKey(data) {
     document.getElementById('adminVault').style.display = 'block';
+    showAdminActions();
     document.getElementById('edit_id').value = data.id;
     document.getElementById('vaultKeyName').value = data.key_name;
     document.getElementById('vaultPlatform').value = data.platform_name;
