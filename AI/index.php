@@ -1,8 +1,9 @@
 <?php
 /**
- * Project:  AI Vault & Generator — Universal API Connector V2.2
+ * Project:  AI Vault & Generator — Universal API Connector V2.3
  * Feature: Dynamic Model Selector & Injection
  * Location: /AI/index.php
+ * Updated: 2026-06-28 | Tool: Claude Sonnet 4.6
  */
 
 $status_msg    = "";
@@ -114,7 +115,7 @@ if (isset($_GET['action_delete_key']) && isset($pdo_ai)) {
     }
 }
 
-if (isset($_GET['saved']) && $_GET['saved'] == 1) $status_msg = "<div class='alert success'>محفوظ ہو گیا!</div>";
+if (isset($_GET['saved'])   && $_GET['saved']   == 1) $status_msg = "<div class='alert success'>محفوظ ہو گیا!</div>";
 if (isset($_GET['updated']) && $_GET['updated'] == 1) $status_msg = "<div class='alert success'>اپڈیٹ ہو گیا!</div>";
 if (isset($_GET['deleted']) && $_GET['deleted'] == 1) $status_msg = "<div class='alert success'>حذف ہو گیا!</div>";
 
@@ -125,13 +126,15 @@ if (isset($pdo_ai)) {
         $saved_profiles = $stmt_sel->fetchAll();
     } catch (PDOException $e) { }
 }
+
+$last_update = date('Y-m-d H:i:s', time() + 5*3600); // PKT = UTC+5
 ?>
 <!DOCTYPE html>
 <html lang="ur" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Generator V2.1 — Universal Connector</title>
+    <title>AI Generator V2.3 — Universal Connector</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -152,7 +155,7 @@ if (isset($pdo_ai)) {
         .btn:hover { opacity: .88; }
         .btn-blue { background: #2563eb; color: #fff; width: 100%; }
         .btn-orange { background: #d97706; color: #fff; width: 100%; margin-top: 10px; }
-        .btn-small { padding: 6px 10px; font-size: 12px; width: auto; margin: 0 4px; }
+        .btn-small { padding: 6px 10px; font-size: 12px; width: auto; margin: 0 4px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .alert { padding: 11px 14px; border-radius: 6px; font-size: 13px; text-align: center; font-family: 'Noto Nastaliq Urdu', serif; margin-bottom: 14px; font-weight: 600; }
         .success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
         .error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
@@ -169,42 +172,61 @@ if (isset($pdo_ai)) {
         .key-field strong { color: #0f172a; font-size: 12px; margin-bottom: 2px; }
         .key-field span { color: #475569; font-family: monospace; word-break: break-all; }
         .key-actions { display: flex; gap: 4px; margin-top: 8px; }
-        .output-box { margin-top: 16px; padding: 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; min-height: 120px; font-size: 15px; line-height: 1.8; white-space: pre-wrap; color: #0f172a; }
+        .output-box { margin-top: 16px; padding: 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; min-height: 120px; font-size: 15px; line-height: 1.8; white-space: pre-wrap; color: #0f172a; word-break: break-word; }
         .loader { text-align: center; color: #2563eb; font-weight: 600; margin: 10px 0; display: none; font-size: 14px; font-family: 'Noto Nastaliq Urdu', serif; }
         .admin-btn { position: absolute; top: 12px; left: 14px; background: none; border: none; font-size: 18px; cursor: pointer; color: #94a3b8; }
-        .preset-badge { display: inline-block; padding: 4px 8px; background: #e2e8f0; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px; margin-bottom: 5px; }
+        .preset-badge { display: inline-block; padding: 4px 8px; background: #e2e8f0; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px; margin-bottom: 5px; border: none; font-family: inherit; }
         .preset-badge:hover { background: #cbd5e1; }
-        .star { font-size: 24px; color: #cbd5e1; cursor: pointer; transition: color 0.2s; margin-right: 4px; }
-        .star.active, .star:hover { color: #f59e0b; }
+        /* Result Actions */
+        #resultActions { display: none; margin-top: 12px; padding: 10px 14px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; }
+        #resultActions .actions-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        #copyResultBtn { background: #10b981; color: white; padding: 7px 14px; font-size: 13px; font-family: 'Noto Nastaliq Urdu', serif; transition: background .2s; }
         #copyResultBtn.copied { background: #059669; }
+        /* Star Rating */
+        .stars-wrap { display: flex; align-items: center; gap: 4px; direction: ltr; }
+        .star { font-size: 22px; color: #cbd5e1; cursor: pointer; transition: color .15s; line-height: 1; user-select: none; }
+        .star.active { color: #f59e0b; }
+        .star.hover-active { color: #fbbf24; }
+        #ratingLabel { font-size: 12px; color: #64748b; font-family: 'Noto Nastaliq Urdu', serif; margin-right: 6px; }
+        /* Admin only */
         .admin-only { display: none !important; }
         .admin-only.show-admin { display: flex !important; }
+        /* Footer */
+        .page-footer { background: #1e293b; color: #94a3b8; text-align: center; padding: 10px; font-size: 11px; margin-top: auto; }
+        .page-footer a { color: #60a5fa; text-decoration: none; }
+        .page-footer a:hover { text-decoration: underline; }
+        @media (max-width: 768px) {
+            .dashboard-wrap { flex-direction: column; }
+            .ad-col { width: 100%; min-height: 90px; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
 <div class="dashboard-wrap">
     <div class="ad-col">AdSense<br>160×600</div>
+
     <div class="workspace">
         <div class="main-card">
             <button class="admin-btn" onclick="unlockVault()" title="Admin">⚙️</button>
-            <h2>✨ یونیورسل اے آئی کنٹینٹ جنریٹر V2.1</h2>
+            <h2>✨ یونیورسل اے آئی کنٹینٹ جنریٹر V2.3</h2>
             <?php echo $status_msg; ?>
 
-            <!-- ══ Admin Vault V2 ══ -->
+            <!-- ══ Admin Vault ══ -->
             <div id="adminVault">
-                <h3>🔒 ایڈمن والٹ — یونیورسل اے پی آئی V2.1</h3>
+                <h3>🔒 ایڈمن والٹ — یونیورسل اے پی آئی V2.3</h3>
                 
                 <div style="margin-bottom:15px;">
                     <label>پری سیٹ منتخب کریں (Auto-Fill):</label>
                     <div id="presets">
-                        <span class="preset-badge" onclick="applyPreset('openai')">OpenAI</span>
-                        <span class="preset-badge" onclick="applyPreset('gemini')">Google Gemini</span>
-                        <span class="preset-badge" onclick="applyPreset('anthropic')">Anthropic</span>
-                        <span class="preset-badge" onclick="applyPreset('cohere')">Cohere</span>
-                        <span class="preset-badge" onclick="applyPreset('groq')">Groq</span>
-                        <span class="preset-badge" onclick="applyPreset('zai')">Z.AI GLM</span>
-                        <span class="preset-badge" onclick="applyPreset('openrouter')">OpenRouter</span>
+                        <button class="preset-badge" onclick="applyPreset('openai')">OpenAI</button>
+                        <button class="preset-badge" onclick="applyPreset('gemini')">Google Gemini</button>
+                        <button class="preset-badge" onclick="applyPreset('anthropic')">Anthropic</button>
+                        <button class="preset-badge" onclick="applyPreset('cohere')">Cohere</button>
+                        <button class="preset-badge" onclick="applyPreset('groq')">Groq</button>
+                        <button class="preset-badge" onclick="applyPreset('zai')">Z.AI GLM</button>
+                        <button class="preset-badge" onclick="applyPreset('openrouter')">OpenRouter</button>
                     </div>
                 </div>
 
@@ -234,7 +256,7 @@ if (isset($pdo_ai)) {
                         </div>
                         <div>
                             <label>ٹارگٹ ماڈلز (ہر لائن میں ایک):</label>
-                            <textarea name="model_target" id="vaultModel" placeholder="gpt-4o\ngpt-3.5-turbo" style="height:60px;"></textarea>
+                            <textarea name="model_target" id="vaultModel" placeholder="gpt-4o&#10;gpt-3.5-turbo" style="height:60px;"></textarea>
                         </div>
                     </div>
 
@@ -263,7 +285,7 @@ if (isset($pdo_ai)) {
                     <div id="advancedSettings" class="advanced-settings">
                         <div class="grid-2">
                             <div>
-                                <label>سسٹم میسج (System Prompt):</label>
+                                <label>سسٹم میسج:</label>
                                 <textarea name="system_message" id="vaultSysMsg" placeholder="You are a helpful assistant."></textarea>
                             </div>
                             <div>
@@ -281,7 +303,7 @@ if (isset($pdo_ai)) {
                                 </select>
                             </div>
                             <div>
-                                <label>ماڈل کی (Key Name):</label>
+                                <label>ماڈل کی نام:</label>
                                 <input type="text" name="model_key_name" id="vaultModelKey" placeholder="model">
                             </div>
                             <div>
@@ -337,25 +359,29 @@ if (isset($pdo_ai)) {
             </div>
 
             <div style="margin-bottom:12px;">
-                <textarea id="promptInput" placeholder="اپنا سوال یہاں لکھیں..."></textarea>
+                <textarea id="promptInput" rows="4" placeholder="اپنا سوال یہاں لکھیں..."></textarea>
             </div>
             <button class="btn btn-blue" onclick="processAIGeneration()">جواب حاصل کریں 🚀</button>
             <div class="loader" id="loader">اے آئی سوچ رہا ہے...</div>
             <div class="output-box" id="responseViewport">نتیجہ یہاں ظاہر ہوگا۔</div>
-            
-            <!-- Copy Button & Rating Section -->
-            <div id="resultActions" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0;">
-                <button class="btn btn-small" id="copyResultBtn" onclick="copyResult()" style="background:#10b981; color:white;">📋 کاپی کریں</button>
-                <span style="margin-right:15px; font-size:13px; color:#64748b;">ریٹنگ دیں:</span>
-                <span class="star" data-value="1" onclick="rateModel(1)">★</span>
-                <span class="star" data-value="2" onclick="rateModel(2)">★</span>
-                <span class="star" data-value="3" onclick="rateModel(3)">★</span>
-                <span class="star" data-value="4" onclick="rateModel(4)">★</span>
-                <span class="star" data-value="5" onclick="rateModel(5)">★</span>
-                <span id="ratingMsg" style="font-size:12px; color:#64748b; margin-right:8px;"></span>
+
+            <!-- Copy & Rating -->
+            <div id="resultActions">
+                <div class="actions-row">
+                    <button class="btn btn-small" id="copyResultBtn" onclick="copyResult()">📋 کاپی کریں</button>
+                    <span id="ratingLabel">ریٹنگ دیں:</span>
+                    <div class="stars-wrap" id="starsWrap">
+                        <span class="star" data-value="1">★</span>
+                        <span class="star" data-value="2">★</span>
+                        <span class="star" data-value="3">★</span>
+                        <span class="star" data-value="4">★</span>
+                        <span class="star" data-value="5">★</span>
+                    </div>
+                    <span id="ratingMsg" style="font-size:12px; color:#64748b;"></span>
+                </div>
             </div>
 
-            <!-- ── API Key List ── -->
+            <!-- API Key List -->
             <div class="api-list">
                 <button class="collapse-btn" onclick="toggleKeyList()">📋 محفوظ شدہ انجن لسٹ</button>
                 <div id="keysList">
@@ -376,115 +402,197 @@ if (isset($pdo_ai)) {
             </div>
         </div>
     </div>
+
+    <div class="ad-col">AdSense<br>160×600</div>
 </div>
+
+<!-- Footer -->
+<footer class="page-footer">
+    آخری اپڈیٹ: <?php echo $last_update; ?> PKT &nbsp;|&nbsp;
+    <a href="../deploy.php" target="_blank">deploy.php</a> &nbsp;|&nbsp;
+    Universal AI Connector V2.3
+</footer>
 
 <script>
 const presets = {
-    openai: { platform: "OpenAI", endpoint: "https://api.openai.com/v1/chat/completions", models: "gpt-4o\ngpt-4-turbo\ngpt-3.5-turbo", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" },
-    gemini: { platform: "Google Gemini", endpoint: "https://generativelanguage.googleapis.com/v1beta/models/{{MODEL}}:generateContent", models: "gemini-2.5-flash\ngemini-2.5-pro-preview-06-05\ngemini-2.0-flash\ngemini-1.5-pro", auth_type: "query", auth_header: "key", auth_prefix: "", user_tpl: '{"contents":[{"parts":[{"text":"{{PROMPT}}"}]}]}', resp_path: "candidates.0.content.parts.0.text", model_loc: "body", model_key: "model" },
-    anthropic: { platform: "Anthropic", endpoint: "https://api.anthropic.com/v1/messages", models: "claude-3-5-sonnet-20240620\nclaude-3-opus-20240229\nclaude-3-haiku-20240307", auth_type: "api-key", auth_header: "x-api-key", auth_prefix: "", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "content.0.text", model_loc: "body", model_key: "model", extras: '{"max_tokens":1024, "anthropic-version":"2023-06-01"}' },
-    cohere: { platform: "Cohere", endpoint: "https://api.cohere.ai/v1/generate", models: "command-r-plus\ncommand-r\ncommand", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"prompt":"{{PROMPT}}"}', resp_path: "text", model_loc: "body", model_key: "model" },
-    groq: { platform: "Groq", endpoint: "https://api.groq.com/openai/v1/chat/completions", models: "llama-3.3-70b-versatile\nllama-3.1-8b-instant\nmixtral-8x7b-32768", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" },
-    zai: { platform: "Z.AI (GLM)", endpoint: "https://api.z.ai/api/paas/v4/chat/completions", models: "glm-4.5\nglm-4.5-air\nglm-4-flash\nglm-5.1\nglm-5.2", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" },
-    openrouter: { platform: "OpenRouter", endpoint: "https://openrouter.ai/api/v1/chat/completions", models: "openai/gpt-4o\nmeta-llama/llama-3-8b-instruct\nanthropic/claude-3-haiku", auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ", user_tpl: '{"role":"user","content":"{{PROMPT}}"}', resp_path: "choices.0.message.content", model_loc: "body", model_key: "model" }
+    openai: {
+        platform: "OpenAI",
+        endpoint: "https://api.openai.com/v1/chat/completions",
+        models: "gpt-4o\ngpt-4-turbo\ngpt-3.5-turbo",
+        auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ",
+        user_tpl: '{"role":"user","content":"{{PROMPT}}"}',
+        resp_path: "choices.0.message.content", model_loc: "body", model_key: "model"
+    },
+    gemini: {
+        platform: "Google Gemini",
+        endpoint: "https://generativelanguage.googleapis.com/v1beta/models/{{MODEL}}:generateContent",
+        models: "gemini-2.5-flash\ngemini-2.5-pro\ngemini-2.0-flash\ngemini-1.5-pro",
+        auth_type: "query", auth_header: "key", auth_prefix: "",
+        user_tpl: '{"contents":[{"parts":[{"text":"{{PROMPT}}"}]}]}',
+        resp_path: "candidates.0.content.parts.0.text", model_loc: "body", model_key: "model"
+    },
+    anthropic: {
+        platform: "Anthropic",
+        endpoint: "https://api.anthropic.com/v1/messages",
+        models: "claude-sonnet-4-6\nclaude-3-5-sonnet-20240620\nclaude-3-haiku-20240307",
+        auth_type: "api-key", auth_header: "x-api-key", auth_prefix: "",
+        user_tpl: '{"role":"user","content":"{{PROMPT}}"}',
+        resp_path: "content.0.text", model_loc: "body", model_key: "model",
+        extras: '{"max_tokens":1024,"anthropic-version":"2023-06-01"}'
+    },
+    cohere: {
+        platform: "Cohere",
+        endpoint: "https://api.cohere.ai/v1/generate",
+        models: "command-r-plus\ncommand-r\ncommand",
+        auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ",
+        user_tpl: '{"prompt":"{{PROMPT}}"}',
+        resp_path: "text", model_loc: "body", model_key: "model"
+    },
+    groq: {
+        platform: "Groq",
+        endpoint: "https://api.groq.com/openai/v1/chat/completions",
+        models: "llama-3.3-70b-versatile\nllama-3.1-8b-instant\ndeepseek-r1-distill-llama-70b\ngemma2-9b-it",
+        auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ",
+        user_tpl: '{"role":"user","content":"{{PROMPT}}"}',
+        resp_path: "choices.0.message.content", model_loc: "body", model_key: "model"
+    },
+    zai: {
+        platform: "Z.AI (GLM)",
+        endpoint: "https://api.z.ai/api/paas/v4/chat/completions",
+        models: "glm-4.5\nglm-4.5-air\nglm-4-flash\nglm-5.1\nglm-5.2",
+        auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ",
+        user_tpl: '{"role":"user","content":"{{PROMPT}}"}',
+        resp_path: "choices.0.message.content", model_loc: "body", model_key: "model"
+    },
+    openrouter: {
+        platform: "OpenRouter",
+        endpoint: "https://openrouter.ai/api/v1/chat/completions",
+        models: "openai/gpt-4o\nmeta-llama/llama-3-8b-instruct\nanthropic/claude-3-haiku\ngoogle/gemini-flash-1.5",
+        auth_type: "bearer", auth_header: "Authorization", auth_prefix: "Bearer ",
+        user_tpl: '{"role":"user","content":"{{PROMPT}}"}',
+        resp_path: "choices.0.message.content", model_loc: "body", model_key: "model"
+    }
 };
 
 function applyPreset(id) {
     const p = presets[id];
-    document.getElementById('vaultPlatform').value = p.platform;
+    if (!p) return;
+    document.getElementById('vaultPlatform').value    = p.platform;
     document.getElementById('vaultApiEndpoint').value = p.endpoint;
-    document.getElementById('vaultModel').value = p.models;
-    document.getElementById('vaultAuthType').value = p.auth_type;
-    document.getElementById('vaultAuthHeader').value = p.auth_header;
-    document.getElementById('vaultAuthPrefix').value = p.auth_prefix;
-    document.getElementById('vaultUserTpl').value = p.user_tpl;
-    document.getElementById('vaultRespPath').value = p.resp_path;
-    document.getElementById('vaultModelLoc').value = p.model_loc;
-    document.getElementById('vaultModelKey').value = p.model_key;
-    document.getElementById('vaultExtras').value = p.extras || '';
+    document.getElementById('vaultModel').value       = p.models;
+    document.getElementById('vaultAuthType').value    = p.auth_type;
+    document.getElementById('vaultAuthHeader').value  = p.auth_header;
+    document.getElementById('vaultAuthPrefix').value  = p.auth_prefix;
+    document.getElementById('vaultUserTpl').value     = p.user_tpl;
+    document.getElementById('vaultRespPath').value    = p.resp_path;
+    document.getElementById('vaultModelLoc').value    = p.model_loc;
+    document.getElementById('vaultModelKey').value    = p.model_key;
+    document.getElementById('vaultExtras').value      = p.extras || '';
+    document.getElementById('advancedSettings').style.display = 'block';
 }
 
-function unlockVault() { const pin = prompt("PIN:"); if (pin === "7860") { document.getElementById('adminVault').style.display = 'block'; showAdminActions(); } }
-function toggleAdvanced() { const adv = document.getElementById('advancedSettings'); adv.style.display = (adv.style.display === 'block') ? 'none' : 'block'; }
-function toggleKeyList() { document.getElementById('keysList').classList.toggle('show'); }
+function unlockVault() {
+    const pin = prompt("PIN:");
+    if (pin === "7860") {
+        document.getElementById('adminVault').style.display = 'block';
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.add('show-admin'));
+    }
+}
+
+function toggleAdvanced() {
+    const adv = document.getElementById('advancedSettings');
+    adv.style.display = adv.style.display === 'block' ? 'none' : 'block';
+}
+
+function toggleKeyList() {
+    document.getElementById('keysList').classList.toggle('show');
+}
 
 function updateModelSelector() {
     const profileSelect = document.getElementById('selectedProfileId');
-    const modelSelect = document.getElementById('selectedModelId');
-    const selectedOption = profileSelect.options[profileSelect.selectedIndex];
-    
+    const modelSelect   = document.getElementById('selectedModelId');
+    const opt           = profileSelect.options[profileSelect.selectedIndex];
     modelSelect.innerHTML = '<option value="">— ماڈل منتخب کریں —</option>';
-    
-    if (selectedOption && selectedOption.value) {
-        const models = selectedOption.getAttribute('data-models').split('\n');
+    if (opt && opt.value) {
+        const models = opt.getAttribute('data-models').split('\n');
         models.forEach(m => {
-            if (m.trim()) {
-                const opt = document.createElement('option');
-                opt.value = m.trim();
-                opt.textContent = m.trim();
-                modelSelect.appendChild(opt);
+            m = m.trim();
+            if (m) {
+                const o = document.createElement('option');
+                o.value = m; o.textContent = m;
+                modelSelect.appendChild(o);
             }
         });
-    } else {
-        modelSelect.innerHTML = '<option value="">— پہلے انجن منتخب کریں —</option>';
     }
 }
 
 function editKey(data) {
     document.getElementById('adminVault').style.display = 'block';
-    showAdminActions();
-    document.getElementById('edit_id').value = data.id;
-    document.getElementById('vaultKeyName').value = data.key_name;
-    document.getElementById('vaultPlatform').value = data.platform_name;
-    document.getElementById('vaultApiEndpoint').value = data.api_endpoint;
-    document.getElementById('vaultApiKey').value = data.api_key;
-    document.getElementById('vaultModel').value = data.model_target;
-    document.getElementById('vaultAuthType').value = data.auth_type;
-    document.getElementById('vaultAuthHeader').value = data.auth_header;
-    document.getElementById('vaultAuthPrefix').value = data.auth_prefix;
-    document.getElementById('vaultSysMsg').value = data.system_message;
-    document.getElementById('vaultUserTpl').value = data.user_message_template;
-    document.getElementById('vaultExtras').value = data.extra_body_fields;
-    document.getElementById('vaultModelLoc').value = data.model_location;
-    document.getElementById('vaultModelKey').value = data.model_key_name;
-    document.getElementById('vaultMethod').value = data.request_method;
-    document.getElementById('vaultRespPath').value = data.response_path;
-    document.getElementById('saveBtn').innerHTML = 'اپڈیٹ کریں 🔄';
+    document.querySelectorAll('.admin-only').forEach(el => el.classList.add('show-admin'));
+    document.getElementById('edit_id').value           = data.id;
+    document.getElementById('vaultKeyName').value      = data.key_name;
+    document.getElementById('vaultPlatform').value     = data.platform_name;
+    document.getElementById('vaultApiEndpoint').value  = data.api_endpoint;
+    document.getElementById('vaultApiKey').value       = data.api_key;
+    document.getElementById('vaultModel').value        = data.model_target;
+    document.getElementById('vaultAuthType').value     = data.auth_type;
+    document.getElementById('vaultAuthHeader').value   = data.auth_header;
+    document.getElementById('vaultAuthPrefix').value   = data.auth_prefix;
+    document.getElementById('vaultSysMsg').value       = data.system_message;
+    document.getElementById('vaultUserTpl').value      = data.user_message_template;
+    document.getElementById('vaultExtras').value       = data.extra_body_fields;
+    document.getElementById('vaultModelLoc').value     = data.model_location;
+    document.getElementById('vaultModelKey').value     = data.model_key_name;
+    document.getElementById('vaultMethod').value       = data.request_method;
+    document.getElementById('vaultRespPath').value     = data.response_path;
+    document.getElementById('saveBtn').innerHTML       = 'اپڈیٹ کریں 🔄';
     document.getElementById('cancelEditBtn').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function cancelEdit() { document.getElementById('edit_id').value = '0'; document.getElementById('vaultForm').reset(); document.getElementById('saveBtn').innerHTML = 'والٹ میں محفوظ کریں 💾'; document.getElementById('cancelEditBtn').style.display = 'none'; }
+function cancelEdit() {
+    document.getElementById('edit_id').value = '0';
+    document.getElementById('vaultForm').reset();
+    document.getElementById('saveBtn').innerHTML = 'والٹ میں محفوظ کریں 💾';
+    document.getElementById('cancelEditBtn').style.display = 'none';
+}
 
 async function processAIGeneration() {
     const profileId = document.getElementById('selectedProfileId').value;
-    const modelId = document.getElementById('selectedModelId').value;
-    const prompt = document.getElementById('promptInput').value.trim();
-    const loader = document.getElementById('loader');
-    const viewport = document.getElementById('responseViewport');
-    const resultActions = document.getElementById('resultActions');
-    
+    const modelId   = document.getElementById('selectedModelId').value;
+    const prompt    = document.getElementById('promptInput').value.trim();
+    const loader    = document.getElementById('loader');
+    const viewport  = document.getElementById('responseViewport');
+    const actions   = document.getElementById('resultActions');
+
     if (!profileId || !prompt) { alert('انجن اور سوال ضروری ہیں!'); return; }
-    if (!modelId) { alert('براہِ کرم ایک ماڈل منتخب کریں!'); return; }
-    
-    loader.style.display = 'block'; viewport.textContent = '';
-    resultActions.style.display = 'none';
+    if (!modelId)              { alert('براہِ کرم ایک ماڈل منتخب کریں!'); return; }
+
+    loader.style.display = 'block';
+    viewport.textContent = '';
+    actions.style.display = 'none';
+    resetStars();
+
     try {
-        const res = await fetch('ai_processor.php', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
-            body: `profile_id=${profileId}&model_id=${encodeURIComponent(modelId)}&prompt=${encodeURIComponent(prompt)}` 
+        const res  = await fetch('ai_processor.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `profile_id=${profileId}&model_id=${encodeURIComponent(modelId)}&prompt=${encodeURIComponent(prompt)}`
         });
         const data = await res.json();
         loader.style.display = 'none';
-        if (data.success) { 
-            viewport.textContent = data.result; 
-            resultActions.style.display = 'block';
-            // Store current model info for rating
-            window.currentRatingContext = { profileId, modelId };
-        } 
-        else { viewport.innerHTML = "<span style='color:red;'>خرابی: " + data.message + "</span><br><small>" + JSON.stringify(data.raw || '') + "</small>"; }
-    } catch (err) { loader.style.display = 'none'; viewport.textContent = "سرور سے رابطہ نہیں ہو سکا۔"; }
+        if (data.success) {
+            viewport.textContent = data.result;
+            actions.style.display = 'block';
+            window.currentRatingCtx = { profileId, modelId };
+            loadSavedRating(profileId, modelId);
+        } else {
+            viewport.innerHTML = "<span style='color:red;'>خرابی: " + data.message + "</span><br><small>" + JSON.stringify(data.raw || '') + "</small>";
+        }
+    } catch (err) {
+        loader.style.display = 'none';
+        viewport.textContent = "سرور سے رابطہ نہیں ہو سکا۔";
+    }
 }
 
 function copyResult() {
@@ -493,74 +601,64 @@ function copyResult() {
         const btn = document.getElementById('copyResultBtn');
         btn.textContent = '✅ کاپی ہو گیا!';
         btn.classList.add('copied');
-        setTimeout(() => {
-            btn.textContent = '📋 کاپی کریں';
-            btn.classList.remove('copied');
-        }, 2000);
-    }).catch(err => {
-        alert('کاپی کرنے میں خرابی: ' + err);
+        setTimeout(() => { btn.textContent = '📋 کاپی کریں'; btn.classList.remove('copied'); }, 2000);
+    }).catch(() => alert('کاپی کرنے میں خرابی'));
+}
+
+// ── Star Rating ──────────────────────────────────────
+const stars = document.querySelectorAll('#starsWrap .star');
+
+function resetStars(savedVal = 0) {
+    stars.forEach((s, i) => {
+        s.classList.toggle('active', i < savedVal);
+        s.classList.remove('hover-active');
     });
 }
 
-function rateModel(stars) {
-    const ctx = window.currentRatingContext;
-    if (!ctx) { alert('پہلے کوئی جواب حاصل کریں!'); return; }
-    
-    // Update UI
-    document.querySelectorAll('.star').forEach((s, i) => {
-        s.classList.toggle('active', i < stars);
-    });
-    document.getElementById('ratingMsg').textContent = stars + ' ستارے محفوظ ہو رہے ہیں...';
-    
-    // Save rating to localStorage (simple client-side storage)
-    const ratingKey = `rating_${ctx.profileId}_${ctx.modelId}`;
-    localStorage.setItem(ratingKey, stars);
-    
-    // Also save aggregate ratings
-    const aggKey = `ratings_aggregate`;
-    let agg = JSON.parse(localStorage.getItem(aggKey) || '{}');
-    if (!agg[ratingKey]) agg[ratingKey] = { total: 0, count: 0 };
-    agg[ratingKey].total += parseInt(stars);
-    agg[ratingKey].count += 1;
-    agg[ratingKey].avg = (agg[ratingKey].total / agg[ratingKey].count).toFixed(1);
-    localStorage.setItem(aggKey, JSON.stringify(agg));
-    
-    document.getElementById('ratingMsg').textContent = 'شکریہ! آپ نے ' + stars + ' ستارے دیے۔ (اوسط: ' + agg[ratingKey].avg + ')';
+function loadSavedRating(profileId, modelId) {
+    const key   = `rating_${profileId}_${modelId}`;
+    const saved = parseInt(localStorage.getItem(key) || '0');
+    resetStars(saved);
+    document.getElementById('ratingMsg').textContent = saved ? saved + ' ⭐ محفوظ' : '';
 }
 
-// Load saved ratings on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Add hover effect for stars
-    document.querySelectorAll('.star').forEach(star => {
-        star.addEventListener('mouseenter', function() {
-            const val = parseInt(this.getAttribute('data-value'));
-            document.querySelectorAll('.star').forEach((s, i) => {
-                s.classList.toggle('active', i < val);
-            });
+stars.forEach(star => {
+    star.addEventListener('mouseenter', function () {
+        const val = parseInt(this.getAttribute('data-value'));
+        stars.forEach((s, i) => {
+            s.classList.remove('active');
+            s.classList.toggle('hover-active', i < val);
         });
-        
-        star.addEventListener('mouseleave', function() {
-            // Reset to saved rating or clear
-            const ctx = window.currentRatingContext;
-            if (ctx) {
-                const ratingKey = `rating_${ctx.profileId}_${ctx.modelId}`;
-                const saved = localStorage.getItem(ratingKey);
-                const savedVal = saved ? parseInt(saved) : 0;
-                document.querySelectorAll('.star').forEach((s, i) => {
-                    s.classList.toggle('active', i < savedVal);
-                });
-            } else {
-                document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
-            }
-        });
+    });
+    star.addEventListener('mouseleave', function () {
+        stars.forEach(s => s.classList.remove('hover-active'));
+        const ctx = window.currentRatingCtx;
+        if (ctx) {
+            const saved = parseInt(localStorage.getItem(`rating_${ctx.profileId}_${ctx.modelId}`) || '0');
+            resetStars(saved);
+        }
+    });
+    star.addEventListener('click', function () {
+        const val = parseInt(this.getAttribute('data-value'));
+        const ctx = window.currentRatingCtx;
+        if (!ctx) { alert('پہلے کوئی جواب حاصل کریں!'); return; }
+
+        const key = `rating_${ctx.profileId}_${ctx.modelId}`;
+        localStorage.setItem(key, val);
+
+        // Aggregate
+        const aggKey = 'ratings_aggregate';
+        const agg    = JSON.parse(localStorage.getItem(aggKey) || '{}');
+        if (!agg[key]) agg[key] = { total: 0, count: 0 };
+        agg[key].total += val;
+        agg[key].count += 1;
+        agg[key].avg    = (agg[key].total / agg[key].count).toFixed(1);
+        localStorage.setItem(aggKey, JSON.stringify(agg));
+
+        resetStars(val);
+        document.getElementById('ratingMsg').textContent = 'شکریہ! ' + val + ' ⭐  (اوسط: ' + agg[key].avg + ')';
     });
 });
-
-function showAdminActions() {
-    document.querySelectorAll('.admin-only').forEach(el => {
-        el.classList.add('show-admin');
-    });
-}
 </script>
 </body>
 </html>
