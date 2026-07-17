@@ -115,11 +115,20 @@ if ($auth_type === 'bearer' || $auth_type === 'api-key') {
 }
 
 // 4. Execute Request
-$ch = curl_init($url);
+$ch = curl_init();
+
+if ($method === 'GET') {
+    $sep = (strpos($url, '?') === false) ? '?' : '&';
+    $url .= $sep . http_build_query($payload);
+    curl_setopt($ch, CURLOPT_URL, $url);
+} else {
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+}
+
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_CUSTOMREQUEST  => $method,
-    CURLOPT_POSTFIELDS     => json_encode($payload),
     CURLOPT_HTTPHEADER     => $headers,
     CURLOPT_TIMEOUT        => 60,
     CURLOPT_SSL_VERIFYPEER => false
