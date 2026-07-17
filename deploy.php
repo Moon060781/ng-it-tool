@@ -32,6 +32,7 @@ function git($cmd) {
 
 function karachi_fmt($ts = null, $format = 'D d-M-Y H:i') {
     $dt = new DateTime($ts ?? 'now', new DateTimeZone(TZ));
+    $dt->setTimezone(new DateTimeZone(TZ)); // force PKT even for '@'-prefixed UTC timestamps
     return $dt->format($format);
 }
 
