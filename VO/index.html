@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl" class="h-full bg-[#07231C] text-[#F7F2E7]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NG Voice (نور جی وائس — ذاتی اردو وائس اوور اسٹوڈیو)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Noto Nastaliq Urdu, Montserrat & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Noto+Nastaliq+Urdu:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- LameJS Library for MP3 encoding -->
+  <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js" async defer onload="window.lamejsLoaded=true" onerror="window.lamejsLoaded=false"></script>
+
+  <style>
+    body {
+      font-family: 'Noto Nastaliq Urdu', 'Inter', system-ui, -apple-system, sans-serif;
+      line-height: 2.25;
+      background-color: #07231C;
+      color: #F7F2E7;
+    }
+    
+    .font-montserrat {
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .font-inter {
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Ensure Urdu descenders are never clipped */
+    textarea, input, select, button, p, span, h1, h2, h3, h4 {
+      padding-top: 0.35rem;
+      padding-bottom: 0.35rem;
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #07231C;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #0D352B;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #184e40;
+    }
+
+    /* Range slider custom styling */
+    input[type=range] {
+      accent-color: #FFBE0B;
+    }
+
+    /* Focus styles for accessible navigation */
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 2px solid #FFBE0B !important;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-[#FFBE0B] selection:text-[#07231C]">
+
+  <!-- TOP HEADER WITH BRANDING & LANGUAGE TOGGLE -->
+  <header class="bg-[#0D352B] border-b border-[#184e40] sticky top-0 z-50 shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      
+      <!-- Voice NG Wordmark -->
+      <div class="flex items-center gap-3">
+        <span class="font-montserrat font-semibold text-2xl tracking-tight text-white">
+          Voice <span class="text-[#FFBE0B]">NG</span>
+        </span>
+        <span class="text-xs px-2 py-0.5 rounded bg-[#07231C] text-[#FFBE0B] border border-[#FFBE0B]/30 font-inter">v3.8 Flash</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Language Toggle Button -->
+        <button id="langToggleBtn" onclick="toggleLanguage()" class="px-3 py-1.5 rounded-lg bg-[#07231C] border border-[#184e40] text-sm text-[#F7F2E7] hover:bg-[#184e40] transition flex items-center gap-1.5 focus:outline-none">
+          <span id="langToggleLabel" class="font-inter font-medium">English UI</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-5xl mx-auto w-full px-4 py-6 flex-grow flex flex-col gap-8">
+
+    <!-- TITLE / APP HEADER -->
+    <div class="text-center my-2">
+      <h1 id="appTitle" class="text-3xl md:text-4xl font-bold text-[#FFBE0B] mb-2">نور جی وائس — ذاتی اردو وائس اوور اسٹوڈیو</h1>
+      <p id="appSubtext" class="text-sm md:text-base text-gray-300 max-w-2xl mx-auto">
+        گوگل جیمنائی API کے ذریعے اپنی مرضی کی آواز، تاثرات اور رفتار کے ساتھ پیشہ ورانہ اردو وائس اوور بنائیں۔
+      </p>
+    </div>
+
+    <!-- SECTION 1: KEY & PRIVACY (BYOK) -->
+    <section class="bg-[#0D352B] rounded-2xl p-5 md:p-6 border border-[#184e40] shadow-xl relative" id="sec-key">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="w-7 h-7 rounded-full bg-[#FFBE0B] text-[#07231C] font-bold font-inter text-sm flex items-center justify-center">1</span>
+        <h2 id="lbl-sec1-title" class="text-xl font-bold text-[#FFBE0B]">API کی (Key) اور راز داری</h2>
+      </div>
+
+      <div class="space-y-4">
+        <p id="lbl-sec1-desc" class="text-xs md:text-sm text-gray-300">
+          آپ کی Gemini API کی براہ راست آپ کے براؤزر سے Google Servers کو بھیجی جاتی ہے۔ یہ کی کبھی بھی کسی اور سرور یا کلاؤڈ پر منتقل نہیں ہوتی۔
+        </p>
+
+        <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+          <div class="relative flex-1">
+            <input type="password" id="apiKeyInput" autocomplete="off" placeholder="AIzaSy..." class="w-full bg-[#07231C] border border-[#184e40] rounded-xl px-4 py-2.5 text-sm font-inter text-white placeholder-gray-500 focus:border-[#FFBE0B] transition dir-ltr" />
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-toggle-key" onclick="toggleKeyVisibility()" class="px-3 py-2 bg-[#07231C] hover:bg-[#184e40] border border-[#184e40] rounded-xl text-xs text-[#F7F2E7] transition flex items-center justify-center gap-1 min-w-[100px]">
+              <span id="lbl-show-key">کی دکھائیں</span>
+            </button>
+            <button id="btn-test-key" onclick="testApiKey()" class="px-3 py-2 bg-[#184e40] hover:bg-[#206352] text-[#FFBE0B] font-semibold rounded-xl text-xs transition min-w-[100px]">
+              <span id="lbl-test-key">کی آزمائیں</span>
+            </button>
+            <button id="btn-clear-key" onclick="clearApiKey()" class="px-3 py-2 bg-red-950/60 hover:bg-red-900/80 border border-red-800/40 text-red-200 rounded-xl text-xs transition min-w-[100px]">
+              <span id="lbl-clear-key">کی صاف کریں</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs border-t border-[#184e40]/50">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="chkSaveKey" onchange="handleSaveKeyToggle()" class="rounded border-[#184e40] text-[#FFBE0B] focus:ring-0 bg-[#07231C] w-4 h-4" />
+            <span id="lbl-save-device">اسی ڈیوائس پر محفوظ کریں (Save on this device)</span>
+          </label>
+
+          <div class="flex items-center gap-4 text-xs font-inter text-gray-400">
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="hover:text-[#FFBE0B] underline flex items-center gap-1">Get API Key ↗</a>
+            <a href="https://aistudio.google.com/app/plan_information" target="_blank" rel="noopener noreferrer" class="hover:text-[#FFBE0B] underline">Limits ↗</a>
+            <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener noreferrer" class="hover:text-[#FFBE0B] underline">Pricing ↗</a>
+          </div>
+        </div>
+
+        <div id="keyStatusBox" class="hidden rounded-xl p-3 text-xs border font-inter"></div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: SCRIPT & AUDITION -->
+    <section class="bg-[#0D352B] rounded-2xl p-5 md:p-6 border border-[#184e40] shadow-xl" id="sec-script">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-full bg-[#FFBE0B] text-[#07231C] font-bold font-inter text-sm flex items-center justify-center">2</span>
+          <h2 id="lbl-sec2-title" class="text-xl font-bold text-[#FFBE0B]">تحریر اور مختصر آڈیشن</h2>
+        </div>
+        <button onclick="loadSampleScript()" class="text-xs bg-[#07231C] hover:bg-[#184e40] text-[#FFBE0B] border border-[#184e40] px-3 py-1.5 rounded-lg transition">
+          <span id="lbl-btn-audition-sample">نمونہ متن لوڈ کریں</span>
+        </button>
+      </div>
+
+      <div class="bg-[#07231C]/60 rounded-xl p-3 mb-4 text-xs text-gray-300 border border-[#184e40]/60 space-y-1">
+        <p id="lbl-audition-notice">
+          <strong>نوٹ:</strong> Gemini Flash TTS ماڈل 130 سے زائد زبانوں کا احاطہ کرتا ہے۔ باقاعدہ اردو تلفظ اور آواز کے تاثر کا اندازہ لگانے کے لیے نیچے دیے گئے مختصر آزمائشی متن پر آڈیشن لیں۔
+        </p>
+      </div>
+
+      <div class="space-y-3">
+        <div class="relative">
+          <textarea id="scriptInput" dir="auto" rows="6" oninput="updateScriptStats()" placeholder="یہاں اپنا اردو متن درج کریں..." class="w-full bg-[#07231C] border border-[#184e40] rounded-xl p-4 text-base md:text-lg text-[#F7F2E7] placeholder-gray-500 focus:border-[#FFBE0B] transition resize-y"></textarea>
+        </div>
+
+        <!-- Script Metrics Counter Bar -->
+        <div class="flex flex-wrap items-center justify-between text-xs text-gray-300 bg-[#07231C] px-4 py-2 rounded-xl border border-[#184e40]/40 font-inter gap-2">
+          <div class="flex items-center gap-4 flex-wrap">
+            <span><span id="lbl-chars">حروف:</span> <strong id="statChars" class="text-[#FFBE0B]">0</strong></span>
+            <span><span id="lbl-graphemes">گرافیم:</span> <strong id="statGraphemes" class="text-[#FFBE0B]">0</strong></span>
+            <span><span id="lbl-chunks">حصے (Chunks):</span> <strong id="statChunks" class="text-[#FFBE0B]">1</strong></span>
+            <span><span id="lbl-est-time">تخمینی وقت:</span> <strong id="statEstTime" class="text-[#FFBE0B]">~0 sec</strong></span>
+          </div>
+          <div id="chunkWarning" class="hidden text-amber-400 font-semibold flex items-center gap-1">
+            ⚠️ <span id="lbl-chunk-warn">متن 1800 حروف سے زائد ہے (ملٹی چنک)</span>
+          </div>
+        </div>
+
+        <!-- Vocal tag hint -->
+        <div class="text-xs text-gray-400 pt-1">
+          <span id="lbl-tag-hint">قابلِ استعمال وقفے و تاثراتی ٹیگز:</span>
+          <code class="bg-[#07231C] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#184e40] font-mono text-[11px] mx-0.5">&lt;short pause&gt;</code>
+          <code class="bg-[#07231C] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#184e40] font-mono text-[11px] mx-0.5">&lt;long pause&gt;</code>
+          <code class="bg-[#07231C] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#184e40] font-mono text-[11px] mx-0.5">&lt;breath&gt;</code>
+          <code class="bg-[#07231C] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#184e40] font-mono text-[11px] mx-0.5">&lt;sigh&gt;</code>
+          <code class="bg-[#07231C] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#184e40] font-mono text-[11px] mx-0.5">&lt;laugh&gt;</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: VOICE, MODEL & STYLE DIRECTION -->
+    <section class="bg-[#0D352B] rounded-2xl p-5 md:p-6 border border-[#184e40] shadow-xl" id="sec-voice">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="w-7 h-7 rounded-full bg-[#FFBE0B] text-[#07231C] font-bold font-inter text-sm flex items-center justify-center">3</span>
+        <h2 id="lbl-sec3-title" class="text-xl font-bold text-[#FFBE0B]">آواز، ماڈل اور طرز کا انتخاب</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        
+        <!-- Left Column: Voice & Model Selection -->
+        <div class="space-y-4">
+          <div>
+            <label id="lbl-select-model" class="block text-xs font-semibold text-gray-300 mb-1">TTS ماڈل کا انتخاب:</label>
+            <select id="modelSelect" class="w-full bg-[#07231C] border border-[#184e40] rounded-xl px-3 py-2.5 text-sm text-[#F7F2E7] focus:border-[#FFBE0B] font-inter">
+              <option value="gemini-3.8-flash-tts" selected>gemini-3.8-flash-tts (توصیہ شدہ / Recommended)</option>
+              <option value="gemini-3.8-flash-lite-tts">gemini-3.8-flash-lite-tts (ہلکا ماڈل / Fast Lite)</option>
+            </select>
+            <p id="lbl-model-note" class="text-[11px] text-gray-400 mt-1">
+              نوٹ: gemini-2.5-flash-preview-tts کی ممکنہ بندش 17 نومبر 2026 تک متوقع ہے۔ یہ ایپ پہلے سے 3.8 ماڈلز استعمال کرتی ہے۔
+            </p>
+          </div>
+
+          <div>
+            <label id="lbl-select-voice" class="block text-xs font-semibold text-gray-300 mb-1">آواز کا انتخاب (30 Prebuilt Voices):</label>
+            <select id="voiceSelect" onchange="handleVoiceSelectChange()" class="w-full bg-[#07231C] border border-[#184e40] rounded-xl px-3 py-2.5 text-sm text-[#F7F2E7] focus:border-[#FFBE0B] font-inter">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+
+          <!-- Custom Voice ID Fallback -->
+          <div>
+            <label id="lbl-custom-voice" class="block text-xs text-gray-400 mb-1">کسٹم وائس کی (اگر موجود ہو):</label>
+            <input type="text" id="customVoiceInput" placeholder="voice_... or voicekey_..." oninput="handleCustomVoiceInput()" class="w-full bg-[#07231C] border border-[#184e40] rounded-xl px-3 py-2 text-xs text-[#F7F2E7] font-inter dir-ltr" />
+          </div>
+        </div>
+
+        <!-- Right Column: Speech Style Presets & Editable Prompt -->
+        <div class="space-y-3">
+          <label id="lbl-style-presets" class="block text-xs font-semibold text-gray-300 mb-1">انداز، رفتار اور لہجہ (Preset Controls):</label>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label id="lbl-p-expression" class="block text-[11px] text-gray-400 mb-0.5">تاثر:</label>
+              <select id="presetExpression" onchange="updateStylePromptFromPresets()" class="w-full bg-[#07231C] border border-[#184e40] rounded-lg p-1.5 text-xs text-white">
+                <option value="Formal & Professional">سنجیدہ / Professional</option>
+                <option value="Warm & Conversational" selected>گرم جوش / Warm</option>
+                <option value="Energetic & Enthusiastic">پرجوش / Energetic</option>
+                <option value="Dramatic & Storyteller">ڈرامائی / Dramatic</option>
+                <option value="Calm & Gentle">پرسکون / Calm</option>
+              </select>
+            </div>
+            <div>
+              <label id="lbl-p-pace" class="block text-[11px] text-gray-400 mb-0.5">رفتار:</label>
+              <select id="presetPace" onchange="updateStylePromptFromPresets()" class="w-full bg-[#07231C] border border-[#184e40] rounded-lg p-1.5 text-xs text-white">
+                <option value="Normal pace">عام / Normal</option>
+                <option value="Slow and clear delivery">آہستہ / Slow</option>
+                <option value="Fast and lively delivery">تیز / Fast</option>
+              </select>
+            </div>
+            <div>
+              <label id="lbl-p-accent" class="block text-[11px] text-gray-400 mb-0.5">لہجہ:</label>
+              <select id="presetAccent" onchange="updateStylePromptFromPresets()" class="w-full bg-[#07231C] border border-[#184e40] rounded-lg p-1.5 text-xs text-white">
+                <option value="Pakistani Urdu news presenter accent" selected>پاکستانی اردو / Standard</option>
+                <option value="Clear South Asian Urdu articulation">صاف و واضح / Clear</option>
+                <option value="Poetic Ghazal recitation tone">شاعرانہ / Poetic</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label id="lbl-style-text" class="block text-xs font-semibold text-gray-300 mb-1">ہدایت نامہ (speech_metadata.style):</label>
+            <textarea id="styleMetadataInput" rows="2" class="w-full bg-[#07231C] border border-[#184e40] rounded-xl p-2.5 text-xs text-[#F7F2E7] focus:border-[#FFBE0B] transition dir-auto"></textarea>
+          </div>
+
+          <!-- JSON Request Preview -->
+          <details class="text-xs bg-[#07231C] rounded-xl border border-[#184e40]/60 p-2">
+            <summary class="cursor-pointer text-gray-400 font-inter hover:text-[#FFBE0B] flex items-center justify-between">
+              <span id="lbl-view-payload">JSON Request Preview</span>
+            </summary>
+            <pre id="jsonPayloadPreview" class="mt-2 text-[10px] text-emerald-400 font-mono overflow-x-auto p-2 bg-black/40 rounded dir-ltr text-left"></pre>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: GENERATION & PROGRESS -->
+    <section class="bg-[#0D352B] rounded-2xl p-5 md:p-6 border border-[#184e40] shadow-xl text-center" id="sec-gen">
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <span class="w-7 h-7 rounded-full bg-[#FFBE0B] text-[#07231C] font-bold font-inter text-sm flex items-center justify-center">4</span>
+        <h2 id="lbl-sec4-title" class="text-xl font-bold text-[#FFBE0B]">وائس اوور کی تیاری</h2>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-4 mb-6">
+        <button id="btnGenerate" onclick="startGeneration()" class="px-8 py-3.5 bg-gradient-to-r from-[#FFBE0B] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-[#07231C] font-bold rounded-xl shadow-lg transition transform active:scale-95 text-base flex items-center gap-2">
+          <span>🎙️</span> <span id="lbl-btn-generate">مکمل وائس اوور تیار کریں</span>
+        </button>
+        <button id="btnCancel" onclick="cancelGeneration()" disabled class="px-6 py-3.5 bg-red-950/80 hover:bg-red-900 border border-red-800/60 text-red-200 font-semibold rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed text-sm flex items-center gap-2">
+          <span>⏹️</span> <span id="lbl-btn-cancel">منسوخ کریں</span>
+        </button>
+      </div>
+
+      <!-- Progress display area -->
+      <div id="progressArea" class="hidden max-w-xl mx-auto space-y-3">
+        <div class="flex items-center justify-between text-xs text-gray-300 font-inter">
+          <span id="progressStatusText">پروسیسنگ شروع ہو رہی ہے...</span>
+          <span id="progressChunkText">Chunk 0 / 0</span>
+        </div>
+        <div class="w-full bg-[#07231C] rounded-full h-3 border border-[#184e40] overflow-hidden">
+          <div id="progressBarFill" class="bg-[#FFBE0B] h-full w-0 transition-all duration-300"></div>
+        </div>
+      </div>
+
+      <div id="errorBox" class="hidden mt-4 p-4 rounded-xl text-xs text-left font-inter border dir-ltr"></div>
+    </section>
+
+    <!-- SECTION 5: RESULT PLAYER, DOWNLOAD & CAPTION VIDEO -->
+    <section class="bg-[#0D352B] rounded-2xl p-5 md:p-6 border border-[#184e40] shadow-xl space-y-6" id="sec-result">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-7 h-7 rounded-full bg-[#FFBE0B] text-[#07231C] font-bold font-inter text-sm flex items-center justify-center">5</span>
+        <h2 id="lbl-sec5-title" class="text-xl font-bold text-[#FFBE0B]">نتائج، ڈاؤن لوڈ اور کیپشن ویڈیو</h2>
+      </div>
+
+      <!-- Audio Player Container -->
+      <div class="bg-[#07231C] p-4 rounded-2xl border border-[#184e40] flex flex-col md:flex-row items-center gap-4">
+        <audio id="mainAudioPlayer" controls class="w-full flex-1 h-12 rounded-xl focus:outline-none"></audio>
+        
+        <div class="flex items-center gap-4 text-xs font-inter text-gray-300 whitespace-nowrap">
+          <div><span id="lbl-dur">دورانیہ:</span> <strong id="resDuration" class="text-[#FFBE0B]">0.0s</strong></div>
+          <div><span id="lbl-size">سائز:</span> <strong id="resFileSize" class="text-[#FFBE0B]">0 KB</strong></div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap gap-3">
+        <button id="btnDownloadWav" onclick="downloadAudioWav()" disabled class="px-4 py-2.5 bg-[#184e40] hover:bg-[#206352] text-[#FFBE0B] font-semibold rounded-xl text-xs transition disabled:opacity-40 flex items-center gap-2">
+          💾 <span id="lbl-dl-wav">WAV ڈاؤن لوڈ کریں</span>
+        </button>
+
+        <button id="btnDownloadMp3" onclick="downloadAudioMp3()" disabled class="px-4 py-2.5 bg-[#184e40] hover:bg-[#206352] text-[#FFBE0B] font-semibold rounded-xl text-xs transition disabled:opacity-40 flex items-center gap-2">
+          🎵 <span id="lbl-dl-mp3">MP3 ڈاؤن لوڈ کریں</span>
+        </button>
+
+        <button id="btnShareFile" onclick="shareAudioFile()" disabled class="px-4 py-2.5 bg-[#07231C] hover:bg-[#184e40] text-gray-200 font-semibold rounded-xl text-xs transition border border-[#184e40] disabled:opacity-40 flex items-center gap-2">
+          📲 <span id="lbl-share">فائل شیئر کریں</span>
+        </button>
+      </div>
+
+      <!-- PORTRAIT CAPTION VIDEO SECTION -->
+      <div class="border-t border-[#184e40] pt-6 mt-6">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div>
+            <h3 class="text-lg font-bold text-[#FFBE0B] flex items-center gap-2">
+              🎬 <span id="lbl-video-title">تجرباتی پورٹریٹ کیپشن ویڈیو (Portrait Caption Video)</span>
+            </h3>
+            <p id="lbl-video-subtitle" class="text-xs text-gray-300">
+              تیار شدہ اردو آواز اور تحریر کو متحرک کیپشنز اور ویو فارم کے ساتھ ویڈیو کی صورت ایکسپورٹ کریں۔
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          
+          <!-- Video Render Options -->
+          <div class="space-y-4 bg-[#07231C] p-4 rounded-xl border border-[#184e40]">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label id="lbl-video-res" class="block text-xs text-gray-300 mb-1">ریزولیوشن:</label>
+                <select id="vidResolution" class="w-full bg-[#0D352B] border border-[#184e40] rounded-lg p-2 text-xs text-white">
+                  <option value="720x1280" selected>720x1280 (HD Portrait 24fps)</option>
+                  <option value="1080x1920">1080x1920 (FHD 30fps)</option>
+                </select>
+              </div>
+              <div>
+                <label id="lbl-video-format" class="block text-xs text-gray-300 mb-1">فارمیٹ:</label>
+                <select id="vidFormat" class="w-full bg-[#0D352B] border border-[#184e40] rounded-lg p-2 text-xs text-white">
+                  <option value="auto" selected>آٹو (Auto WebM / MP4)</option>
+                </select>
+              </div>
+            </div>
+
+            <button id="btnRenderVideo" onclick="generatePortraitVideo()" disabled class="w-full py-3 bg-[#FFBE0B] hover:bg-amber-400 text-[#07231C] font-bold rounded-xl text-sm transition disabled:opacity-40 flex items-center justify-center gap-2">
+              🎬 <span id="lbl-btn-render-video">پورٹریٹ ویڈیو جنریٹ کریں</span>
+            </button>
+
+            <!-- Video Progress -->
+            <div id="videoProgressArea" class="hidden space-y-2">
+              <div class="flex justify-between text-xs text-gray-300 font-inter">
+                <span id="vidProgressStatus">ویڈیو رینڈر ہو رہی ہے...</span>
+                <span id="vidProgressPercent">0%</span>
+              </div>
+              <div class="w-full bg-[#0D352B] rounded-full h-2 overflow-hidden border border-[#184e40]">
+                <div id="vidProgressBarFill" class="bg-[#FFBE0B] h-full w-0 transition-all"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Preview Player Container -->
+          <div class="flex flex-col items-center justify-center bg-[#07231C] p-4 rounded-xl border border-[#184e40] min-h-[300px]">
+            <div id="videoContainer" class="relative w-full max-w-[220px] aspect-[9/16] bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-800 flex items-center justify-center">
+              <canvas id="exportCanvas" width="720" height="1280" class="hidden"></canvas>
+              <video id="exportedVideoPlayer" controls class="w-full h-full object-cover hidden"></video>
+              <div id="videoPlaceholder" class="text-center p-4 text-xs text-gray-500 space-y-2">
+                <div class="text-3xl">📱</div>
+                <p id="lbl-vid-placeholder">وائس اوور کے بعد یہاں پورٹریٹ ویڈیو کا پیش نظارہ ظاہر ہوگا</p>
+              </div>
+            </div>
+
+            <button id="btnDownloadVideo" onclick="downloadExportedVideo()" class="hidden mt-4 px-4 py-2 bg-[#184e40] hover:bg-[#206352] text-[#FFBE0B] font-semibold rounded-xl text-xs transition flex items-center gap-2">
+              ⬇️ <span id="lbl-dl-video">ویڈیو ڈاؤن لوڈ کریں</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: OFFLINE DIAGNOSTICS DRAWER -->
+    <details class="bg-[#0D352B] rounded-2xl border border-[#184e40] p-4 shadow-lg">
+      <summary class="cursor-pointer text-sm font-semibold text-[#FFBE0B] flex items-center justify-between">
+        <span id="lbl-diag-title">🛠️ آف لائن ٹیسٹنگ اور تشخیصی ڈراور (Simulated Diagnostics Drawer)</span>
+        <span class="text-xs font-normal text-gray-400 font-inter">کوئی حقیقی API کی خرچ نہیں ہوتی</span>
+      </summary>
+
+      <div class="mt-4 pt-4 border-t border-[#184e40] space-y-3 text-xs">
+        <p id="lbl-diag-desc" class="text-gray-300">
+          یہاں آپ بغیر کسی Gemini API کی کے ایپ کی تمام آڈیو اسمبلی، کیڈرنس، ایرر ہینڈلنگ اور UI کا تجربہ کر سکتے ہیں۔
+        </p>
+
+        <div class="flex flex-wrap gap-2">
+          <button onclick="runSimulatedSingleChunk()" class="px-3 py-2 bg-[#07231C] hover:bg-[#184e40] text-emerald-400 border border-[#184e40] rounded-lg">
+            ایک چنک WAV فرضی ٹیسٹ
+          </button>
+          <button onclick="runSimulatedMultiChunkPCM()" class="px-3 py-2 bg-[#07231C] hover:bg-[#184e40] text-emerald-400 border border-[#184e40] rounded-lg">
+            3 چنک PCM اسمبلی فرضی ٹیسٹ
+          </button>
+          <button onclick="runSimulatedError(403)" class="px-3 py-2 bg-[#07231C] hover:bg-[#184e40] text-amber-400 border border-[#184e40] rounded-lg">
+            Simulate 403 Permission Error
+          </button>
+          <button onclick="runSimulatedError(429)" class="px-3 py-2 bg-[#07231C] hover:bg-[#184e40] text-amber-400 border border-[#184e40] rounded-lg">
+            Simulate 429 Quota Error
+          </button>
+        </div>
+
+        <div id="diagConsole" class="p-3 bg-black/60 rounded-xl font-mono text-[11px] text-gray-300 max-h-40 overflow-y-auto dir-ltr">
+          Ready for diagnostic runs.
+        </div>
+      </div>
+    </details>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-[#0D352B] border-t border-[#184e40] py-4 px-4 text-center text-xs text-gray-400">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>
+        <span>NG Voice © 2026 — نور جی وائس اسٹوڈیو</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="https://ai.google.dev/gemini-api/docs/speech-generation" target="_blank" rel="noopener noreferrer" class="hover:text-[#FFBE0B] underline">Gemini Speech Docs</a>
+        <a href="https://ai.google.dev/gemini-api/docs/rate-limits" target="_blank" rel="noopener noreferrer" class="hover:text-[#FFBE0B] underline">Rate Limits</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    /* GLOBAL STATE */
+    const STATE = {
+      lang: 'ur',
+      apiKey: '',
+      model: 'gemini-3.8-flash-tts',
+      voice: 'Kore',
+      customVoice: '',
+      styleMetadata: 'Pakistani Urdu news presenter accent, Warm & Conversational delivery, Normal pace.',
+      scriptText: '',
+      audioChunks: [],
+      combinedAudioBlob: null,
+      combinedAudioBuffer: null,
+      audioDuration: 0,
+      activeAbortController: null,
+      chunkCache: new Map(),
+      exportedVideoBlob: null
+    };
+
+    const OFFICIAL_VOICES = [
+      { id: "Kore", desc: "Firm" }, { id: "Zephyr", desc: "Bright" }, { id: "Puck", desc: "Upbeat" },
+      { id: "Charon", desc: "Informative" }, { id: "Sulafat", desc: "Warm" }, { id: "Fenrir", desc: "Excitable" },
+      { id: "Leda", desc: "Youthful" }, { id: "Orus", desc: "Firm" }, { id: "Aoede", desc: "Breezy" },
+      { id: "Callirrhoe", desc: "Easy-going" }, { id: "Autonoe", desc: "Bright" }, { id: "Enceladus", desc: "Breathy" },
+      { id: "Iapetus", desc: "Clear" }, { id: "Umbriel", desc: "Easy-going" }, { id: "Algieba", desc: "Smooth" },
+      { id: "Despina", desc: "Smooth" }, { id: "Erinome", desc: "Clear" }, { id: "Algenib", desc: "Gravelly" },
+      { id: "Rasalgethi", desc: "Informative" }, { id: "Laomedeia", desc: "Upbeat" }, { id: "Achernar", desc: "Soft" },
+      { id: "Alnilam", desc: "Firm" }, { id: "Schedar", desc: "Even" }, { id: "Gacrux", desc: "Mature" },
+      { id: "Pulcherrima", desc: "Forward" }, { id: "Achird", desc: "Friendly" }, { id: "Zubenelgenubi", desc: "Casual" },
+      { id: "Vindemiatrix", desc: "Gentle" }, { id: "Sadachbia", desc: "Lively" }, { id: "Sadaltager", desc: "Knowledgeable" }
+    ];
+
+    const SAMPLE_AUDITION_SCRIPT = "السلام علیکم! آج ہم اردو میں اپنا پہلا وائس اوور بنا رہے ہیں۔ پہلے ایک چھوٹا سا متن آزمائیں، پھر آواز سن کر اگلا قدم اٹھائیں۔";
+
+    const I18N = {
+      ur: {
+        appTitle: "نور جی وائس — ذاتی اردو وائس اوور اسٹوڈیو",
+        appSubtext: "گوگل جیمنائی API کے ذریعے اپنی مرضی کی آواز، تاثرات اور رفتار کے ساتھ پیشہ ورانہ اردو وائس اوور بنائیں۔",
+        sec1Title: "API کی (Key) اور راز داری",
+        sec1Desc: "آپ کی Gemini API کی براہ راست آپ کے براؤزر سے Google Servers کو بھیجی جاتی ہے۔ یہ کی کبھی بھی کسی اور سرور یا کلاؤڈ پر منتقل نہیں ہوتی۔",
+        showKey: "کی دکھائیں", hideKey: "کی چھپائیں", testKey: "کی آزمائیں", clearKey: "کی صاف کریں",
+        saveDevice: "اسی ڈیوائس پر محفوظ کریں (Save on this device)",
+        sec2Title: "تحریر اور مختصر آڈیشن", btnAuditionSample: "نمونہ متن لوڈ کریں",
+        auditionNotice: "<strong>نوٹ:</strong> Gemini Flash TTS ماڈل 130 سے زائد زبانوں کا احاطہ کرتا ہے۔ باقاعدہ اردو تلفظ اور آواز کے تاثر کا اندازہ لگانے کے لیے نیچے دیے گئے مختصر آزمائشی متن پر آڈیشن لیں۔",
+        placeholderScript: "یہاں اپنا اردو متن درج کریں...",
+        lblChars: "حروف:", lblGraphemes: "گرافیم:", lblChunks: "حصے (Chunks):", lblEstTime: "تخمینی وقت:",
+        lblChunkWarn: "متن 1800 حروف سے زائد ہے (ملٹی چنک)", lblTagHint: "قابلِ استعمال وقفے و تاثراتی ٹیگز:",
+        sec3Title: "آواز، ماڈل اور طرز کا انتخاب", selectModel: "TTS ماڈل کا انتخاب:",
+        modelNote: "نوٹ: gemini-2.5-flash-preview-tts کی ممکنہ بندش 17 نومبر 2026 تک متوقع ہے۔ یہ ایپ پہلے سے 3.8 ماڈلز استعمال کرتی ہے۔",
+        selectVoice: "آواز کا انتخاب (30 Prebuilt Voices):", customVoice: "کسٹم وائس کی (اگر موجود ہو):",
+        stylePresets: "انداز، رفتار اور لہجہ (Preset Controls):", styleText: "ہدایت نامہ (speech_metadata.style):",
+        viewPayload: "JSON Request Preview", sec4Title: "وائس اوور کی تیاری", btnGenerate: "مکمل وائس اوور تیار کریں",
+        btnCancel: "منسوخ کریں", sec5Title: "نتائج، ڈاؤن لوڈ اور کیپشن ویڈیو", dur: "دورانیہ:", size: "سائز:",
+        dlWav: "WAV ڈاؤن لوڈ کریں", dlMp3: "MP3 ڈاؤن لوڈ کریں", share: "فائل شیئر کریں",
+        videoTitle: "تجرباتی پورٹریٹ کیپشن ویڈیو (Portrait Caption Video)",
+        videoSubtitle: "تیار شدہ اردو آواز اور تحریر کو متحرک کیپشنز اور ویو فارم کے ساتھ ویڈیو کی صورت ایکسپورٹ کریں۔",
+        videoRes: "ریزولیوشن:", videoFormat: "فارمیٹ:", btnRenderVideo: "پورٹریٹ ویڈیو جنریٹ کریں",
+        vidPlaceholder: "وائس اوور کے بعد یہاں پورٹریٹ ویڈیو کا پیش نظارہ ظاہر ہوگا", dlVideo: "ویڈیو ڈاؤن لوڈ کریں",
+        diagTitle: "🛠️ آف لائن ٹیسٹنگ اور تشخیصی ڈراور (Simulated Diagnostics Drawer)",
+        diagDesc: "یہاں آپ بغیر کسی Gemini API کی کے ایپ کی تمام آڈیو اسمبلی، کیڈرنس، ایرر ہینڈلنگ اور UI کا تجربہ کر سکتے ہیں۔"
+      },
+      en: {
+        appTitle: "NG Voice — Personal Urdu Voiceover Studio",
+        appSubtext: "Generate professional Urdu voiceovers using Google Gemini API with custom voice, style, and tone controls.",
+        sec1Title: "1. API Key & Privacy (BYOK)",
+        sec1Desc: "Your Gemini API Key is sent directly from your browser to Google Servers. It is never transmitted to any proxy or third-party cloud server.",
+        showKey: "Show Key", hideKey: "Hide Key", testKey: "Test Key", clearKey: "Clear Key",
+        saveDevice: "Save on this device (LocalStorage)",
+        sec2Title: "2. Script & Short Audition", btnAuditionSample: "Load Audition Sample",
+        auditionNotice: "<strong>Note:</strong> Gemini Flash TTS covers 130+ languages. Run a short audition on the sample text below to judge Pakistani Urdu pronunciation.",
+        placeholderScript: "Enter your Urdu script here...",
+        lblChars: "Characters:", lblGraphemes: "Graphemes:", lblChunks: "Chunks:", lblEstTime: "Est. Time:",
+        lblChunkWarn: "Script exceeds 1,800 chars (Multi-chunk)", lblTagHint: "Allowed vocal/pause tags:",
+        sec3Title: "3. Voice, Model & Style Direction", selectModel: "Select TTS Model:",
+        modelNote: "Note: gemini-2.5-flash-preview-tts has a listed deprecation of 17 Nov 2026. This app defaults to 3.8 models.",
+        selectVoice: "Select Voice (30 Prebuilt Voices):", customVoice: "Custom Voice ID (Optional):",
+        stylePresets: "Expression, Pace & Accent Presets:", styleText: "Style Direction (speech_metadata.style):",
+        viewPayload: "JSON Request Preview", sec4Title: "4. Generation & Progress", btnGenerate: "Generate Voiceover",
+        btnCancel: "Cancel", sec5Title: "5. Results, Download & Caption Video", dur: "Duration:", size: "Size:",
+        dlWav: "Download WAV", dlMp3: "Download MP3", share: "Share File",
+        videoTitle: "Experimental Portrait Caption Video",
+        videoSubtitle: "Export your generated Urdu voiceover into a typographic portrait caption video with dynamic waveform.",
+        videoRes: "Resolution:", videoFormat: "Format:", btnRenderVideo: "Render Portrait Video",
+        vidPlaceholder: "Portrait caption video preview will appear here after generation", dlVideo: "Download Video",
+        diagTitle: "🛠️ Offline Testing & Diagnostics Drawer",
+        diagDesc: "Test audio assembly, error handling, and video rendering locally without consuming Gemini API quota."
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initVoiceDropdown();
+      loadStoredSettings();
+      updateScriptStats();
+      updateStylePromptFromPresets();
+      updatePayloadPreview();
+
+      const scriptInput = document.getElementById('scriptInput');
+      if (!scriptInput.value.trim()) {
+        scriptInput.value = SAMPLE_AUDITION_SCRIPT;
+        updateScriptStats();
+      }
+    });
+
+    function initVoiceDropdown() {
+      const select = document.getElementById('voiceSelect');
+      select.innerHTML = '';
+      OFFICIAL_VOICES.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.id;
+        opt.textContent = `${v.id} (${v.desc})`;
+        select.appendChild(opt);
+      });
+      select.value = "Kore";
+    }
+
+    function checkLocalStorageSupport() {
+      try {
+        const testKey = '__ng_test_str__';
+        localStorage.setItem(testKey, '1');
+        localStorage.removeItem(testKey);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function loadStoredSettings() {
+      const savedLang = localStorage.getItem('ng_voice_lang');
+      if (savedLang === 'en' || savedLang === 'ur') {
+        STATE.lang = savedLang;
+        applyLanguageUI();
+      }
+
+      if (checkLocalStorageSupport()) {
+        const storedKey = localStorage.getItem('ng_voice_api_key');
+        if (storedKey) {
+          document.getElementById('apiKeyInput').value = storedKey;
+          STATE.apiKey = storedKey;
+          document.getElementById('chkSaveKey').checked = true;
+        }
+      } else {
+        document.getElementById('chkSaveKey').disabled = true;
+      }
+    }
+
+    function handleSaveKeyToggle() {
+      const chk = document.getElementById('chkSaveKey');
+      const val = document.getElementById('apiKeyInput').value.trim();
+      if (chk.checked) {
+        if (checkLocalStorageSupport() && val) {
+          localStorage.setItem('ng_voice_api_key', val);
+        }
+      } else {
+        if (checkLocalStorageSupport()) {
+          localStorage.removeItem('ng_voice_api_key');
+        }
+      }
+    }
+
+    function toggleKeyVisibility() {
+      const input = document.getElementById('apiKeyInput');
+      const label = document.getElementById('lbl-show-key');
+      if (input.type === 'password') {
+        input.type = 'text';
+        label.textContent = STATE.lang === 'ur' ? 'کی چھپائیں' : 'Hide Key';
+      } else {
+        input.type = 'password';
+        label.textContent = STATE.lang === 'ur' ? 'کی دکھائیں' : 'Show Key';
+      }
+    }
+
+    function clearApiKey() {
+      if (STATE.activeAbortController) {
+        STATE.activeAbortController.abort();
+      }
+      document.getElementById('apiKeyInput').value = '';
+      STATE.apiKey = '';
+      if (checkLocalStorageSupport()) {
+        localStorage.removeItem('ng_voice_api_key');
+      }
+      document.getElementById('chkSaveKey').checked = false;
+      showKeyStatus(STATE.lang === 'ur' ? 'کی صاف کر دی گئی ہے۔' : 'API Key cleared.', 'info');
+    }
+
+    async function testApiKey() {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      if (!key) {
+        showKeyStatus(STATE.lang === 'ur' ? 'برائے مہربانی API کی درج کریں۔' : 'Please enter an API key.', 'error');
+        return;
+      }
+
+      const model = document.getElementById('modelSelect').value;
+      showKeyStatus(STATE.lang === 'ur' ? 'کی کی توثیق ہو رہی ہے...' : 'Testing key permissions...', 'info');
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}`, {
+          method: 'GET',
+          headers: { 'x-goog-api-key': key }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          STATE.apiKey = key;
+          if (document.getElementById('chkSaveKey').checked && checkLocalStorageSupport()) {
+            localStorage.setItem('ng_voice_api_key', key);
+          }
+          showKeyStatus(
+            STATE.lang === 'ur' 
+              ? `✅ کی درست ہے! ماڈل رسائی معلوم ہو گئی (${data.displayName || model})۔`
+              : `✅ Key verified! Access confirmed for ${data.displayName || model}.`, 
+            'success'
+          );
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          const msg = errData.error?.message || `HTTP ${res.status}`;
+          showKeyStatus(`❌ Verification failed: ${sanitizeError(msg)}`, 'error');
+        }
+      } catch (err) {
+        showKeyStatus(`❌ Network error: ${sanitizeError(err.message)}`, 'error');
+      }
+    }
+
+    function showKeyStatus(msg, type) {
+      const box = document.getElementById('keyStatusBox');
+      box.classList.remove('hidden', 'bg-emerald-950/60', 'border-emerald-800', 'text-emerald-200', 'bg-red-950/60', 'border-red-800', 'text-red-200', 'bg-blue-950/60', 'border-blue-800', 'text-blue-200');
+      
+      if (type === 'success') {
+        box.classList.add('bg-emerald-950/60', 'border-emerald-800', 'text-emerald-200');
+      } else if (type === 'error') {
+        box.classList.add('bg-red-950/60', 'border-red-800', 'text-red-200');
+      } else {
+        box.classList.add('bg-blue-950/60', 'border-blue-800', 'text-blue-200');
+      }
+      box.innerHTML = msg;
+    }
+
+    function sanitizeError(msg) {
+      if (!msg) return 'Unknown error';
+      let clean = msg.replace(/AIzaSy[A-Za-z0-9_-]{33}/g, '[REDACTED_API_KEY]');
+      if (STATE.apiKey) {
+        clean = clean.split(STATE.apiKey).join('[REDACTED_API_KEY]');
+      }
+      return clean;
+    }
+
+    function toggleLanguage() {
+      STATE.lang = STATE.lang === 'ur' ? 'en' : 'ur';
+      if (checkLocalStorageSupport()) {
+        localStorage.setItem('ng_voice_lang', STATE.lang);
+      }
+      applyLanguageUI();
+    }
+
+    function applyLanguageUI() {
+      const isUr = STATE.lang === 'ur';
+      document.documentElement.lang = STATE.lang;
+      document.documentElement.dir = isUr ? 'rtl' : 'ltr';
+
+      document.getElementById('langToggleLabel').textContent = isUr ? 'English UI' : 'اردو انٹرفیس';
+
+      const dict = I18N[STATE.lang];
+      document.getElementById('appTitle').textContent = dict.appTitle;
+      document.getElementById('appSubtext').textContent = dict.appSubtext;
+      document.getElementById('lbl-sec1-title').textContent = dict.sec1Title;
+      document.getElementById('lbl-sec1-desc').textContent = dict.sec1Desc;
+      document.getElementById('lbl-show-key').textContent = document.getElementById('apiKeyInput').type === 'password' ? dict.showKey : dict.hideKey;
+      document.getElementById('lbl-test-key').textContent = dict.testKey;
+      document.getElementById('lbl-clear-key').textContent = dict.clearKey;
+      document.getElementById('lbl-save-device').textContent = dict.saveDevice;
+
+      document.getElementById('lbl-sec2-title').textContent = dict.sec2Title;
+      document.getElementById('lbl-btn-audition-sample').textContent = dict.btnAuditionSample;
+      document.getElementById('lbl-audition-notice').innerHTML = dict.auditionNotice;
+      document.getElementById('scriptInput').placeholder = dict.placeholderScript;
+
+      document.getElementById('lbl-chars').textContent = dict.lblChars;
+      document.getElementById('lbl-graphemes').textContent = dict.lblGraphemes;
+      document.getElementById('lbl-chunks').textContent = dict.lblChunks;
+      document.getElementById('lbl-est-time').textContent = dict.lblEstTime;
+      document.getElementById('lbl-chunk-warn').textContent = dict.lblChunkWarn;
+      document.getElementById('lbl-tag-hint').textContent = dict.lblTagHint;
+
+      document.getElementById('lbl-sec3-title').textContent = dict.sec3Title;
+      document.getElementById('lbl-select-model').textContent = dict.selectModel;
+      document.getElementById('lbl-model-note').textContent = dict.modelNote;
+      document.getElementById('lbl-select-voice').textContent = dict.selectVoice;
+      document.getElementById('lbl-custom-voice').textContent = dict.customVoice;
+      document.getElementById('lbl-style-presets').textContent = dict.stylePresets;
+      document.getElementById('lbl-style-text').textContent = dict.styleText;
+      document.getElementById('lbl-view-payload').textContent = dict.viewPayload;
+
+      document.getElementById('lbl-sec4-title').textContent = dict.sec4Title;
+      document.getElementById('lbl-btn-generate').textContent = dict.btnGenerate;
+      document.getElementById('lbl-btn-cancel').textContent = dict.btnCancel;
+
+      document.getElementById('lbl-sec5-title').textContent = dict.sec5Title;
+      document.getElementById('lbl-dur').textContent = dict.dur;
+      document.getElementById('lbl-size').textContent = dict.size;
+      document.getElementById('lbl-dl-wav').textContent = dict.dlWav;
+      document.getElementById('lbl-dl-mp3').textContent = dict.dlMp3;
+      document.getElementById('lbl-share').textContent = dict.share;
+
+      document.getElementById('lbl-video-title').textContent = dict.videoTitle;
+      document.getElementById('lbl-video-subtitle').textContent = dict.videoSubtitle;
+      document.getElementById('lbl-video-res').textContent = dict.videoRes;
+      document.getElementById('lbl-video-format').textContent = dict.videoFormat;
+      document.getElementById('lbl-btn-render-video').textContent = dict.btnRenderVideo;
+      document.getElementById('lbl-vid-placeholder').textContent = dict.vidPlaceholder;
+      document.getElementById('lbl-dl-video').textContent = dict.dlVideo;
+
+      document.getElementById('lbl-diag-title').textContent = dict.diagTitle;
+      document.getElementById('lbl-diag-desc').textContent = dict.diagDesc;
+    }
+
+    function loadSampleScript() {
+      document.getElementById('scriptInput').value = SAMPLE_AUDITION_SCRIPT;
+      updateScriptStats();
+    }
+
+    function updateScriptStats() {
+      const text = document.getElementById('scriptInput').value;
+      STATE.scriptText = text;
+
+      const charCount = text.length;
+      document.getElementById('statChars').textContent = charCount;
+
+      let graphemeCount = 0;
+      if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+        const segmenter = new Intl.Segmenter('ur', { granularity: 'grapheme' });
+        graphemeCount = Array.from(segmenter.segment(text)).length;
+      } else {
+        graphemeCount = Array.from(text).length;
+      }
+      document.getElementById('statGraphemes').textContent = graphemeCount;
+
+      const chunks = splitTextIntoChunks(text, 1800);
+      document.getElementById('statChunks').textContent = chunks.length;
+
+      const textWithoutTags = stripVocalTags(text);
+      const wordCount = textWithoutTags.trim() ? textWithoutTags.trim().split(/\s+/).length : 0;
+      const estSeconds = Math.ceil((wordCount / 120) * 60);
+      document.getElementById('statEstTime').textContent = `~${estSeconds} sec`;
+
+      const warnBox = document.getElementById('chunkWarning');
+      if (charCount > 1800) {
+        warnBox.classList.remove('hidden');
+      } else {
+        warnBox.classList.add('hidden');
+      }
+
+      updatePayloadPreview();
+    }
+
+    function stripVocalTags(str) {
+      return str.replace(/<(short pause|long pause|breath|sigh|laugh)>/gi, '');
+    }
+
+    function splitTextIntoChunks(text, maxChars = 1800) {
+      if (!text || text.trim().length === 0) return [];
+      if (text.length <= maxChars) return [text];
+
+      const chunks = [];
+      const sentences = text.split(/([۔؟!.\?\n]+)/);
+      let currentChunk = '';
+
+      for (let i = 0; i < sentences.length; i++) {
+        const part = sentences[i];
+        if ((currentChunk + part).length > maxChars) {
+          if (currentChunk.trim().length > 0) {
+            chunks.push(currentChunk.trim());
+            currentChunk = part;
+          } else {
+            chunks.push(part.substring(0, maxChars));
+            currentChunk = part.substring(maxChars);
+          }
+        } else {
+          currentChunk += part;
+        }
+      }
+
+      if (currentChunk.trim().length > 0) {
+        chunks.push(currentChunk.trim());
+      }
+
+      return chunks;
+    }
+
+    function updateStylePromptFromPresets() {
+      const expr = document.getElementById('presetExpression').value;
+      const pace = document.getElementById('presetPace').value;
+      const accent = document.getElementById('presetAccent').value;
+
+      const styleStr = `${accent}, ${expr}, ${pace}.`;
+      document.getElementById('styleMetadataInput').value = styleStr;
+      STATE.styleMetadata = styleStr;
+      updatePayloadPreview();
+    }
+
+    function handleVoiceSelectChange() {
+      STATE.voice = document.getElementById('voiceSelect').value;
+      document.getElementById('customVoiceInput').value = '';
+      STATE.customVoice = '';
+      updatePayloadPreview();
+    }
+
+    function handleCustomVoiceInput() {
+      const val = document.getElementById('customVoiceInput').value.trim();
+      STATE.customVoice = val;
+      updatePayloadPreview();
+    }
+
+    function updatePayloadPreview() {
+      const activeVoice = STATE.customVoice || STATE.voice;
+      const sampleText = (STATE.scriptText || "مختصر آزمائشی متن...").substring(0, 100);
+
+      const payload = {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: sampleText,
+                speech_metadata: {
+                  style: document.getElementById('styleMetadataInput').value
+                }
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          responseModalities: ["AUDIO"],
+          speechConfig: {
+            voiceConfig: {
+              voice: activeVoice
+            }
+          }
+        }
+      };
+
+      document.getElementById('jsonPayloadPreview').textContent = JSON.stringify(payload, null, 2);
+    }
+
+    async function startGeneration() {
+      const apiKey = document.getElementById('apiKeyInput').value.trim();
+      if (!apiKey) {
+        showError("برائے مہربانی اپنی Gemini API Key درج کریں۔ (Please enter your API Key)", "401 / Missing Key");
+        return;
+      }
+      STATE.apiKey = apiKey;
+
+      const text = document.getElementById('scriptInput').value.trim();
+      if (!text) {
+        showError("براہ کرم پہلے کچھ اردو متن لکھیں۔ (Please enter script text)", "Empty Script");
+        return;
+      }
+
+      hideError();
+      const model = document.getElementById('modelSelect').value;
+      const activeVoice = STATE.customVoice || STATE.voice;
+      const styleMetadata = document.getElementById('styleMetadataInput').value;
+
+      const chunks = splitTextIntoChunks(text, 1800);
+      STATE.audioChunks = [];
+      STATE.activeAbortController = new AbortController();
+
+      document.getElementById('btnGenerate').disabled = true;
+      document.getElementById('btnCancel').disabled = false;
+      showProgress(true);
+      updateProgressStatus(0, chunks.length, "پروسیسنگ شروع ہو رہی ہے...");
+
+      try {
+        for (let i = 0; i < chunks.length; i++) {
+          const chunkText = chunks[i];
+          updateProgressStatus(i, chunks.length, `حصہ ${i + 1} آف ${chunks.length} کی تیاری...`);
+
+          const cacheKey = `${model}_${activeVoice}_${styleMetadata}_${chunkText}`;
+          let chunkAudioBuffer = STATE.chunkCache.get(cacheKey);
+
+          if (!chunkAudioBuffer) {
+            chunkAudioBuffer = await fetchTTSChunkWithRetry(
+              model, 
+              apiKey, 
+              chunkText, 
+              activeVoice, 
+              styleMetadata, 
+              STATE.activeAbortController.signal
+            );
+            STATE.chunkCache.set(cacheKey, chunkAudioBuffer);
+          }
+
+          STATE.audioChunks.push(chunkAudioBuffer);
+          updateProgressStatus(i + 1, chunks.length, `حصہ ${i + 1} مکمل ہو گیا`);
+        }
+
+        updateProgressStatus(chunks.length, chunks.length, "آڈیو فائل مرتب کی جا رہی ہے...");
+        await assembleAndProcessAudio(STATE.audioChunks);
+
+        updateProgressStatus(chunks.length, chunks.length, "✅ وائس اوور مکمل ہو گیا!");
+        enableResultButtons(true);
+
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          showError("وائس اوور کا عمل منسوخ کر دیا گیا ہے۔", "Cancelled by user");
+        } else {
+          showError(`وائس اوور میں خرابی: ${sanitizeError(err.message)}`, "Generation Error");
+        }
+      } finally {
+        document.getElementById('btnGenerate').disabled = false;
+        document.getElementById('btnCancel').disabled = true;
+        STATE.activeAbortController = null;
+      }
+    }
+
+    function cancelGeneration() {
+      if (STATE.activeAbortController) {
+        STATE.activeAbortController.abort();
+      }
+    }
+
+    async function fetchTTSChunkWithRetry(model, apiKey, textChunk, voice, style, signal, maxRetries = 2) {
+      let attempt = 0;
+      while (attempt <= maxRetries) {
+        try {
+          return await fetchTTSChunk(model, apiKey, textChunk, voice, style, signal);
+        } catch (err) {
+          if (err.name === 'AbortError') throw err;
+          
+          attempt++;
+          if (err.status === 400 || err.status === 401 || err.status === 403 || err.status === 404) {
+            throw err;
+          }
+
+          if (attempt > maxRetries) throw err;
+
+          const delayMs = Math.pow(2, attempt) * 1000;
+          await new Promise(r => setTimeout(r, delayMs));
+        }
+      }
+    }
+
+    async function fetchTTSChunk(model, apiKey, textChunk, voice, style, signal) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+      const requestBody = {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: textChunk,
+                speech_metadata: { style: style }
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          responseModalities: ["AUDIO"],
+          speechConfig: {
+            voiceConfig: { voice: voice }
+          }
+        }
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
+        body: JSON.stringify(requestBody),
+        signal: signal
+      });
+
+      if (!response.ok) {
+        const errorJson = await response.json().catch(() => ({}));
+        const message = errorJson.error?.message || `HTTP ${response.status} ${response.statusText}`;
+        const err = new Error(message);
+        err.status = response.status;
+        throw err;
+      }
+
+      const data = await response.json();
+      const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+
+      if (!inlineData || !inlineData.data) {
+        throw new Error("API responded without inline audio data.");
+      }
+
+      const binaryString = atob(inlineData.data);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      return bytes.buffer;
+    }
+
+    async function assembleAndProcessAudio(chunks) {
+      if (!chunks || chunks.length === 0) {
+        throw new Error("No audio chunks available to assemble.");
+      }
+
+      let finalWavBuffer = null;
+
+      if (chunks.length === 1) {
+        const single = chunks[0];
+        if (isWavFormat(single)) {
+          finalWavBuffer = single;
+        } else {
+          finalWavBuffer = pcmToWavContainer(new Int16Array(single), 24000, 1);
+        }
+      } else {
+        let totalPcmSamples = [];
+
+        for (let buf of chunks) {
+          let pcmData = isWavFormat(buf) ? extractPcmFromWav(buf) : new Int16Array(buf);
+          totalPcmSamples.push(pcmData);
+        }
+
+        let totalLen = totalPcmSamples.reduce((acc, arr) => acc + arr.length, 0);
+        let mergedPcm = new Int16Array(totalLen);
+        let offset = 0;
+        for (let arr of totalPcmSamples) {
+          mergedPcm.set(arr, offset);
+          offset += arr.length;
+        }
+
+        finalWavBuffer = pcmToWavContainer(mergedPcm, 24000, 1);
+      }
+
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const decodedBuffer = await audioCtx.decodeAudioData(finalWavBuffer.slice(0));
+
+      STATE.combinedAudioBuffer = decodedBuffer;
+      STATE.audioDuration = decodedBuffer.duration;
+
+      STATE.combinedAudioBlob = new Blob([finalWavBuffer], { type: 'audio/wav' });
+
+      const player = document.getElementById('mainAudioPlayer');
+      player.src = URL.createObjectURL(STATE.combinedAudioBlob);
+
+      document.getElementById('resDuration').textContent = `${STATE.audioDuration.toFixed(1)}s`;
+      document.getElementById('resFileSize').textContent = `${(STATE.combinedAudioBlob.size / 1024).toFixed(0)} KB`;
+    }
+
+    function isWavFormat(arrayBuffer) {
+      if (arrayBuffer.byteLength < 12) return false;
+      const view = new DataView(arrayBuffer);
+      const riff = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
+      const wave = String.fromCharCode(view.getUint8(8), view.getUint8(9), view.getUint8(10), view.getUint8(11));
+      return riff === 'RIFF' && wave === 'WAVE';
+    }
+
+    function extractPcmFromWav(arrayBuffer) {
+      const view = new DataView(arrayBuffer);
+      let offset = 12;
+
+      while (offset < arrayBuffer.byteLength) {
+        const chunkId = String.fromCharCode(view.getUint8(offset), view.getUint8(offset+1), view.getUint8(offset+2), view.getUint8(offset+3));
+        const chunkSize = view.getUint32(offset + 4, true);
+
+        if (chunkId === 'data') {
+          const dataOffset = offset + 8;
+          return new Int16Array(arrayBuffer.slice(dataOffset, dataOffset + chunkSize));
+        }
+
+        offset += 8 + chunkSize;
+      }
+
+      return new Int16Array(arrayBuffer.slice(44));
+    }
+
+    function pcmToWavContainer(pcmInt16Array, sampleRate = 24000, numChannels = 1) {
+      const buffer = new ArrayBuffer(44 + pcmInt16Array.length * 2);
+      const view = new DataView(buffer);
+
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + pcmInt16Array.length * 2, true);
+      writeString(view, 8, 'WAVE');
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * numChannels * 2, true);
+      view.setUint16(32, numChannels * 2, true);
+      view.setUint16(34, 16, true);
+      writeString(view, 36, 'data');
+      view.setUint32(40, pcmInt16Array.length * 2, true);
+
+      let offset = 44;
+      for (let i = 0; i < pcmInt16Array.length; i++, offset += 2) {
+        view.setInt16(offset, pcmInt16Array[i], true);
+      }
+
+      return buffer;
+    }
+
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+
+    function enableResultButtons(enable) {
+      document.getElementById('btnDownloadWav').disabled = !enable;
+      document.getElementById('btnDownloadMp3').disabled = !enable;
+      document.getElementById('btnShareFile').disabled = !enable;
+      document.getElementById('btnRenderVideo').disabled = !enable;
+    }
+
+    function downloadAudioWav() {
+      if (!STATE.combinedAudioBlob) return;
+      const url = URL.createObjectURL(STATE.combinedAudioBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ng_urdu_voiceover_${Date.now()}.wav`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function downloadAudioMp3() {
+      if (!STATE.combinedAudioBuffer) return;
+
+      if (!window.lamejsLoaded || typeof lamejs === 'undefined') {
+        alert("MP3 library is not loaded. Downloading WAV format instead.");
+        downloadAudioWav();
+        return;
+      }
+
+      try {
+        const mp3Blob = await convertAudioBufferToMp3(STATE.combinedAudioBuffer);
+        const url = URL.createObjectURL(mp3Blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ng_urdu_voiceover_${Date.now()}.mp3`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (e) {
+        alert("MP3 conversion failed. Downloading WAV fallback.");
+        downloadAudioWav();
+      }
+    }
+
+    function convertAudioBufferToMp3(audioBuffer) {
+      return new Promise((resolve, reject) => {
+        try {
+          const sampleRate = audioBuffer.sampleRate;
+          const mp3encoder = new lamejs.Mp3Encoder(1, sampleRate, 128);
+          const samples = audioBuffer.getChannelData(0);
+          
+          const sampleBlockSize = 1152;
+          const mp3Data = [];
+          const int16Samples = new Int16Array(samples.length);
+          for (let i = 0; i < samples.length; i++) {
+            let s = Math.max(-1, Math.min(1, samples[i]));
+            int16Samples[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+          }
+
+          for (let i = 0; i < int16Samples.length; i += sampleBlockSize) {
+            const chunk = int16Samples.subarray(i, i + sampleBlockSize);
+            const mp3buf = mp3encoder.encodeBuffer(chunk);
+            if (mp3buf.length > 0) mp3Data.push(mp3buf);
+          }
+
+          const endBuf = mp3encoder.flush();
+          if (endBuf.length > 0) mp3Data.push(endBuf);
+
+          resolve(new Blob(mp3Data, { type: 'audio/mp3' }));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+
+    async function shareAudioFile() {
+      if (!STATE.combinedAudioBlob) return;
+      const file = new File([STATE.combinedAudioBlob], 'ng_urdu_voiceover.wav', { type: 'audio/wav' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'NG Voice Urdu Voiceover',
+            text: 'نور جی وائس اسٹوڈیو سے تیار کردہ اردو وائس اوور',
+            files: [file]
+          });
+        } catch (err) {
+          if (err.name !== 'AbortError') console.warn("Share failed:", err);
+        }
+      } else {
+        alert("Direct file sharing is not supported on this browser.");
+      }
+    }
+
+    async function generatePortraitVideo() {
+      if (!STATE.combinedAudioBuffer) return;
+
+      const resVal = document.getElementById('vidResolution').value;
+      const [width, height] = resVal.split('x').map(Number);
+      const fps = width === 1080 ? 30 : 24;
+
+      const canvas = document.getElementById('exportCanvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioCtx.createBufferSource();
+      source.buffer = STATE.combinedAudioBuffer;
+
+      const dest = audioCtx.createMediaStreamDestination();
+      source.connect(dest);
+      source.connect(audioCtx.destination);
+
+      const canvasStream = canvas.captureStream(fps);
+      const combinedStream = new MediaStream([
+        ...canvasStream.getVideoTracks(),
+        ...dest.stream.getAudioTracks()
+      ]);
+
+      let mimeType = 'video/webm;codecs=vp9,opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
+      if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = '';
+
+      const recorder = new MediaRecorder(combinedStream, mimeType ? { mimeType } : undefined);
+      const recordedChunks = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      const cleanScript = stripVocalTags(STATE.scriptText).trim();
+      const words = cleanScript ? cleanScript.split(/\s+/) : ["اردو", "وائس", "اوور"];
+      const totalDuration = STATE.audioDuration;
+      const wordDuration = totalDuration / words.length;
+
+      document.getElementById('videoProgressArea').classList.remove('hidden');
+      document.getElementById('btnRenderVideo').disabled = true;
+
+      recorder.start();
+      source.start();
+
+      const startTime = audioCtx.currentTime;
+
+      function renderFrame() {
+        const elapsed = audioCtx.currentTime - startTime;
+        const progress = Math.min(1, elapsed / totalDuration);
+
+        document.getElementById('vidProgressBarFill').style.width = `${Math.round(progress * 100)}%`;
+        document.getElementById('vidProgressPercent').textContent = `${Math.round(progress * 100)}%`;
+
+        const grad = ctx.createLinearGradient(0, 0, 0, height);
+        grad.addColorStop(0, '#07231C');
+        grad.addColorStop(1, '#020d0a');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.font = '600 36px Montserrat';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'right';
+        ctx.fillText('Urdu ', width - 60, 90);
+        ctx.fillStyle = '#FFBE0B';
+        ctx.fillText('Ai', width - 20, 90);
+
+        drawAudioWaveform(ctx, width, height, elapsed);
+
+        const currentWordIdx = Math.min(words.length - 1, Math.floor(elapsed / wordDuration));
+
+        ctx.font = '700 48px "Noto Nastaliq Urdu", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.direction = 'rtl';
+
+        const startIdx = Math.max(0, currentWordIdx - 1);
+        const endIdx = Math.min(words.length, currentWordIdx + 2);
+        const lineText = words.slice(startIdx, endIdx).join(' ');
+
+        ctx.shadowColor = '#FFBE0B';
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = '#FFBE0B';
+        ctx.fillText(lineText, width / 2, height / 2 + 100);
+        ctx.shadowBlur = 0;
+
+        ctx.font = '400 24px Inter';
+        ctx.fillStyle = '#A0AEC0';
+        ctx.textAlign = 'center';
+        ctx.direction = 'ltr';
+        ctx.fillText(`${elapsed.toFixed(1)}s / ${totalDuration.toFixed(1)}s`, width / 2, height - 120);
+
+        if (elapsed < totalDuration) {
+          requestAnimationFrame(renderFrame);
+        } else {
+          setTimeout(() => recorder.stop(), 300);
+        }
+      }
+
+      renderFrame();
+
+      recorder.onstop = () => {
+        STATE.exportedVideoBlob = new Blob(recordedChunks, { type: recorder.mimeType || 'video/webm' });
+        
+        const player = document.getElementById('exportedVideoPlayer');
+        player.src = URL.createObjectURL(STATE.exportedVideoBlob);
+        player.classList.remove('hidden');
+        document.getElementById('videoPlaceholder').classList.add('hidden');
+        document.getElementById('btnDownloadVideo').classList.remove('hidden');
+
+        document.getElementById('btnRenderVideo').disabled = false;
+        document.getElementById('vidProgressStatus').textContent = "✅ ویڈیو مکمل ہو گئی!";
+      };
+    }
+
+    function drawAudioWaveform(ctx, width, height, time) {
+      const centerY = height / 2 - 80;
+      const numBars = 30;
+      const barWidth = 10;
+      const gap = 8;
+      const startX = (width - (numBars * (barWidth + gap))) / 2;
+
+      ctx.fillStyle = '#FFBE0B';
+      for (let i = 0; i < numBars; i++) {
+        const h = Math.abs(Math.sin(time * 8 + i * 0.5)) * 120 + 15;
+        const x = startX + i * (barWidth + gap);
+        const y = centerY - h / 2;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barWidth, h, 5);
+        ctx.fill();
+      }
+    }
+
+    function downloadExportedVideo() {
+      if (!STATE.exportedVideoBlob) return;
+      const url = URL.createObjectURL(STATE.exportedVideoBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ng_urdu_caption_video_${Date.now()}.webm`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function showProgress(show) {
+      const area = document.getElementById('progressArea');
+      if (show) area.classList.remove('hidden');
+      else area.classList.add('hidden');
+    }
+
+    function updateProgressStatus(current, total, statusText) {
+      document.getElementById('progressStatusText').textContent = statusText;
+      document.getElementById('progressChunkText').textContent = `Chunk ${current} / ${total}`;
+      const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+      document.getElementById('progressBarFill').style.width = `${pct}%`;
+    }
+
+    function showError(msg, title = "Error") {
+      const box = document.getElementById('errorBox');
+      box.classList.remove('hidden');
+      box.className = "mt-4 p-4 rounded-xl text-xs text-left font-inter border bg-red-950/80 border-red-800 text-red-200 dir-ltr";
+      box.innerHTML = `<strong>${title}:</strong> ${msg}`;
+    }
+
+    function hideError() {
+      document.getElementById('errorBox').classList.add('hidden');
+    }
+
+    function logDiag(str) {
+      const consoleBox = document.getElementById('diagConsole');
+      consoleBox.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${str}</div>`;
+      consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    async function runSimulatedSingleChunk() {
+      logDiag("Running Simulated 1-Chunk WAV test...");
+      const sampleRate = 24000;
+      const pcm = new Int16Array(sampleRate);
+      for (let i = 0; i < sampleRate; i++) {
+        pcm[i] = Math.sin(2 * Math.PI * 440 * (i / sampleRate)) * 16000;
+      }
+      const wavBuf = pcmToWavContainer(pcm, 24000, 1);
+      await assembleAndProcessAudio([wavBuf]);
+      enableResultButtons(true);
+      logDiag("✅ Simulated 1-Chunk WAV test completed successfully.");
+    }
+
+    async function runSimulatedMultiChunkPCM() {
+      logDiag("Running Simulated 3-Chunk PCM Assembly test...");
+      const sampleRate = 24000;
+      const chunk1 = new Int16Array(sampleRate * 0.5);
+      const chunk2 = new Int16Array(sampleRate * 0.5);
+      const chunk3 = new Int16Array(sampleRate * 0.5);
+
+      for (let i = 0; i < chunk1.length; i++) chunk1[i] = Math.sin(i * 0.1) * 12000;
+      for (let i = 0; i < chunk2.length; i++) chunk2[i] = Math.cos(i * 0.1) * 12000;
+      for (let i = 0; i < chunk3.length; i++) chunk3[i] = Math.sin(i * 0.2) * 12000;
+
+      await assembleAndProcessAudio([chunk1.buffer, chunk2.buffer, chunk3.buffer]);
+      enableResultButtons(true);
+      logDiag("✅ Simulated 3-Chunk PCM concatenation completed.");
+    }
+
+    function runSimulatedError(code) {
+      logDiag(`Simulating HTTP ${code} Error handling...`);
+      if (code === 403) {
+        showError("API Key restricted or lacks permission for model gemini-3.8-flash-tts.", "HTTP 403 Forbidden");
+      } else if (code === 429) {
+        showError("Quota limit reached for Gemini API. Daily limit resets at 00:00 Pacific Time.", "HTTP 429 Rate Limit");
+      }
+    }
+  </script>
+</body>
+</html>
