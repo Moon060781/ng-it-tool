@@ -280,6 +280,62 @@
     </section>
 
     <!-- SECTION 4: GENERATION & PROGRESS -->
+    <section class="bg-[#0D352B] rounded-2xl p-5 md:p-6 border border-[#184e40] shadow-xl" id="sec-clone">
+      <h2 class="text-xl font-bold text-[#FFBE0B] mb-1">وائس کلون (Voice Clone)</h2>
+      <p class="text-xs text-gray-300 mb-4">
+        صرف اپنی آواز، یا مالک کی اجازت سے۔ Google رضامندی والی ریکارڈنگ کو ریفرنس آواز سے ملا کر چیک کرتا ہے۔
+        <span class="font-inter dir-ltr inline-block">(Only your own voice or with the owner's consent.)</span>
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-[#07231C] border border-[#184e40] rounded-xl p-4">
+          <h3 class="text-sm font-bold text-[#F7F2E7] mb-1">۱) ریفرنس آواز (10–30 سیکنڈ)</h3>
+          <p class="text-[11px] text-gray-400 mb-2">صاف، پرسکون جگہ، قدرتی لہجہ۔ Source audio</p>
+          <div class="flex flex-wrap gap-2">
+            <input type="file" accept="audio/*" onchange="VC.file('source', this)" class="text-xs text-gray-300 font-inter max-w-full" />
+            <button type="button" id="vc-rec-source" onclick="VC.record('source')" class="px-3 py-1.5 bg-[#184e40] hover:bg-[#206352] text-[#FFBE0B] font-semibold rounded-lg text-xs transition">ریکارڈ کریں</button>
+          </div>
+          <audio id="vc-prev-source" controls class="w-full h-9 mt-2"></audio>
+          <p id="vc-msg-source" class="text-xs mt-2 font-inter text-gray-300"></p>
+        </div>
+
+        <div class="bg-[#07231C] border border-[#184e40] rounded-xl p-4">
+          <h3 class="text-sm font-bold text-[#F7F2E7] mb-1">۲) رضامندی کی ریکارڈنگ</h3>
+          <p class="text-[11px] text-gray-400 mb-2">وہی شخص، وہی مائیک۔ نیچے کا جملہ بالکل ویسا ہی بولیں۔ اردو سپورٹڈ نہیں، اس لیے زبان چنیں۔</p>
+          <select id="vc-consent-lang" onchange="VC.consent()" class="w-full bg-[#0D352B] border border-[#184e40] rounded-lg p-1.5 text-xs text-white font-inter mb-2">
+            <option value="en-US">English</option>
+            <option value="hi-IN">Hindi</option>
+            <option value="ar-XA">Arabic</option>
+          </select>
+          <p id="vc-consent-text" class="text-xs text-[#FFBE0B] bg-black/30 rounded-lg p-2 mb-2 font-inter dir-ltr text-left"></p>
+          <div class="flex flex-wrap gap-2">
+            <input type="file" accept="audio/*" onchange="VC.file('consent', this)" class="text-xs text-gray-300 font-inter max-w-full" />
+            <button type="button" id="vc-rec-consent" onclick="VC.record('consent')" class="px-3 py-1.5 bg-[#184e40] hover:bg-[#206352] text-[#FFBE0B] font-semibold rounded-lg text-xs transition">ریکارڈ کریں</button>
+          </div>
+          <audio id="vc-prev-consent" controls class="w-full h-9 mt-2"></audio>
+          <p id="vc-msg-consent" class="text-xs mt-2 font-inter text-gray-300"></p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-3 mt-4 items-end">
+        <div>
+          <label class="block text-xs text-gray-300 mb-1">آواز کا نام</label>
+          <input type="text" id="vc-name" maxlength="60" placeholder="My Voice" class="w-full bg-[#07231C] border border-[#184e40] rounded-xl px-3 py-2 text-xs text-[#F7F2E7] font-inter dir-ltr" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-300 mb-1">محفوظ کرنے کا انداز</label>
+          <select id="vc-store" class="w-full bg-[#07231C] border border-[#184e40] rounded-xl px-3 py-2 text-xs text-[#F7F2E7] font-inter">
+            <option value="1">Google پر محفوظ (voice_..., 1 سال)</option>
+            <option value="0">صرف میرے براؤزر میں (voicekey_..., 7 دن)</option>
+          </select>
+        </div>
+        <button type="button" id="vc-create" onclick="VC.create()" class="px-4 py-2.5 bg-[#FFBE0B] hover:bg-amber-400 text-[#07231C] font-bold rounded-xl text-sm transition disabled:opacity-40">کلون بنائیں</button>
+      </div>
+      <p id="vc-msg-create" class="text-xs mt-2 font-inter text-gray-300"></p>
+
+      <div id="vc-list" class="mt-4 space-y-2"></div>
+    </section>
+
     <section class="bg-[#0D352B] rounded-2xl p-5 md:p-6 border border-[#184e40] shadow-xl text-center" id="sec-gen">
       <div class="flex items-center justify-center gap-2 mb-4">
         <span class="w-7 h-7 rounded-full bg-[#FFBE0B] text-[#07231C] font-bold font-inter text-sm flex items-center justify-center">4</span>
@@ -1466,6 +1522,213 @@
         showError("Quota limit reached for Gemini API. Daily limit resets at 00:00 Pacific Time.", "HTTP 429 Rate Limit");
       }
     }
+  
+
+    /* ===== Voice Clone (Gemini Voices API, BYOK, browser -> Google) ===== */
+    const VC = (() => {
+      const LS = 'ng_voice_clones';
+      const API = 'https://generativelanguage.googleapis.com/v1beta/voices';
+      const CONSENT = {
+        'en-US': 'I am the owner of this voice and I consent to Google using this voice to create a synthetic voice model.',
+        'hi-IN': 'मैं इस आवाज का मालिक हूं और मैं सिंथेटिक आवाज मॉडल बनाने के लिए Google को इस आवाज का उपयोग करने की सहमति देता हूं',
+        'ar-XA': 'أنا مالك هذا الصوت وأوافق على أن تستخدم Google هذا الصوت لإنشاء نموذج صوتي اصطناعي.'
+      };
+      const LIMITS = { source: [10, 30], consent: [2, 30] };
+      const clips = { source: null, consent: null };
+      let rec = null, stream = null, timer = null;
+      const $ = (id) => document.getElementById(id);
+
+      function say(id, msg, kind) {
+        const el = $(id);
+        el.textContent = msg;
+        el.className = 'text-xs mt-2 font-inter ' + (kind === 'err' ? 'text-red-300' : kind === 'ok' ? 'text-emerald-300' : 'text-gray-300');
+      }
+      function loadList() {
+        try { return JSON.parse(localStorage.getItem(LS) || '[]'); } catch (e) { return []; }
+      }
+      function saveList(list) {
+        try { localStorage.setItem(LS, JSON.stringify(list)); } catch (e) { /* storage blocked */ }
+      }
+
+      async function toWav24(arrayBuffer) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new Ctx();
+        let decoded;
+        try { decoded = await ctx.decodeAudioData(arrayBuffer); } finally { ctx.close(); }
+        const rate = 24000;
+        const off = new OfflineAudioContext(1, Math.ceil(decoded.duration * rate), rate);
+        const src = off.createBufferSource();
+        src.buffer = decoded;
+        src.connect(off.destination);
+        src.start();
+        const samples = (await off.startRendering()).getChannelData(0);
+        const n = samples.length;
+        const buf = new ArrayBuffer(44 + n * 2);
+        const v = new DataView(buf);
+        const tag = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+        tag(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); tag(8, 'WAVE'); tag(12, 'fmt ');
+        v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+        v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+        tag(36, 'data'); v.setUint32(40, n * 2, true);
+        for (let i = 0; i < n; i++) {
+          const s = Math.max(-1, Math.min(1, samples[i]));
+          v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        }
+        const u8 = new Uint8Array(buf);
+        let bin = '';
+        for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+        return { b64: btoa(bin), sec: decoded.duration, wav: buf };
+      }
+
+      async function setClip(kind, arrayBuffer) {
+        const prev = $('vc-prev-' + kind);
+        try {
+          const clip = await toWav24(arrayBuffer);
+          const [lo, hi] = LIMITS[kind];
+          if (clip.sec < lo || clip.sec > hi) {
+            clips[kind] = null;
+            prev.removeAttribute('src');
+            say('vc-msg-' + kind, 'دورانیہ ' + clip.sec.toFixed(1) + ' سیکنڈ ہے۔ ' + lo + ' سے ' + hi + ' سیکنڈ درکار ہیں۔', 'err');
+            return;
+          }
+          clips[kind] = clip;
+          prev.src = URL.createObjectURL(new Blob([clip.wav], { type: 'audio/wav' }));
+          say('vc-msg-' + kind, 'تیار: ' + clip.sec.toFixed(1) + ' سیکنڈ (24kHz mono WAV)', 'ok');
+        } catch (e) {
+          clips[kind] = null;
+          say('vc-msg-' + kind, 'آڈیو پڑھی نہیں جا سکی۔ WAV یا MP3 آزمائیں۔', 'err');
+        }
+      }
+
+      async function file(kind, input) {
+        const f = input.files && input.files[0];
+        if (!f) return;
+        say('vc-msg-' + kind, 'پروسیسنگ...', 'info');
+        await setClip(kind, await f.arrayBuffer());
+      }
+
+      async function record(kind) {
+        const btn = $('vc-rec-' + kind);
+        if (rec) { rec.stop(); return; }
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+        } catch (e) {
+          say('vc-msg-' + kind, 'مائیک کی اجازت نہیں ملی۔', 'err');
+          return;
+        }
+        const parts = [];
+        rec = new MediaRecorder(stream);
+        rec.ondataavailable = (e) => { if (e.data.size) parts.push(e.data); };
+        rec.onstop = async () => {
+          clearTimeout(timer);
+          stream.getTracks().forEach((t) => t.stop());
+          const type = rec.mimeType || 'audio/webm';
+          rec = null;
+          btn.textContent = 'ریکارڈ کریں';
+          say('vc-msg-' + kind, 'پروسیسنگ...', 'info');
+          await setClip(kind, await new Blob(parts, { type }).arrayBuffer());
+        };
+        rec.start();
+        btn.textContent = 'روکیں';
+        say('vc-msg-' + kind, 'ریکارڈنگ جاری ہے (زیادہ سے زیادہ 30 سیکنڈ)...', 'info');
+        timer = setTimeout(() => { if (rec) rec.stop(); }, 30000);
+      }
+
+      function consent() {
+        $('vc-consent-text').textContent = CONSENT[$('vc-consent-lang').value];
+      }
+
+      function render() {
+        const box = $('vc-list');
+        box.textContent = '';
+        loadList().forEach((item) => {
+          const row = document.createElement('div');
+          row.className = 'flex flex-wrap items-center justify-between gap-2 bg-[#07231C] border border-[#184e40] rounded-xl px-3 py-2';
+          const info = document.createElement('div');
+          info.className = 'text-xs font-inter dir-ltr text-left';
+          const exp = new Date(item.ts + (item.store ? 365 : 7) * 86400000).toISOString().slice(0, 10);
+          info.textContent = item.name + ' | ' + (item.store ? 'voice_' : 'voicekey_') + '... | expires ~' + exp;
+          const acts = document.createElement('div');
+          acts.className = 'flex gap-2';
+          const useBtn = document.createElement('button');
+          useBtn.type = 'button';
+          useBtn.textContent = 'استعمال کریں';
+          useBtn.className = 'px-3 py-1.5 bg-[#184e40] hover:bg-[#206352] text-[#FFBE0B] rounded-lg text-xs transition';
+          useBtn.onclick = () => use(item.id);
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.textContent = 'حذف';
+          delBtn.className = 'px-3 py-1.5 bg-red-950/60 hover:bg-red-900/80 border border-red-800/40 text-red-200 rounded-lg text-xs transition';
+          delBtn.onclick = () => del(item.id, item.store);
+          acts.append(useBtn, delBtn);
+          row.append(info, acts);
+          box.appendChild(row);
+        });
+      }
+
+      function use(id) {
+        $('customVoiceInput').value = id;
+        handleCustomVoiceInput();
+        say('vc-msg-create', 'کسٹم وائس فیلڈ میں سیٹ ہو گئی۔ اب وائس اوور بنائیں۔', 'ok');
+      }
+
+      async function del(id, stored) {
+        if (stored) {
+          const key = $('apiKeyInput').value.trim();
+          if (!key) { say('vc-msg-create', 'حذف کے لیے API Key درج کریں۔', 'err'); return; }
+          const r = await fetch(API + '/' + encodeURIComponent(id), { method: 'DELETE', headers: { 'x-goog-api-key': key } });
+          if (!r.ok && r.status !== 404) { say('vc-msg-create', 'حذف نہیں ہو سکی: HTTP ' + r.status, 'err'); return; }
+        }
+        saveList(loadList().filter((x) => x.id !== id));
+        if ($('customVoiceInput').value === id) { $('customVoiceInput').value = ''; handleCustomVoiceInput(); }
+        render();
+      }
+
+      async function create() {
+        const key = $('apiKeyInput').value.trim();
+        if (!key) { say('vc-msg-create', 'پہلے اوپر Gemini API Key درج کریں۔', 'err'); return; }
+        if (!clips.source || !clips.consent) { say('vc-msg-create', 'ریفرنس اور رضامندی دونوں آڈیو درکار ہیں۔', 'err'); return; }
+        const store = $('vc-store').value === '1';
+        const name = $('vc-name').value.trim() || 'My Voice';
+        const btn = $('vc-create');
+        btn.disabled = true;
+        say('vc-msg-create', 'کلون بن رہا ہے...', 'info');
+        try {
+          const voice = {
+            model: $('modelSelect').value,
+            type: 'replicated',
+            replicated: {
+              source_audio: { mime_type: 'audio/wav', data: clips.source.b64 },
+              consent_audio: { mime_type: 'audio/wav', data: clips.consent.b64 }
+            }
+          };
+          if (store) voice.display_name = name;
+          const r = await fetch(API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+            body: JSON.stringify({ store: store, voice: voice })
+          });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error((d.error && d.error.message) || ('HTTP ' + r.status));
+          const id = d.id || d.key || (d.voice && (d.voice.id || d.voice.key));
+          if (!id) throw new Error('جواب میں وائس آئی ڈی نہیں ملی۔');
+          const list = loadList();
+          list.unshift({ id: id, name: name, store: store, ts: Date.now() });
+          saveList(list);
+          render();
+          use(id);
+        } catch (e) {
+          say('vc-msg-create', 'ناکام: ' + e.message, 'err');
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      function init() { consent(); render(); }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+      return { file, record, consent, create };
+    })();
   </script>
+  <div class="text-center text-[10px] text-gray-500 py-3 font-inter dir-ltr">Last Update: 2026-10-26 06:17:23 PST | <a href="../deploy.php" class="hover:text-[#FFBE0B] underline">deploy.php</a></div>
 </body>
 </html>
