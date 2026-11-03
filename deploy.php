@@ -1,15 +1,19 @@
 <?php
 // ============================================================
 // deploy.php — it.noorgee.com Git Deployment Manager
-// Repo: https://github.com/grapheart247/ng-it-tool
+// Repo: https://github.com/Moon060781/ng-it-tool
+// Git runs in the cPanel clone (GIT_WORKDIR), then files are synced into this live folder
 // Branch: main-it
 // ============================================================
 
 session_start();
 
-define('PASSWORD',     '1234');
+// Optional: put DEPLOY_PASSWORD="..." in /home/noorgeec/cred/deploy.env (outside web root)
+$__env = @parse_ini_file('/home/noorgeec/cred/deploy.env');
+define('PASSWORD',     (is_array($__env) && !empty($__env['DEPLOY_PASSWORD'])) ? $__env['DEPLOY_PASSWORD'] : '1234');
+define('GIT_WORKDIR',  '/home/noorgeec/repositories/ng-it-tool'); // cPanel Git clone
 define('BRANCH',       'main-it');
-define('REPO_URL',     'https://github.com/grapheart247/ng-it-tool');
+define('REPO_URL',     'https://github.com/Moon060781/ng-it-tool');
 define('SITE_URL',     'https://it.noorgee.com');
 define('TZ',           'Asia/Karachi');
 
@@ -25,9 +29,35 @@ if (!isset($_SESSION['auth'])) { showLogin(isset($login_error) ? $login_error : 
 
 // ── Git helpers ──────────────────────────────────────────────
 function git($cmd) {
-    $cwd = escapeshellarg(dirname(__FILE__));
+    $cwd = escapeshellarg(GIT_WORKDIR);
     $full = "cd $cwd && git $cmd 2>&1";
     return shell_exec($full);
+}
+
+// Copy repo files into the live folder (this file's folder). Never touches cred/, .git, error_log, .env.
+function sync_to_live() {
+    $src = rtrim(GIT_WORKDIR, '/');
+    $dst = rtrim(dirname(__FILE__), '/');
+    if (!is_dir($src . '/.git')) return "\nSYNC ERROR: not a git repository: $src\n";
+    $skip = ['.git', 'cred', 'error_log', '.env', '.cpanel.yml'];
+    $it = new RecursiveIteratorIterator(
+        new RecursiveCallbackFilterIterator(
+            new RecursiveDirectoryIterator($src, FilesystemIterator::SKIP_DOTS),
+            function ($f) use ($skip) { return !in_array($f->getFilename(), $skip, true); }
+        ),
+        RecursiveIteratorIterator::SELF_FIRST
+    );
+    $copied = 0; $failed = [];
+    foreach ($it as $f) {
+        $rel = substr($f->getPathname(), strlen($src));
+        $to  = $dst . $rel;
+        if ($f->isDir()) { if (!is_dir($to)) @mkdir($to, 0755, true); continue; }
+        if (is_file($to) && filesize($to) === $f->getSize() && md5_file($to) === md5_file($f->getPathname())) continue;
+        if (@copy($f->getPathname(), $to)) $copied++; else $failed[] = $rel;
+    }
+    $msg = "\nSYNC success: $copied file(s) copied to live folder\n";
+    if ($failed) $msg .= "SYNC failed: " . implode(', ', $failed) . "\n";
+    return $msg;
 }
 
 function karachi_fmt($ts = null, $format = 'D d-M-Y H:i') {
@@ -79,12 +109,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $o  = git('fetch origin');
         $o .= git('checkout ' . BRANCH);
         $o .= git('pull origin ' . BRANCH);
+        $o .= sync_to_live();
         $output = $o; $action_done = 'Standard Pull';
     }
     elseif ($act === 'force_pull') {
         $o  = git('fetch origin');
         $o .= git('reset --hard origin/' . BRANCH);
         $o .= git('clean -fd');
+        $o .= sync_to_live();
         $output = $o; $action_done = 'Force Pull';
     }
     elseif ($act === 'push') {
@@ -102,6 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     elseif ($act === 'revert_last') {
         $o = git('revert HEAD --no-edit');
+        $o .= sync_to_live();
         $output = $o; $action_done = 'Revert Last Commit';
     }
     elseif ($act === 'select_commit_details') {
@@ -125,6 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($hash) {
             $o  = git('fetch origin');
             $o .= git('checkout ' . $hash);
+            $o .= sync_to_live();
             $output = $o; $action_done = 'Restore Commit: ' . substr($hash, 0, 8);
             
             // بحالی کے بعد تفصیلات دکھانے کے لیے دوبارہ ڈیٹا حاصل کریں
