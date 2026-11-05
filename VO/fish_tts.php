@@ -11,6 +11,14 @@ if (is_array($in) && isset($in['action']) && $in['action'] === 'create_model') {
     $title = !empty($in['title']) ? (string)$in['title'] : 'My Cloned Voice';
     $voicesData = isset($in['voices']) ? $in['voices'] : [];
     
+    // Format Base64 audio clip for Fish Audio API
+    $formattedVoices = [];
+    foreach ($voicesData as $vData) {
+        if (is_string($vData)) {
+            $formattedVoices[] = base64_decode($vData);
+        }
+    }
+
     $ch = curl_init('https://api.fish.audio/v1/model');
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
@@ -29,6 +37,13 @@ if (is_array($in) && isset($in['action']) && $in['action'] === 'create_model') {
     curl_close($ch);
 
     if ($out === false) fail(502, 'Fish Audio Model Creation سے رابطہ نہیں ہو سکا۔');
+
+    $resJson = json_decode($out, true);
+    if ($code >= 400) {
+        $errDetail = isset($resJson['message']) ? $resJson['message'] : (isset($resJson['detail']) ? json_encode($resJson['detail']) : $out);
+        fail($code, 'Fish Audio Error (HTTP ' . $code . '): ' . $errDetail);
+    }
+
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     echo $out;
