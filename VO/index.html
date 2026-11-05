@@ -1616,7 +1616,7 @@
       const LS = 'ng_voice_clones';
       const CONSENT = {
         'en-US': 'I am the owner of this voice and I consent to Google using this voice to create a synthetic voice model.',
-           'hi-IN': 'मैं इस आवाज का मालिक हूं और मैं सिंथेटिक आवाज मॉडल बनाने के लिए Google को इस आवाज का उपयोग करने की सहमति देता हूं<br>میں اس آواز کا مالک ہوں، اور میں گوگل کو اجازت دیتا ہوں کہ وہ اسے ایک مصنوعی صوتی ماڈل بنانے کے لیے استعمال کرے',
+        'hi-IN': 'मैं इस आवाज का मालिक हूं और मैं सिंथेटिक आवाज मॉडल बनाने के लिए Google को इस आवाज का उपयोग करने की सहमति देता हूं',
         'ar-XA': 'أنا مالك هذا الصوت وأوافق على أن تستخدم Google هذا الصوت لإنشاء نموذج صوتي اصطناعي.'
       };
       const LIMITS = { source: [10, 30], consent: [2, 30] };
@@ -1784,39 +1784,63 @@
 
       async function create() {
         const key = $('apiKeyInput').value.trim();
-        if (!clips.source || !clips.consent) { say('vc-msg-create', 'ریفرنس اور رضامندی دونوں آڈیو درکار ہیں۔', 'err'); return; }
+        if (!clips.source) { say('vc-msg-create', 'ریفرنس آڈیو درکار ہے۔', 'err'); return; }
+        const engine = $('engineSelect') ? $('engineSelect').value : 'gemini';
         const store = $('vc-store').value === '1';
         const name = $('vc-name').value.trim() || 'My Voice';
         const btn = $('vc-create');
         if (btn) btn.disabled = true;
         say('vc-msg-create', 'کلون بن رہا ہے...', 'info');
+
         try {
-          const voicePayload = {
-            model: $('modelSelect').value,
-            type: 'replicated',
-            replicated: {
-              source_audio: { mime_type: 'audio/wav', data: clips.source.b64 },
-              consent_audio: { mime_type: 'audio/wav', data: clips.consent.b64 }
-            }
-          };
-          if (store) voicePayload.display_name = name;
+          let id = '';
+          if (engine === 'fish') {
+            // Create Voice Model using Fish Audio Proxy
+            const r = await fetch('fish_tts.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'create_model',
+                title: name,
+                voices: [clips.source.b64]
+              })
+            });
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error((d.error && (d.error.message || d.error)) || ('HTTP ' + r.status));
+            id = d._id || d.id;
+            if (!id) throw new Error('Fish Audio سے Model ID نہیں ملی۔');
+            $('fishRefInput').value = id;
+          } else {
+            // Create Voice Model using Gemini API
+            if (!clips.consent) { say('vc-msg-create', 'Gemini کے لیے رضامندی آڈیو بھی درکار ہے۔', 'err'); return; }
+            const voicePayload = {
+              model: $('modelSelect').value,
+              type: 'replicated',
+              replicated: {
+                source_audio: { mime_type: 'audio/wav', data: clips.source.b64 },
+                consent_audio: { mime_type: 'audio/wav', data: clips.consent.b64 }
+              }
+            };
+            if (store) voicePayload.display_name = name;
 
-          const r = await fetch('gemini_tts.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              api_key: key,
-              endpoint: 'voices',
-              payload: { store: store, voice: voicePayload }
-            })
-          });
+            const r = await fetch('gemini_tts.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                api_key: key,
+                endpoint: 'voices',
+                payload: { store: store, voice: voicePayload }
+              })
+            });
 
-          const d = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error((d.error && (d.error.message || d.error)) || ('HTTP ' + r.status));
-          const id = d.id || d.key || (d.voice && (d.voice.id || d.voice.key));
-          if (!id) throw new Error('جواب میں وائس آئی ڈی نہیں ملی۔');
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error((d.error && (d.error.message || d.error)) || ('HTTP ' + r.status));
+            id = d.id || d.key || (d.voice && (d.voice.id || d.voice.key));
+            if (!id) throw new Error('جواب میں وائس آئی ڈی نہیں ملی۔');
+          }
+
           const list = loadList();
-          list.unshift({ id: id, name: name, store: store, ts: Date.now() });
+          list.unshift({ id: id, name: name + ' (' + engine.toUpperCase() + ')', store: store, engine: engine, ts: Date.now() });
           saveList(list);
           render();
           use(id);
