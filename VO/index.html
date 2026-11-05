@@ -1806,9 +1806,16 @@
               })
             });
             const d = await r.json().catch(() => ({}));
-            if (!r.ok) throw new Error((d.error && (d.error.message || d.error)) || ('HTTP ' + r.status));
-            id = d._id || d.id;
-            if (!id) throw new Error('Fish Audio سے Model ID نہیں ملی۔');
+            if (!r.ok) {
+              const errTxt = (d.error && (d.error.message || d.error)) || ('HTTP ' + r.status);
+              throw new Error(errTxt);
+            }
+            
+            // Flexible ID extraction from various Fish API response schemas
+            id = d._id || d.id || d.model_id || (d.data && (d.data._id || d.data.id));
+            if (!id && typeof d === 'string') id = d;
+
+            if (!id) throw new Error('Fish Audio کا جواب: ' + JSON.stringify(d));
             $('fishRefInput').value = id;
           } else {
             // Create Voice Model using Gemini API
