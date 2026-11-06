@@ -765,7 +765,7 @@
       showKeyStatus(STATE.lang === 'ur' ? 'کی کی توثیق ہو رہی ہے...' : 'Testing key permissions...', 'info');
 
       try {
-        const res = await fetch('gemini_tts.php', {
+        const res = await fetch('gemini_tts_server_proxy.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ api_key: key, model: model, endpoint: 'models' })
@@ -1137,7 +1137,7 @@
         }
       };
 
-      const response = await fetch('gemini_tts.php', {
+      const response = await fetch('gemini_tts_server_proxy.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1767,7 +1767,7 @@
       async function del(id, stored) {
         if (stored) {
           const key = $('apiKeyInput').value.trim();
-          const r = await fetch('gemini_tts.php', {
+          const r = await fetch('gemini_tts_server_proxy.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ api_key: key, endpoint: 'voices/' + encodeURIComponent(id) })
@@ -1830,7 +1830,7 @@
             };
             if (store) voicePayload.display_name = name;
 
-            const r = await fetch('gemini_tts.php', {
+            const r = await fetch('gemini_tts_server_proxy.php', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

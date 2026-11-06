@@ -1,74 +1,271 @@
 <?php
 /**
- * gemini_tts.php - Gemini Audio TTS proxy (key stays on the server).
- * Config: /home/<user>/cred/it-VO.env
- *   GEMINI_API_KEY=...
+ * Voice NG Gemini server proxy.
+ *
+ * Secrets are loaded from /home/noorgeec/cred/it-VO.env when deployed at
+ * /home/noorgeec/it.noorgee.com/VO/. Client-supplied API keys are accepted
+ * only as an optional fallback for the existing UI.
  */
-define('GEMINI_PROXY', true);
-header('X-Content-Type-Options: nosniff');
+declare(strict_types=1);
 
-function fail($code, $msg) {
-    http_response_code($code);
+header('X-Content-Type-Options: nosniff');
+header('Cache-Control: no-store');
+
+function respond(int $status, array $body): never
+{
+    http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['error' => $msg], JSON_UNESCAPED_UNICODE);
+    echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
 
-function load_env(array $paths) {
-    foreach ($paths as $p) {
-        if (!is_readable($p)) continue;
-        $env = [];
-        foreach (file($p, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-            $line = trim($line);
-            if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) continue;
-            list($k, $v) = explode('=', $line, 2);
-            $env[trim($k)] = trim(trim($v), "\"'");
+function failRequest(int $status, string $message, array $extra = []): never
+{
+    respond($status, array_merge(['error' => $message], $extra));
+}
+
+function loadEnv(array $paths): array
+{
+    foreach ($paths as $path) {
+        if (!is_readable($path)) {
+            continue;
         }
-        return $env;
+
+        $values = [];
+        foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) {
+                continue;
+            }
+            [$name, $value] = explode('=', $line, 2);
+            $values[trim($name)] = trim(trim($value), "\"'");
+        }
+        return $values;
     }
     return [];
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail(405, 'POST only');
-
-$src  = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '');
-$host = preg_replace('/:\d+$/', '', isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
-if ($src === '' || parse_url($src, PHP_URL_HOST) !== $host) fail(403, 'Forbidden');
-
-$env = load_env([dirname(__DIR__, 2) . '/cred/it-VO.env', dirname(__DIR__, 2) . '/vo.env', __DIR__ . '/.env']);
-$in = json_decode((string) file_get_contents('php://input'), true);
-
-// Client passed key or use server env key
-$key = is_array($in) && !empty($in['api_key']) ? (string) $in['api_key'] : (isset($env['GEMINI_API_KEY']) ? $env['GEMINI_API_KEY'] : '');
-if ($key === '') fail(500, 'سرور پر GEMINI_API_KEY نہیں ملی۔ .env فائل میں GEMINI_API_KEY شامل کریں۔');
-
-$model = is_array($in) && !empty($in['model']) ? (string)$in['model'] : 'gemini-3.8-flash-tts';
-$endpoint = isset($in['endpoint']) ? (string)$in['endpoint'] : 'generateContent';
-
-if ($endpoint === 'voices') {
-    $url = "https://generativelanguage.googleapis.com/v1beta/voices";
-} else {
-    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
+function requestJson(): array
+{
+    $raw = file_get_contents('php://input');
+    if ($raw === false || trim($raw) === '') {
+        return [];
+    }
+    $data = json_decode($raw, true);
+    if (!is_array($data)) {
+        failRequest(400, 'Invalid JSON request.');
+    }
+    return $data;
 }
 
-$payload = isset($in['payload']) ? $in['payload'] : [];
+function sameOrigin(): bool
+{
+    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    $host = preg_replace('/:\d+$/', '', $host);
+    $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
+    $referer = (string) ($_SERVER['HTTP_REFERER'] ?? '');
+    $source = $origin !== '' ? $origin : $referer;
 
-$ch = curl_init($url);
-curl_setopt_array($ch, [
-    CURLOPT_POST           => true,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_TIMEOUT        => 90,
-    CURLOPT_HTTPHEADER     => [
+    // Permit command-line health checks without browser headers, but reject
+    // a supplied cross-site Origin or Referer.
+    if ($source === '') {
+        return true;
+    }
+    return $host !== '' && strtolower((string) parse_url($source, PHP_URL_HOST)) === $host;
+}
+
+function curlJson(string $url, string $method, string $apiKey, ?array $payload = null): array
+{
+    $ch = curl_init($url);
+    if ($ch === false) {
+        failRequest(502, 'Could not initialize upstream request.');
+    }
+
+    $headers = [
+        'Accept: application/json',
         'Content-Type: application/json',
-        'x-goog-api-key: ' . $key
-    ],
-    CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_UNICODE),
-]);
-$out  = curl_exec($ch);
-$code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+        'x-goog-api-key: ' . $apiKey,
+    ];
+    $options = [
+        CURLOPT_CUSTOMREQUEST => $method,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_CONNECTTIMEOUT => 15,
+        CURLOPT_TIMEOUT => 120,
+        CURLOPT_HTTPHEADER => $headers,
+    ];
+    if ($payload !== null) {
+        $options[CURLOPT_POSTFIELDS] = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+    curl_setopt_array($ch, $options);
 
-if ($out === false) fail(502, 'Google Gemini سے رابطہ نہیں ہو سکا۔');
-http_response_code($code);
-header('Content-Type: application/json; charset=utf-8');
-echo $out;
+    $body = curl_exec($ch);
+    $curlError = curl_error($ch);
+    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($body === false) {
+        failRequest(502, 'Google Gemini connection failed.', ['detail' => $curlError]);
+    }
+
+    $decoded = json_decode($body, true);
+    if (!is_array($decoded)) {
+        $decoded = ['raw' => $body];
+    }
+    return [$status, $decoded];
+}
+
+function normalizeInteractionPayload(array $payload): array
+{
+    // The previous frontend sends generateContent-shaped data. Convert it to
+    // the current Interactions API shape at the server boundary.
+    $contents = $payload['contents'] ?? [];
+    $items = [];
+    foreach ($contents as $content) {
+        foreach (($content['parts'] ?? []) as $part) {
+            $text = isset($part['text']) ? (string) $part['text'] : '';
+            if ($text === '') {
+                continue;
+            }
+            $annotation = [];
+            if (isset($part['speech_metadata']) && is_array($part['speech_metadata'])) {
+                $annotation = $part['speech_metadata'];
+            }
+            $textItem = [
+                'type' => 'text',
+                'text' => $text,
+            ];
+            if ($annotation !== []) {
+                $textItem['annotations'] = [['type' => 'speech_metadata'] + $annotation];
+            }
+            $items[] = $textItem;
+        }
+    }
+
+    if ($items === []) {
+        failRequest(400, 'No speech text was provided.');
+    }
+
+    $voice = $payload['generationConfig']['speechConfig']['voiceConfig']['voice'] ?? 'Kore';
+    return [
+        'input' => [[
+            'type' => 'user_input',
+            'content' => $items,
+        ]],
+        'response_format' => ['type' => 'audio'],
+        'generation_config' => [
+            'speech_config' => [['voice' => (string) $voice]],
+        ],
+    ];
+}
+
+function normalizeAudioResponse(array $response): array
+{
+    // Keep compatibility with the existing browser code, which expects the
+    // generateContent inlineData shape.
+    if (isset($response['candidates'][0]['content']['parts'][0]['inlineData']['data'])) {
+        return $response;
+    }
+
+    $audio = null;
+    foreach (($response['steps'] ?? []) as $step) {
+        foreach (($step['content'] ?? []) as $content) {
+            if (($content['type'] ?? '') === 'audio' && !empty($content['data'])) {
+                $audio = $content;
+            }
+        }
+    }
+    if ($audio === null) {
+        return $response;
+    }
+
+    return [
+        'candidates' => [[
+            'content' => [
+                'parts' => [[
+                    'inlineData' => [
+                        'mimeType' => $audio['mime_type'] ?? 'audio/wav',
+                        'data' => $audio['data'],
+                    ],
+                ]],
+            ],
+        ]],
+        'audio' => $audio,
+    ];
+}
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    failRequest(405, 'POST only.');
+}
+if (!sameOrigin()) {
+    failRequest(403, 'Forbidden origin.');
+}
+
+$input = requestJson();
+$env = loadEnv([
+    '/home/noorgeec/cred/it-VO.env',
+    dirname(__DIR__, 2) . '/cred/it-VO.env',
+    dirname(__DIR__, 2) . '/vo.env',
+    __DIR__ . '/.env',
+]);
+$key = trim((string) ($env['GEMINI_API_KEY'] ?? ''));
+if ($key === '' && !empty($input['api_key'])) {
+    $key = trim((string) $input['api_key']);
+}
+if ($key === '') {
+    failRequest(500, 'GEMINI_API_KEY was not found on the server.');
+}
+
+$endpoint = trim((string) ($input['endpoint'] ?? 'generateContent'), '/');
+$model = trim((string) ($input['model'] ?? 'gemini-3.8-flash-tts'));
+$allowedModels = [
+    'gemini-3.8-flash-tts',
+    'gemini-3.8-flash-lite-tts',
+    'gemini-3.1-flash-tts-preview',
+    'gemini-2.5-flash-preview-tts',
+];
+if ($endpoint === 'generateContent' && !in_array($model, $allowedModels, true)) {
+    failRequest(400, 'Unsupported Gemini TTS model.');
+}
+
+if ($endpoint === 'models') {
+    [$status, $result] = curlJson('https://generativelanguage.googleapis.com/v1beta/models', 'GET', $key);
+    respond($status, $result);
+}
+
+if ($endpoint === 'voices') {
+    [$status, $result] = curlJson(
+        'https://generativelanguage.googleapis.com/v1beta/voices',
+        'POST',
+        $key,
+        is_array($input['payload'] ?? null) ? $input['payload'] : []
+    );
+    respond($status, $result);
+}
+
+if (str_starts_with($endpoint, 'voices/')) {
+    $voiceId = rawurlencode(substr($endpoint, strlen('voices/')));
+    [$status, $result] = curlJson(
+        'https://generativelanguage.googleapis.com/v1beta/voices/' . $voiceId,
+        'DELETE',
+        $key
+    );
+    respond($status, $result);
+}
+
+if ($endpoint !== 'generateContent') {
+    failRequest(400, 'Unsupported proxy endpoint.');
+}
+
+$payload = is_array($input['payload'] ?? null) ? $input['payload'] : [];
+$interactionPayload = normalizeInteractionPayload($payload);
+[$status, $result] = curlJson(
+    'https://generativelanguage.googleapis.com/v1beta/interactions',
+    'POST',
+    $key,
+    [
+        'model' => $model,
+        ...$interactionPayload,
+    ]
+);
+respond($status, normalizeAudioResponse($result));

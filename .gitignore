@@ -18,6 +18,11 @@ venv/
 .env
 .env.local
 *.env.*
+cred/config.php
+cred/*.env
+VO/.env
+VO/*.env
+it-VO.env
 
 # Logs and temp files
 *.log
