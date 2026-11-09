@@ -15,6 +15,7 @@
 
   <!-- LameJS Library for MP3 encoding -->
   <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js" async defer onload="window.lamejsLoaded=true" onerror="window.lamejsLoaded=false"></script>
+  <script src="pronunciation_dictionary.js" defer></script>
 
   <style>
     body {
@@ -424,6 +425,40 @@
         </div>
       </div>
 
+      <!-- LIGHTWEIGHT PRONUNCIATION REVIEW -->
+      <div id="pronunciationReview" class="bg-[#1F1A17] rounded-2xl border border-[#4B4038] p-4 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-base font-bold text-[#FFBE0B]">تلفظ کی فوری تصحیح</h3>
+            <p class="text-xs text-gray-400">آڈیو سنیں، غلط لفظ select کریں، اعراب لگائیں، پھر دوبارہ Generate کریں۔</p>
+          </div>
+          <button type="button" onclick="NGPronunciation.openPopup()" class="px-3 py-2 bg-[#4B4038] hover:bg-[#65564B] text-[#FFBE0B] rounded-lg text-xs font-semibold">منتخب لفظ درست کریں</button>
+        </div>
+        <div id="pronunciationReviewText" dir="rtl" tabindex="0" class="min-h-[72px] select-text whitespace-pre-wrap bg-[#2E2723] border border-[#4B4038] rounded-xl p-3 text-sm leading-8 text-[#F7F2E7] focus:border-[#FFBE0B] outline-none">آڈیو بننے کے بعد یہاں TTS متن ظاہر ہوگا۔</div>
+        <p class="text-[11px] text-gray-500">صرف ایک لفظ select کریں۔ اصل editor متن تبدیل نہیں ہوگا؛ correction صرف TTS متن پر لگے گی۔</p>
+        <div id="pronunciationReviewMessage" class="text-xs mt-2"></div>
+        <div id="pronunciationPopup" class="hidden border border-[#FFBE0B]/50 bg-[#2E2723] rounded-xl p-3 space-y-2">
+          <label for="pronunciationCorrectionInput" class="block text-xs text-gray-300">درست تلفظ</label>
+          <input id="pronunciationCorrectionInput" type="text" dir="rtl" class="w-full bg-[#1F1A17] border border-[#4B4038] rounded-lg px-3 py-2 text-base text-[#F7F2E7]" placeholder="مثال: اُردو یا بَنا" />
+          <div class="flex flex-wrap gap-1" dir="rtl">
+            <button type="button" data-diacritic="َ" class="px-2 py-1 rounded bg-[#4B4038] text-[#FFBE0B]">َ زبر</button>
+            <button type="button" data-diacritic="ِ" class="px-2 py-1 rounded bg-[#4B4038] text-[#FFBE0B]">ِ زیر</button>
+            <button type="button" data-diacritic="ُ" class="px-2 py-1 rounded bg-[#4B4038] text-[#FFBE0B]">ُ پیش</button>
+            <button type="button" data-diacritic="ْ" class="px-2 py-1 rounded bg-[#4B4038] text-[#FFBE0B]">ْ جزم</button>
+            <button type="button" data-diacritic="ّ" class="px-2 py-1 rounded bg-[#4B4038] text-[#FFBE0B]">ّ تشدید</button>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="NGPronunciation.saveCorrection()" class="px-3 py-2 bg-[#85CC14] text-[#1F1A17] rounded-lg text-xs font-bold">Correction محفوظ کریں</button>
+            <button type="button" onclick="NGPronunciation.closePopup()" class="px-3 py-2 bg-[#4B4038] text-gray-200 rounded-lg text-xs">منسوخ</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button type="button" onclick="NGPronunciation.exportJSON()" class="px-3 py-1.5 border border-[#4B4038] text-gray-300 rounded-lg text-xs">JSON Export</button>
+          <label class="px-3 py-1.5 border border-[#4B4038] text-gray-300 rounded-lg text-xs cursor-pointer">JSON Import<input id="pronunciationImportFile" type="file" accept="application/json,.json" class="hidden" /></label>
+          <button type="button" onclick="NGPronunciation.reset()" class="px-3 py-1.5 border border-red-900/60 text-red-300 rounded-lg text-xs">Corrections صاف کریں</button>
+        </div>
+      </div>
+
       <!-- Action Buttons -->
       <div class="flex flex-wrap gap-3">
         <button id="btnDownloadWav" onclick="downloadAudioWav()" disabled class="px-4 py-2.5 bg-[#4B4038] hover:bg-[#65564B] text-[#FFBE0B] font-semibold rounded-xl text-xs transition disabled:opacity-40 flex items-center gap-2">
@@ -569,12 +604,15 @@
       scriptText: '',
       audioChunks: [],
       combinedAudioBlob: null,
+      ttsText: '',
+      reviewDirty: false,
       combinedAudioBuffer: null,
       audioDuration: 0,
       activeAbortController: null,
       chunkCache: new Map(),
       exportedVideoBlob: null
     };
+    window.STATE = STATE;
 
     const OFFICIAL_VOICES = [
       { id: "Kore", desc: "Firm" }, { id: "Zephyr", desc: "Bright" }, { id: "Puck", desc: "Upbeat" },
@@ -659,6 +697,7 @@
         scriptInput.value = SAMPLE_AUDITION_SCRIPT;
         updateScriptStats();
       }
+      if (window.NGPronunciation) NGPronunciation.init();
     });
 
     function toggleEngineUI() {
@@ -892,6 +931,7 @@
     function updateScriptStats() {
       const text = document.getElementById('scriptInput').value;
       STATE.scriptText = text;
+      STATE.ttsText = text;
 
       const charCount = text.length;
       document.getElementById('statChars').textContent = charCount;
@@ -1019,7 +1059,7 @@
 
       STATE.apiKey = apiKey;
 
-      const text = document.getElementById('scriptInput').value.trim();
+      const text = (STATE.ttsText || document.getElementById('scriptInput').value).trim();
       if (!text) {
         showError("براہ کرم پہلے کچھ اردو متن لکھیں۔ (Please enter script text)", "Empty Script");
         return;
@@ -1067,6 +1107,7 @@
 
         updateProgressStatus(chunks.length, chunks.length, "آڈیو فائل مرتب کی جا رہی ہے...");
         await assembleAndProcessAudio(STATE.audioChunks);
+        if (window.NGPronunciation) NGPronunciation.render(text);
 
         updateProgressStatus(chunks.length, chunks.length, "✅ وائس اوور مکمل ہو گیا!");
         enableResultButtons(true);
