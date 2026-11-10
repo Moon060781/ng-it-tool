@@ -1026,6 +1026,7 @@
       if (button) { button.disabled = true; button.textContent = 'اعراب لگ رہے ہیں...'; }
       hideError();
       try {
+        if (window.NGPronunciation) await NGPronunciation.ready();
         const response = await fetch('gemini_tts_server_proxy.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1041,7 +1042,14 @@
         preview.value = data.text;
         box.classList.remove('hidden');
         const status = document.getElementById('diacriticsPreviewStatus');
-        if (status) status.textContent = data.correctionsUsed ? `${data.correctionsUsed} محفوظ correction مثال استعمال ہوا` : 'AI result — جائزہ لازمی ہے';
+        if (status) {
+          if (data.correctionsUsed) {
+            const memorySource = data.correctionsSource === 'database' ? 'سائٹ database' : 'browser fallback';
+            status.textContent = `${data.correctionsUsed} correction مثال استعمال ہوئیں (${memorySource})`;
+          } else {
+            status.textContent = 'AI result — جائزہ لازمی ہے';
+          }
+        }
         setScriptFont(localStorage.getItem('ng_voice_script_font') || 'Noto Nastaliq Urdu, serif');
       } catch (error) {
         showError(`اعراب لگانے میں خرابی: ${sanitizeError(error.message)}`, 'Gemini Diacritics');

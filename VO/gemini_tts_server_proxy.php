@@ -9,6 +9,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/corrections_db.php';
 voRequireAuth();
 
 header('X-Content-Type-Options: nosniff');
@@ -260,20 +261,33 @@ if ($endpoint === 'diacritize') {
         failRequest(400, 'Diacritization text is empty or exceeds 12,000 characters.');
     }
 
-    $memory = [];
-    foreach (($input['corrections'] ?? []) as $item) {
-        if (!is_array($item)) {
-            continue;
-        }
-        $original = trim((string) ($item['original'] ?? ''));
-        $corrected = trim((string) ($item['corrected'] ?? ''));
-        if ($original !== '' && $corrected !== '' && mb_strlen($original, 'UTF-8') <= 120 && mb_strlen($corrected, 'UTF-8') <= 120) {
-            $memory[] = ['original' => $original, 'corrected' => $corrected];
+    $memorySource = 'database';
+    try {
+        $memory = voRelevantCorrections(voCorrectionsPdo(), voCorrectionOwner(), $text, 40);
+    } catch (Throwable $databaseError) {
+        // Keep diacritization available if database setup is incomplete.
+        // Browser memory is fallback only; database remains authoritative when available.
+        $memorySource = 'browser_fallback';
+        $memory = [];
+        $fallbackCorrections = is_array($input['corrections'] ?? null) ? array_slice($input['corrections'], -200) : [];
+        foreach ($fallbackCorrections as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $original = trim((string) ($item['original'] ?? ''));
+            $corrected = trim((string) ($item['corrected'] ?? ''));
+            if ($original !== '' && $corrected !== ''
+                && mb_strlen($original, 'UTF-8') <= 120
+                && mb_strlen($corrected, 'UTF-8') <= 120) {
+                $memory[] = ['original' => $original, 'corrected' => $corrected];
+            }
+            if (count($memory) >= 40) {
+                break;
+            }
         }
     }
-    $memory = array_slice($memory, -40);
     $examples = $memory === [] ? 'کوئی محفوظ correction مثال موجود نہیں۔' : json_encode($memory, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    $prompt = "You are an expert Urdu TTS pronunciation editor. Add only the Urdu diacritics needed for correct intended pronunciation: zabar, zer, pesh, jazm, tashdeed, madd, and tanween. Preserve every word, punctuation mark, whitespace, line break, XML-like vocal tag, and meaning. Do not translate, paraphrase, add commentary, or remove tags. Use sentence context to resolve words with multiple readings. Apply these previously approved correction examples when the same word and context match: {$examples}\n\nReturn JSON only with one key named text. Input:\n" . $text;
+    $prompt = "You are an expert Urdu TTS pronunciation editor. Add only the Urdu diacritics needed for correct intended pronunciation: zabar, zer, pesh, jazm, tashdeed, madd, and tanween. Preserve every word, punctuation mark, whitespace, line break, XML-like vocal tag, and meaning. Do not translate, paraphrase, add commentary, or remove tags. Use sentence context to resolve words with multiple readings. Apply these previously approved correction examples when the same word matches: {$examples}\n\nReturn JSON only with one key named text. Input:\n" . $text;
     $model = trim((string) ($env['GEMINI_DIACRITIC_MODEL'] ?? 'gemini-3.8-flash'));
     if (!preg_match('/^[a-zA-Z0-9._-]+$/', $model)) {
         failRequest(400, 'Invalid Gemini diacritization model.');
@@ -324,7 +338,11 @@ if ($endpoint === 'diacritize') {
     if ($corrected === '') {
         failRequest(502, 'Gemini returned no diacritized text.');
     }
-    respond(200, ['text' => $corrected, 'correctionsUsed' => count($memory)]);
+    respond(200, [
+        'text' => $corrected,
+        'correctionsUsed' => count($memory),
+        'correctionsSource' => $memorySource,
+    ]);
 }
 
 if ($endpoint === 'voices') {

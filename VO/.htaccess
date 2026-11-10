@@ -13,7 +13,7 @@
 Options -Indexes
 DirectoryIndex index.php
 
-<FilesMatch "^(studio\.html|auth\.php)$">
+<FilesMatch "^(studio\.html|auth\.php|corrections_db\.php|schema_corrections\.sql)$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
