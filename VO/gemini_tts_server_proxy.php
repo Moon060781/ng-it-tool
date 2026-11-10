@@ -273,10 +273,28 @@ if ($endpoint === 'diacritize') {
         ]
     );
     if ($status >= 400) {
-        respond($status, $result);
+        $upstreamError = $result['error'] ?? $result;
+        if (is_array($upstreamError)) {
+            $message = $upstreamError['message'] ?? $upstreamError['status'] ?? '';
+            if (is_array($message)) {
+                $message = json_encode($message, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+            if (trim((string) $message) === '') {
+                $message = json_encode($upstreamError, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+        } else {
+            $message = (string) $upstreamError;
+        }
+        respond($status, [
+            'error' => [
+                'message' => trim((string) $message) ?: 'Gemini diacritization request failed.',
+                'status' => $status,
+            ],
+        ]);
     }
     $rawText = (string) ($result['candidates'][0]['content']['parts'][0]['text'] ?? '');
-    $decoded = json_decode($rawText, true);
+    $cleanJson = preg_replace('/^\s*```(?:json)?\s*|\s*```\s*$/i', '', $rawText);
+    $decoded = json_decode((string) $cleanJson, true);
     $corrected = is_array($decoded) ? trim((string) ($decoded['text'] ?? '')) : '';
     if ($corrected === '') {
         failRequest(502, 'Gemini returned no diacritized text.');

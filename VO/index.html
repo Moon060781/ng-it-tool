@@ -1004,6 +1004,17 @@
       if (status) status.textContent = 'وائس کے لیے منتخب ہو گیا';
     }
 
+    function formatGeminiError(data, status) {
+      const error = data && data.error !== undefined ? data.error : data;
+      if (typeof error === 'string' && error.trim()) return error.trim();
+      if (error && typeof error === 'object') {
+        const message = error.message || error.detail || error.status || error.code;
+        if (typeof message === 'string' && message.trim()) return message.trim();
+        try { return JSON.stringify(error); } catch (_) { /* fall through */ }
+      }
+      return `HTTP ${status}`;
+    }
+
     async function applyGeminiDiacritics() {
       const source = document.getElementById('scriptInput');
       const button = document.getElementById('btnApplyDiacritics');
@@ -1025,7 +1036,7 @@
           })
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.text) throw new Error(data.error || `HTTP ${response.status}`);
+        if (!response.ok || !data.text) throw new Error(formatGeminiError(data, response.status));
         preview.value = data.text;
         box.classList.remove('hidden');
         const status = document.getElementById('diacriticsPreviewStatus');
