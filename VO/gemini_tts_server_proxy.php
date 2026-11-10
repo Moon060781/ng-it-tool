@@ -194,6 +194,24 @@ function normalizeAudioResponse(array $response): array
     ];
 }
 
+function findInteractionText(mixed $value): string
+{
+    if (is_array($value)) {
+        foreach (['text', 'output_text'] as $key) {
+            if (isset($value[$key]) && is_string($value[$key]) && trim($value[$key]) !== '') {
+                return trim($value[$key]);
+            }
+        }
+        foreach ($value as $child) {
+            $found = findInteractionText($child);
+            if ($found !== '') {
+                return $found;
+            }
+        }
+    }
+    return '';
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     failRequest(405, 'POST only.');
 }
@@ -253,23 +271,27 @@ if ($endpoint === 'diacritize') {
     $memory = array_slice($memory, -40);
     $examples = $memory === [] ? 'کوئی محفوظ correction مثال موجود نہیں۔' : json_encode($memory, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $prompt = "You are an expert Urdu TTS pronunciation editor. Add only the Urdu diacritics needed for correct intended pronunciation: zabar, zer, pesh, jazm, tashdeed, madd, and tanween. Preserve every word, punctuation mark, whitespace, line break, XML-like vocal tag, and meaning. Do not translate, paraphrase, add commentary, or remove tags. Use sentence context to resolve words with multiple readings. Apply these previously approved correction examples when the same word and context match: {$examples}\n\nReturn JSON only with one key named text. Input:\n" . $text;
-    $model = trim((string) ($env['GEMINI_DIACRITIC_MODEL'] ?? 'gemini-2.5-flash'));
+    $model = trim((string) ($env['GEMINI_DIACRITIC_MODEL'] ?? 'gemini-3.8-flash'));
     if (!preg_match('/^[a-zA-Z0-9._-]+$/', $model)) {
         failRequest(400, 'Invalid Gemini diacritization model.');
     }
     [$status, $result] = curlJson(
-        'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/interactions',
         'POST',
         $key,
         [
-            'contents' => [[
-                'role' => 'user',
-                'parts' => [['text' => $prompt]],
+            'model' => $model,
+            'input' => [[
+                'type' => 'user_input',
+                'content' => [[
+                    'type' => 'text',
+                    'text' => $prompt,
+                ]],
             ]],
-            'generationConfig' => [
+            'generation_config' => [
                 'temperature' => 0.1,
-                'responseMimeType' => 'application/json',
             ],
+            'response_format' => ['type' => 'text'],
         ]
     );
     if ($status >= 400) {
@@ -292,7 +314,7 @@ if ($endpoint === 'diacritize') {
             ],
         ]);
     }
-    $rawText = (string) ($result['candidates'][0]['content']['parts'][0]['text'] ?? '');
+    $rawText = findInteractionText($result);
     $cleanJson = preg_replace('/^\s*```(?:json)?\s*|\s*```\s*$/i', '', $rawText);
     $decoded = json_decode((string) $cleanJson, true);
     $corrected = is_array($decoded) ? trim((string) ($decoded['text'] ?? '')) : '';
