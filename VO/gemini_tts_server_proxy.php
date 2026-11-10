@@ -8,6 +8,9 @@
  */
 declare(strict_types=1);
 
+require_once __DIR__ . '/auth.php';
+voRequireAuth();
+
 header('X-Content-Type-Options: nosniff');
 header('Cache-Control: no-store');
 
