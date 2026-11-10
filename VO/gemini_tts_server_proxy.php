@@ -233,6 +233,57 @@ if ($endpoint === 'models') {
     respond($status, $result);
 }
 
+if ($endpoint === 'diacritize') {
+    $text = trim((string) ($input['text'] ?? ''));
+    if ($text === '' || mb_strlen($text, 'UTF-8') > 12000) {
+        failRequest(400, 'Diacritization text is empty or exceeds 12,000 characters.');
+    }
+
+    $memory = [];
+    foreach (($input['corrections'] ?? []) as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $original = trim((string) ($item['original'] ?? ''));
+        $corrected = trim((string) ($item['corrected'] ?? ''));
+        if ($original !== '' && $corrected !== '' && mb_strlen($original, 'UTF-8') <= 120 && mb_strlen($corrected, 'UTF-8') <= 120) {
+            $memory[] = ['original' => $original, 'corrected' => $corrected];
+        }
+    }
+    $memory = array_slice($memory, -40);
+    $examples = $memory === [] ? 'کوئی محفوظ correction مثال موجود نہیں۔' : json_encode($memory, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $prompt = "You are an expert Urdu TTS pronunciation editor. Add only the Urdu diacritics needed for correct intended pronunciation: zabar, zer, pesh, jazm, tashdeed, madd, and tanween. Preserve every word, punctuation mark, whitespace, line break, XML-like vocal tag, and meaning. Do not translate, paraphrase, add commentary, or remove tags. Use sentence context to resolve words with multiple readings. Apply these previously approved correction examples when the same word and context match: {$examples}\n\nReturn JSON only with one key named text. Input:\n" . $text;
+    $model = trim((string) ($env['GEMINI_DIACRITIC_MODEL'] ?? 'gemini-2.5-flash'));
+    if (!preg_match('/^[a-zA-Z0-9._-]+$/', $model)) {
+        failRequest(400, 'Invalid Gemini diacritization model.');
+    }
+    [$status, $result] = curlJson(
+        'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent',
+        'POST',
+        $key,
+        [
+            'contents' => [[
+                'role' => 'user',
+                'parts' => [['text' => $prompt]],
+            ]],
+            'generationConfig' => [
+                'temperature' => 0.1,
+                'responseMimeType' => 'application/json',
+            ],
+        ]
+    );
+    if ($status >= 400) {
+        respond($status, $result);
+    }
+    $rawText = (string) ($result['candidates'][0]['content']['parts'][0]['text'] ?? '');
+    $decoded = json_decode($rawText, true);
+    $corrected = is_array($decoded) ? trim((string) ($decoded['text'] ?? '')) : '';
+    if ($corrected === '') {
+        failRequest(502, 'Gemini returned no diacritized text.');
+    }
+    respond(200, ['text' => $corrected, 'correctionsUsed' => count($memory)]);
+}
+
 if ($endpoint === 'voices') {
     [$status, $result] = curlJson(
         'https://generativelanguage.googleapis.com/v1beta/voices',

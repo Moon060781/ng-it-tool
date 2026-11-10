@@ -15,6 +15,30 @@
     }
   }
 
+  function getCorrectionMemory(sourceText) {
+    const text = String(sourceText || '');
+    return readStore()
+      .filter(item => item && item.original && item.corrected)
+      .filter(item => !text || text.includes(String(item.original)))
+      .slice(-40)
+      .map(item => ({ original: String(item.original), corrected: String(item.corrected) }));
+  }
+
+  function rememberApprovedText(originalText, correctedText) {
+    const originalWords = String(originalText || '').split(/(\s+)/);
+    const correctedWords = String(correctedText || '').split(/(\s+)/);
+    const items = readStore();
+    const limit = Math.min(originalWords.length, correctedWords.length);
+    for (let index = 0; index < limit; index += 1) {
+      const original = originalWords[index];
+      const corrected = correctedWords[index];
+      if (original && corrected && !/^\s+$/.test(original) && original !== corrected && original.length <= 120 && corrected.length <= 120) {
+        items.push({ original, corrected, createdAt: new Date().toISOString() });
+      }
+    }
+    writeStore(items.slice(-200));
+  }
+
   function writeStore(items) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }
@@ -176,6 +200,8 @@
   window.NGPronunciation = {
     init,
     render: setReviewText,
+    getCorrectionMemory,
+    rememberApprovedText,
     openPopup,
     closePopup,
     saveCorrection,

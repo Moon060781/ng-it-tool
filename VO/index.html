@@ -18,6 +18,12 @@
   <script src="pronunciation_dictionary.js" defer></script>
 
   <style>
+    .vocal-tag-button, .font-button { border: 1px solid #4B4038; border-radius: .5rem; padding: .35rem .55rem; color: #FFBE0B; background: #1F1A17; font-size: .7rem; transition: background .15s ease, color .15s ease; }
+    .vocal-tag-button:hover, .font-button:hover { background: #4B4038; color: #F7F2E7; }
+    .font-nastaliq { font-family: 'Noto Nastaliq Urdu', serif; }
+    .font-naskh { font-family: 'Naskh Asia', Tahoma, sans-serif; }
+    .font-nafees { font-family: 'Nafees Nastaleeq', serif; }
+
     body {
       font-family: 'Noto Nastaliq Urdu', 'Inter', system-ui, -apple-system, sans-serif;
       line-height: 2.25;
@@ -184,8 +190,35 @@
       </div>
 
       <div class="space-y-3">
-        <div class="relative">
+        <div class="relative space-y-2">
           <textarea id="scriptInput" dir="auto" rows="6" oninput="updateScriptStats()" placeholder="یہاں اپنا اردو متن درج کریں..." class="w-full bg-[#1F1A17] border border-[#4B4038] rounded-xl p-4 text-base md:text-lg text-[#F7F2E7] placeholder-gray-500 focus:border-[#FFBE0B] transition resize-y"></textarea>
+          <div class="flex flex-wrap items-center gap-2" dir="rtl">
+            <button type="button" id="btnApplyDiacritics" onclick="applyGeminiDiacritics()" class="px-3 py-2 bg-[#FFBE0B] hover:bg-amber-400 text-[#1F1A17] rounded-lg text-xs font-bold disabled:opacity-40">Gemini سے اعراب لگائیں</button>
+            <button type="button" onclick="insertVocalTag('<short pause>')" class="vocal-tag-button">short pause</button>
+            <button type="button" onclick="insertVocalTag('<long pause>')" class="vocal-tag-button">long pause</button>
+            <button type="button" onclick="insertVocalTag('<breath>')" class="vocal-tag-button">breath</button>
+            <button type="button" onclick="insertVocalTag('<sigh>')" class="vocal-tag-button">sigh</button>
+            <button type="button" onclick="insertVocalTag('<laugh>')" class="vocal-tag-button">laugh</button>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 text-xs text-gray-400" dir="rtl">
+            <span>فونٹ:</span>
+            <button type="button" onclick="setScriptFont('Noto Nastaliq Urdu, serif')" class="font-button font-nastaliq">نستعلیق</button>
+            <button type="button" onclick="setScriptFont('Naskh Asia, Tahoma, sans-serif')" class="font-button font-naskh">نسخ ایشیا ٹائپ</button>
+            <button type="button" onclick="setScriptFont('Nafees Nastaleeq, serif')" class="font-button font-nafees">نفیس نسخ</button>
+            <button type="button" onclick="setScriptFont('Tahoma, sans-serif')" class="font-button">Tahoma</button>
+            <button type="button" onclick="setScriptFont('Calibri, sans-serif')" class="font-button">Calibri</button>
+          </div>
+          <div id="diacriticsPreviewBox" class="hidden space-y-2 rounded-xl border border-[#FFBE0B]/50 bg-[#1F1A17] p-3" dir="rtl">
+            <div class="flex items-center justify-between gap-2">
+              <label for="diacriticsPreview" class="text-xs font-semibold text-[#FFBE0B]">اعراب والا متن — جائزہ لیں</label>
+              <span id="diacriticsPreviewStatus" class="text-[11px] text-gray-400"></span>
+            </div>
+            <textarea id="diacriticsPreview" rows="5" class="w-full bg-[#2E2723] border border-[#4B4038] rounded-xl p-3 text-base leading-8 text-[#F7F2E7] resize-y"></textarea>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="useDiacriticsPreview()" class="px-3 py-2 bg-[#85CC14] text-[#1F1A17] rounded-lg text-xs font-bold">یہ متن وائس کے لیے استعمال کریں</button>
+              <button type="button" onclick="dismissDiacriticsPreview()" class="px-3 py-2 bg-[#4B4038] text-gray-200 rounded-lg text-xs">بند کریں</button>
+            </div>
+          </div>
         </div>
 
         <!-- Script Metrics Counter Bar -->
@@ -208,7 +241,7 @@
           <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;long pause&gt;</code>
           <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;breath&gt;</code>
           <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;sigh&gt;</code>
-          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;laugh&gt;</code>
+          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;laugh&gt;</code> — اوپر بٹن سے براہِ راست شامل کریں
         </div>
       </div>
     </section>
@@ -311,15 +344,15 @@
           <div>
             <label class="block text-xs font-semibold text-gray-300 mb-1">وائس انجن (TTS Engine Provider):</label>
             <select id="engineSelect" onchange="toggleEngineUI()" class="w-full bg-[#2E2723] border border-[#FFBE0B]/60 rounded-xl px-3 py-2 text-xs text-[#FFBE0B] font-semibold focus:border-[#FFBE0B] font-inter">
-              <option value="gemini" selected>Google Gemini TTS (پری بلٹ + کلون)</option>
-              <option value="fish">Fish Audio (کلون شدہ آواز - پروکسی)</option>
+              <option value="fish" selected>Fish Audio (کلون شدہ آواز - پروکسی)</option>
+              <option value="gemini">Google Gemini TTS (پری بلٹ + کلون)</option>
             </select>
           </div>
 
           <!-- Fish Audio Reference ID Input -->
           <div id="fishRefBox" class="hidden">
             <label class="block text-xs text-gray-300 mb-1">Fish Audio ریفرنس ID (خالی چھوڑنے پر .env والی استعمال ہوگی):</label>
-            <input type="text" id="fishRefInput" maxlength="32" autocomplete="off" placeholder="32 hex characters" class="w-full bg-[#2E2723] border border-[#FFBE0B]/40 rounded-xl px-3 py-2 text-xs text-[#F7F2E7] font-inter dir-ltr" />
+            <input type="text" id="fishRefInput" maxlength="64" autocomplete="off" value="1d0fe21c26b4474191e5b6cfacc1e339" placeholder="Fish Audio reference ID" class="w-full bg-[#2E2723] border border-[#FFBE0B]/40 rounded-xl px-3 py-2 text-xs text-[#F7F2E7] font-inter dir-ltr" />
           </div>
         </div>
       </div>
@@ -748,6 +781,8 @@
       }
 
       if (checkLocalStorageSupport()) {
+        const savedFont = localStorage.getItem('ng_voice_script_font');
+        if (savedFont) setScriptFont(savedFont);
         const storedKey = localStorage.getItem('ng_voice_api_key');
         if (storedKey) {
           document.getElementById('apiKeyInput').value = storedKey;
@@ -925,7 +960,82 @@
 
     function loadSampleScript() {
       document.getElementById('scriptInput').value = SAMPLE_AUDITION_SCRIPT;
+      dismissDiacriticsPreview();
       updateScriptStats();
+    }
+
+    function insertVocalTag(tag) {
+      const input = document.getElementById('scriptInput');
+      if (!input) return;
+      const start = input.selectionStart ?? input.value.length;
+      const end = input.selectionEnd ?? start;
+      const spacerBefore = start > 0 && !/\s/.test(input.value[start - 1]) ? ' ' : '';
+      const spacerAfter = end < input.value.length && !/\s/.test(input.value[end]) ? ' ' : '';
+      const insertion = spacerBefore + tag + spacerAfter;
+      input.value = input.value.slice(0, start) + insertion + input.value.slice(end);
+      input.focus();
+      const caret = start + insertion.length;
+      input.setSelectionRange(caret, caret);
+      updateScriptStats();
+    }
+
+    function setScriptFont(fontFamily) {
+      const ids = ['scriptInput', 'diacriticsPreview', 'pronunciationReviewText'];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.fontFamily = fontFamily;
+      });
+      try { localStorage.setItem('ng_voice_script_font', fontFamily); } catch (_) { /* optional */ }
+    }
+
+    function dismissDiacriticsPreview() {
+      const box = document.getElementById('diacriticsPreviewBox');
+      if (box) box.classList.add('hidden');
+    }
+
+    function useDiacriticsPreview() {
+      const preview = document.getElementById('diacriticsPreview');
+      if (!preview || !preview.value.trim()) return;
+      const source = document.getElementById('scriptInput');
+      if (window.NGPronunciation && source) NGPronunciation.rememberApprovedText(source.value, preview.value);
+      STATE.ttsText = preview.value.trim();
+      if (window.NGPronunciation) NGPronunciation.render(STATE.ttsText);
+      const status = document.getElementById('diacriticsPreviewStatus');
+      if (status) status.textContent = 'وائس کے لیے منتخب ہو گیا';
+    }
+
+    async function applyGeminiDiacritics() {
+      const source = document.getElementById('scriptInput');
+      const button = document.getElementById('btnApplyDiacritics');
+      const preview = document.getElementById('diacriticsPreview');
+      const box = document.getElementById('diacriticsPreviewBox');
+      const text = source ? source.value.trim() : '';
+      if (!text) { showError('پہلے متن لکھیں۔', 'متن موجود نہیں'); return; }
+      if (button) { button.disabled = true; button.textContent = 'اعراب لگ رہے ہیں...'; }
+      hideError();
+      try {
+        const response = await fetch('gemini_tts_server_proxy.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            endpoint: 'diacritize',
+            api_key: document.getElementById('apiKeyInput').value.trim(),
+            text,
+            corrections: window.NGPronunciation ? NGPronunciation.getCorrectionMemory(text) : []
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.text) throw new Error(data.error || `HTTP ${response.status}`);
+        preview.value = data.text;
+        box.classList.remove('hidden');
+        const status = document.getElementById('diacriticsPreviewStatus');
+        if (status) status.textContent = data.correctionsUsed ? `${data.correctionsUsed} محفوظ correction مثال استعمال ہوا` : 'AI result — جائزہ لازمی ہے';
+        setScriptFont(localStorage.getItem('ng_voice_script_font') || 'Noto Nastaliq Urdu, serif');
+      } catch (error) {
+        showError(`اعراب لگانے میں خرابی: ${sanitizeError(error.message)}`, 'Gemini Diacritics');
+      } finally {
+        if (button) { button.disabled = false; button.textContent = 'Gemini سے اعراب لگائیں'; }
+      }
     }
 
     function updateScriptStats() {
@@ -1458,11 +1568,13 @@
       const dest = audioCtx.createMediaStreamDestination();
       source.connect(dest);
       source.connect(audioCtx.destination);
+      const audioTrack = dest.stream.getAudioTracks()[0];
+      if (audioTrack) audioTrack.enabled = true;
 
       const canvasStream = canvas.captureStream(fps);
       const combinedStream = new MediaStream([
         ...canvasStream.getVideoTracks(),
-        ...dest.stream.getAudioTracks()
+        ...(audioTrack ? [audioTrack] : [])
       ]);
 
       let mimeType = 'video/webm;codecs=vp9,opus';
@@ -1476,21 +1588,29 @@
         if (e.data.size > 0) recordedChunks.push(e.data);
       };
 
-      const cleanScript = stripVocalTags(STATE.scriptText).trim();
+      const cleanScript = stripVocalTags(STATE.ttsText || STATE.scriptText).trim();
       const words = cleanScript ? cleanScript.split(/\s+/) : ["اردو", "وائس", "اوور"];
-      const totalDuration = STATE.audioDuration;
+      const totalDuration = Math.max(0.1, Number(STATE.combinedAudioBuffer.duration || STATE.audioDuration));
       const wordDuration = totalDuration / words.length;
 
       document.getElementById('videoProgressArea').classList.remove('hidden');
       document.getElementById('btnRenderVideo').disabled = true;
 
-      recorder.start();
-      source.start();
-
-      const startTime = audioCtx.currentTime;
+      await audioCtx.resume();
+      const startedAt = performance.now();
+      let stopped = false;
+      const stopRecorder = () => {
+        if (!stopped && recorder.state !== 'inactive') {
+          stopped = true;
+          recorder.stop();
+        }
+      };
+      source.onended = () => setTimeout(stopRecorder, 180);
+      recorder.start(250);
+      source.start(0);
 
       function renderFrame() {
-        const elapsed = audioCtx.currentTime - startTime;
+        const elapsed = Math.min(totalDuration, Math.max(0, (performance.now() - startedAt) / 1000));
         const progress = Math.min(1, elapsed / totalDuration);
 
         document.getElementById('vidProgressBarFill').style.width = `${Math.round(progress * 100)}%`;
@@ -1536,7 +1656,7 @@
         if (elapsed < totalDuration) {
           requestAnimationFrame(renderFrame);
         } else {
-          setTimeout(() => recorder.stop(), 300);
+          setTimeout(stopRecorder, 180);
         }
       }
 
