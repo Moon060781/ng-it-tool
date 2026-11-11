@@ -366,8 +366,15 @@
 
           <!-- Fish Audio Reference ID Input -->
           <div id="fishRefBox" class="hidden">
-            <label class="block text-xs text-gray-300 mb-1">Fish Audio ریفرنس ID (خالی چھوڑنے پر .env والی استعمال ہوگی):</label>
-            <input type="text" id="fishRefInput" maxlength="64" autocomplete="off" value="1d0fe21c26b4474191e5b6cfacc1e339" placeholder="Fish Audio reference ID" class="w-full bg-[#2E2723] border border-[#FFBE0B]/40 rounded-xl px-3 py-2 text-xs text-[#F7F2E7] font-inter dir-ltr" />
+            <label for="fishRefInput" class="block text-xs text-gray-300 mb-1">Fish Audio آواز منتخب کریں:</label>
+            <select id="fishRefInput" autocomplete="off" class="w-full bg-[#2E2723] border border-[#FFBE0B]/40 rounded-xl px-3 py-2 text-xs text-[#F7F2E7] font-inter dir-ltr">
+              <option value="1d0fe21c26b4474191e5b6cfacc1e339" selected>NG-Pro-Male — 1d0fe21c26b4474191e5b6cfacc1e339</option>
+              <option value="88ca0be4f6974b9eba468133908f3601">Noor_ur_hi — 88ca0be4f6974b9eba468133908f3601</option>
+            </select>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              <button type="button" id="btnRefreshFishVoices" onclick="loadFishVoices(true)" class="px-3 py-2 bg-[#4B4038] hover:bg-[#65564B] text-[#FFBE0B] rounded-lg text-xs">Fish Audio فہرست تازہ کریں</button>
+              <span id="fishVoiceStatus" role="status" class="text-[11px] text-gray-400">محفوظ آوازیں دستیاب ہیں۔</span>
+            </div>
           </div>
         </div>
       </div>
@@ -732,12 +739,24 @@
       }
     };
 
+    const FISH_VOICE_PRESETS = [
+      { id: '1d0fe21c26b4474191e5b6cfacc1e339', title: 'NG-Pro-Male' },
+      { id: '88ca0be4f6974b9eba468133908f3601', title: 'Noor_ur_hi' }
+    ];
+    let fishVoicesRequest = null;
+
     window.addEventListener('DOMContentLoaded', () => {
       initVoiceDropdown();
       loadStoredSettings();
       updateScriptStats();
       updateStylePromptFromPresets();
       updatePayloadPreview();
+      const fishRefSelect = document.getElementById('fishRefInput');
+      if (fishRefSelect) {
+        fishRefSelect.addEventListener('change', () => {
+          try { localStorage.setItem('ng_voice_fish_reference_id', fishRefSelect.value); } catch (_) { /* optional */ }
+        });
+      }
       toggleEngineUI();
 
       const scriptInput = document.getElementById('scriptInput');
@@ -762,6 +781,87 @@
       if (geminiVoiceBox) geminiVoiceBox.classList.toggle('hidden', isFish);
       if (customVoiceBox) customVoiceBox.classList.toggle('hidden', isFish);
       if (fishRefBox) fishRefBox.classList.toggle('hidden', !isFish);
+      if (isFish) loadFishVoices();
+    }
+
+    async function loadFishVoices(force = false) {
+      const select = document.getElementById('fishRefInput');
+      const status = document.getElementById('fishVoiceStatus');
+      const refreshButton = document.getElementById('btnRefreshFishVoices');
+      if (!select) return;
+      if (fishVoicesRequest) return fishVoicesRequest;
+      if (!force && select.dataset.loaded === 'true') return;
+
+      let savedId = '';
+      try { savedId = localStorage.getItem('ng_voice_fish_reference_id') || ''; } catch (_) { /* optional */ }
+      const selectedId = savedId || select.value || FISH_VOICE_PRESETS[0].id;
+      if (status) status.textContent = 'Fish Audio کی آوازیں لوڈ ہو رہی ہیں...';
+      if (refreshButton) refreshButton.disabled = true;
+
+      fishVoicesRequest = (async () => {
+        try {
+          const response = await fetch('fish_tts.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'list_models' })
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+
+          const voices = new Map();
+          FISH_VOICE_PRESETS.forEach(voice => voices.set(voice.id, voice));
+          const models = Array.isArray(data.models) ? data.models : [];
+          models.forEach(model => {
+            const id = String(model && model.id || '').trim();
+            if (!id || id.length > 128 || /[\u0000-\u001f\u007f]/.test(id)) return;
+            const preset = FISH_VOICE_PRESETS.find(voice => voice.id === id);
+            const title = preset ? preset.title : (String(model.title || 'Fish Audio voice').trim() || 'Fish Audio voice');
+            voices.set(id, { id, title });
+          });
+          let latestSavedId = '';
+          try { latestSavedId = localStorage.getItem('ng_voice_fish_reference_id') || ''; } catch (_) { /* optional */ }
+          const preferredId = latestSavedId || select.value || selectedId;
+          if (preferredId && !voices.has(preferredId)) {
+            voices.set(preferredId, { id: preferredId, title: 'محفوظ انتخاب' });
+          }
+
+          select.replaceChildren();
+          voices.forEach(voice => {
+            const option = document.createElement('option');
+            option.value = voice.id;
+            option.textContent = `${voice.title} (${voice.id})`;
+            select.appendChild(option);
+          });
+          select.value = voices.has(preferredId) ? preferredId : FISH_VOICE_PRESETS[0].id;
+          select.dataset.loaded = 'true';
+          try { localStorage.setItem('ng_voice_fish_reference_id', select.value); } catch (_) { /* optional */ }
+          if (status) {
+            status.textContent = models.length
+              ? `Fish Audio سے ${models.length} آوازیں ملیں۔`
+              : 'اکاؤنٹ کی فہرست خالی؛ محفوظ IDs دستیاب ہیں۔';
+          }
+        } catch (_) {
+          if (status) status.textContent = 'فہرست نہ ملی؛ محفوظ IDs دستیاب ہیں۔ Refresh دوبارہ آزمائیں۔';
+        } finally {
+          if (refreshButton) refreshButton.disabled = false;
+        }
+      })();
+
+      try { await fishVoicesRequest; } finally { fishVoicesRequest = null; }
+    }
+
+    function setFishVoiceSelection(id, title) {
+      const select = document.getElementById('fishRefInput');
+      if (!select || !id) return;
+      let option = Array.from(select.options).find(item => item.value === id);
+      if (!option) {
+        option = document.createElement('option');
+        option.value = id;
+        select.appendChild(option);
+      }
+      option.textContent = `${title || 'Fish Audio voice'} (${id})`;
+      select.value = id;
+      try { localStorage.setItem('ng_voice_fish_reference_id', id); } catch (_) { /* optional */ }
     }
 
     function initVoiceDropdown() {
@@ -2011,7 +2111,7 @@
             if (!id && typeof d === 'string') id = d;
 
             if (!id) throw new Error('Fish Audio کا جواب: ' + JSON.stringify(d));
-            $('fishRefInput').value = id;
+            setFishVoiceSelection(id, name);
           } else {
             // Create Voice Model using Gemini API
             if (!clips.consent) { say('vc-msg-create', 'Gemini کے لیے رضامندی آڈیو بھی درکار ہے۔', 'err'); return; }

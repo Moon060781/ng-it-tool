@@ -128,6 +128,58 @@ if ($action === 'create_model') {
     exit;
 }
 
+if ($action === 'list_models') {
+    $query = http_build_query([
+        'self' => 'true',
+        'page_size' => 100,
+        'page_number' => 1,
+    ]);
+    $ch = curl_init('https://api.fish.audio/model?' . $query);
+    curl_setopt_array($ch, [
+        CURLOPT_HTTPGET => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTPHEADER => [
+            'Authorization: Bearer ' . $key,
+            'Accept: application/json',
+        ],
+    ]);
+    $response = curl_exec($ch);
+    $error = curl_error($ch);
+    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($response === false) failRequest(502, 'Fish Audio connection failed: ' . $error);
+    if ($status >= 400) upstreamError($response, $status);
+
+    $result = json_decode($response, true);
+    if (!is_array($result) || !is_array($result['items'] ?? null)) {
+        failRequest(502, 'Fish Audio returned an invalid model list.');
+    }
+
+    $models = [];
+    foreach ($result['items'] as $item) {
+        if (!is_array($item)) continue;
+        $id = trim((string) ($item['_id'] ?? $item['id'] ?? ''));
+        if ($id === '' || strlen($id) > 128 || preg_match('/[\x00-\x1F\x7F]/', $id)) continue;
+        $title = trim((string) ($item['title'] ?? ''));
+        if ($title === '') $title = 'Fish Audio voice';
+        $models[] = [
+            'id' => $id,
+            'title' => $title,
+        ];
+    }
+
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'models' => $models,
+        'count' => count($models),
+        'has_more' => (bool) ($result['has_more'] ?? false),
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+    exit;
+}
+
 if ($action !== 'tts') failRequest(400, 'Unsupported Fish Audio action.');
 $text = trim((string) ($input['text'] ?? ''));
 $referenceId = trim((string) ($input['reference_id'] ?? $env['FISH_REFERENCE_ID'] ?? ''));
