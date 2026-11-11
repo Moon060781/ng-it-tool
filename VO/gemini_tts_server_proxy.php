@@ -119,6 +119,34 @@ function curlJson(string $url, string $method, string $apiKey, ?array $payload =
     return [$status, $decoded];
 }
 
+function withGeminiOverloadRetries(callable $request, ?callable $sleepFor = null): array
+{
+    $delays = [250000, 750000];
+    $sleepFor ??= static function (int $microseconds): void {
+        usleep($microseconds);
+    };
+
+    for ($attempt = 0; ; $attempt++) {
+        $response = $request();
+        $status = (int) ($response[0] ?? 0);
+        if (!in_array($status, [429, 503], true) || $attempt >= count($delays)) {
+            return $response;
+        }
+
+        if ($status === 429) {
+            $error = $response[1]['error'] ?? [];
+            $errorText = is_string($error)
+                ? $error
+                : json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if (!is_string($errorText) || !preg_match('/high demand|overload|temporarily|try again later/i', $errorText)) {
+                return $response;
+            }
+        }
+
+        $sleepFor($delays[$attempt]);
+    }
+}
+
 function normalizeInteractionPayload(array $payload): array
 {
     // The previous frontend sends generateContent-shaped data. Convert it to
@@ -292,24 +320,27 @@ if ($endpoint === 'diacritize') {
     if (!preg_match('/^[a-zA-Z0-9._-]+$/', $model)) {
         failRequest(400, 'Invalid Gemini diacritization model.');
     }
-    [$status, $result] = curlJson(
-        'https://generativelanguage.googleapis.com/v1beta/interactions',
-        'POST',
-        $key,
-        [
-            'model' => $model,
-            'input' => [[
-                'type' => 'user_input',
-                'content' => [[
-                    'type' => 'text',
-                    'text' => $prompt,
-                ]],
+    $requestPayload = [
+        'model' => $model,
+        'input' => [[
+            'type' => 'user_input',
+            'content' => [[
+                'type' => 'text',
+                'text' => $prompt,
             ]],
-            'generation_config' => [
-                'temperature' => 0.1,
-            ],
-            'response_format' => ['type' => 'text'],
-        ]
+        ]],
+        'generation_config' => [
+            'temperature' => 0.1,
+        ],
+        'response_format' => ['type' => 'text'],
+    ];
+    [$status, $result] = withGeminiOverloadRetries(
+        static fn (): array => curlJson(
+            'https://generativelanguage.googleapis.com/v1beta/interactions',
+            'POST',
+            $key,
+            $requestPayload
+        )
     );
     if ($status >= 400) {
         $upstreamError = $result['error'] ?? $result;
