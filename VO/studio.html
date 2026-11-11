@@ -219,7 +219,7 @@
             <span>فونٹ:</span>
             <button type="button" onclick="setScriptFont('Noto Nastaliq Urdu, serif')" class="font-button font-nastaliq">نستعلیق</button>
             <button type="button" onclick="setScriptFont('Urdu Naskh Asiatype, Tahoma, sans-serif')" class="font-button font-naskh">نسخ ایشیا ٹائپ</button>
-            <button type="button" onclick="setScriptFont('Nafees Tahreer Naskh, serif')" class="font-button font-nafees">نفیس نسخ</button>
+            <button type="button" onclick="setScriptFont('Nafees Tahreer Naskh, serif')" class="font-button font-nafees">نفیس تحریر</button>
             <button type="button" onclick="setScriptFont('Tahoma, sans-serif')" class="font-button">Tahoma</button>
             <button type="button" onclick="setScriptFont('Calibri, sans-serif')" class="font-button">Calibri</button>
           </div>
@@ -229,6 +229,12 @@
               <span id="diacriticsPreviewStatus" class="text-[11px] text-gray-400"></span>
             </div>
             <textarea id="diacriticsPreview" rows="5" class="w-full bg-[#2E2723] border border-[#4B4038] rounded-xl p-3 text-base leading-8 text-[#F7F2E7] resize-y"></textarea>
+            <div class="flex flex-wrap gap-2" dir="rtl" aria-label="حرکات">
+              <button type="button" onclick="insertDiacritic('\u0650')" onmousedown="event.preventDefault()" class="px-3 py-2 bg-[#4B4038] hover:bg-[#65564B] text-[#FFBE0B] rounded-lg text-xs">زیر</button>
+              <button type="button" onclick="insertDiacritic('\u064e')" onmousedown="event.preventDefault()" class="px-3 py-2 bg-[#4B4038] hover:bg-[#65564B] text-[#FFBE0B] rounded-lg text-xs">زبر</button>
+              <button type="button" onclick="insertDiacritic('\u064f')" onmousedown="event.preventDefault()" class="px-3 py-2 bg-[#4B4038] hover:bg-[#65564B] text-[#FFBE0B] rounded-lg text-xs">پیش</button>
+              <button type="button" onclick="insertDiacritic('\u0652')" onmousedown="event.preventDefault()" class="px-3 py-2 bg-[#4B4038] hover:bg-[#65564B] text-[#FFBE0B] rounded-lg text-xs">جزم</button>
+            </div>
             <div class="flex flex-wrap gap-2">
               <button type="button" onclick="useDiacriticsPreview()" class="px-3 py-2 bg-[#85CC14] text-[#1F1A17] rounded-lg text-xs font-bold">یہ متن وائس کے لیے استعمال کریں</button>
               <button type="button" onclick="dismissDiacriticsPreview()" class="px-3 py-2 bg-[#4B4038] text-gray-200 rounded-lg text-xs">بند کریں</button>
@@ -1106,6 +1112,33 @@
     function dismissDiacriticsPreview() {
       const box = document.getElementById('diacriticsPreviewBox');
       if (box) box.classList.add('hidden');
+    }
+
+    function insertDiacritic(mark) {
+      const input = document.getElementById('diacriticsPreview');
+      const validMarks = ['\u0650', '\u064e', '\u064f', '\u0652'];
+      if (!input || !validMarks.includes(mark)) return;
+
+      let start = input.selectionStart ?? input.value.length;
+      let end = input.selectionEnd ?? start;
+      const value = input.value;
+      let selectedText = value.slice(start, end);
+
+      if (start === end && start > 0 && validMarks.includes(value.slice(start - 1, start))) {
+        start -= 1;
+      } else if (start !== end && validMarks.includes(selectedText.slice(-1))) {
+        selectedText = selectedText.slice(0, -1);
+      }
+
+      const insertion = selectedText + mark;
+      input.value = value.slice(0, start) + insertion + value.slice(end);
+      const caret = start + insertion.length;
+      input.focus();
+      input.setSelectionRange(caret, caret);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      const status = document.getElementById('diacriticsPreviewStatus');
+      if (status) status.textContent = 'حرکت شامل ہو گئی';
     }
 
     function useDiacriticsPreview() {
