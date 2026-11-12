@@ -135,9 +135,9 @@ function curlJson(string $url, string $method, string $apiKey, ?array $payload =
     return [$status, $decoded];
 }
 
-function withGeminiOverloadRetries(callable $request, ?callable $sleepFor = null): array
+function withGeminiOverloadRetries(callable $request, ?callable $sleepFor = null, ?array $delays = null): array
 {
-    $delays = [250000, 750000];
+    $delays ??= [250000, 750000];
     $sleepFor ??= static function (int $microseconds): void {
         usleep($microseconds);
     };
@@ -421,7 +421,9 @@ if ($endpoint === 'ipa') {
             'POST',
             $key,
             $requestPayload
-        )
+        ),
+        null,
+        [1000000, 2000000, 4000000]
     );
     if ($status >= 400) {
         $upstreamError = $result['error'] ?? $result;
