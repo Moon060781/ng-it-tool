@@ -231,6 +231,14 @@
       <div class="space-y-3">
         <div class="relative space-y-2">
           <textarea id="scriptInput" dir="auto" rows="6" oninput="updateScriptStats()" placeholder="یہاں اپنا اردو متن درج کریں..." class="w-full bg-[#1F1A17] border border-[#4B4038] rounded-xl p-4 text-base md:text-lg text-[#F7F2E7] placeholder-gray-500 focus:border-[#FFBE0B] transition resize-y"></textarea>
+          <div class="text-xs text-gray-400 pt-1">
+            <span id="lbl-tag-hint">قابلِ استعمال وقفے و تاثراتی ٹیگز:</span>
+            <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;short pause&gt;</code>
+            <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;long pause&gt;</code>
+            <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;breath&gt;</code>
+            <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;sigh&gt;</code>
+            <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;laugh&gt;</code> — اوپر بٹن سے براہِ راست شامل کریں
+          </div>
           <div class="flex flex-wrap items-center gap-2" dir="rtl">
             <button type="button" id="btnApplyDiacritics" onclick="applyGeminiDiacritics()" class="px-3 py-2 bg-[#FFBE0B] hover:bg-amber-400 text-[#1F1A17] rounded-lg text-xs font-bold disabled:opacity-40">Gemini سے اعراب لگائیں</button>
             <button type="button" onclick="insertVocalTag('<short pause>')" class="vocal-tag-button">short pause</button>
@@ -280,27 +288,13 @@
           </section>
         </div>
 
-        <!-- Script Metrics Counter Bar -->
-        <div class="flex flex-wrap items-center justify-between text-xs text-gray-300 bg-[#1F1A17] px-4 py-2 rounded-xl border border-[#4B4038]/40 font-inter gap-2">
-          <div class="flex items-center gap-4 flex-wrap">
-            <span><span id="lbl-chars">حروف:</span> <strong id="statChars" class="text-[#FFBE0B]">0</strong></span>
-            <span><span id="lbl-graphemes">گرافیم:</span> <strong id="statGraphemes" class="text-[#FFBE0B]">0</strong></span>
-            <span><span id="lbl-chunks">حصے (Chunks):</span> <strong id="statChunks" class="text-[#FFBE0B]">1</strong></span>
-            <span><span id="lbl-est-time">تخمینی وقت:</span> <strong id="statEstTime" class="text-[#FFBE0B]">~0 sec</strong></span>
-          </div>
-          <div id="chunkWarning" class="hidden text-amber-400 font-semibold flex items-center gap-1">
-            ⚠️ <span id="lbl-chunk-warn">متن 1800 حروف سے زائد ہے (ملٹی چنک)</span>
-          </div>
-        </div>
-
-        <!-- Vocal tag hint -->
-        <div class="text-xs text-gray-400 pt-1">
-          <span id="lbl-tag-hint">قابلِ استعمال وقفے و تاثراتی ٹیگز:</span>
-          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;short pause&gt;</code>
-          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;long pause&gt;</code>
-          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;breath&gt;</code>
-          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;sigh&gt;</code>
-          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;laugh&gt;</code> — اوپر بٹن سے براہِ راست شامل کریں
+        <!-- Additional vocal tag controls -->
+        <div class="flex flex-wrap items-center gap-2" dir="rtl" aria-label="اضافی وقفے اور تاثراتی ٹیگز">
+          <button type="button" onclick="insertVocalTag('&lt;short pause&gt;')" class="vocal-tag-button">short pause</button>
+          <button type="button" onclick="insertVocalTag('&lt;long pause&gt;')" class="vocal-tag-button">long pause</button>
+          <button type="button" onclick="insertVocalTag('&lt;breath&gt;')" class="vocal-tag-button">breath</button>
+          <button type="button" onclick="insertVocalTag('&lt;sigh&gt;')" class="vocal-tag-button">sigh</button>
+          <button type="button" onclick="insertVocalTag('&lt;laugh&gt;')" class="vocal-tag-button">laugh</button>
         </div>
       </div>
     </section>
@@ -1287,11 +1281,6 @@
       document.getElementById('lbl-audition-notice').innerHTML = dict.auditionNotice;
       document.getElementById('scriptInput').placeholder = dict.placeholderScript;
 
-      document.getElementById('lbl-chars').textContent = dict.lblChars;
-      document.getElementById('lbl-graphemes').textContent = dict.lblGraphemes;
-      document.getElementById('lbl-chunks').textContent = dict.lblChunks;
-      document.getElementById('lbl-est-time').textContent = dict.lblEstTime;
-      document.getElementById('lbl-chunk-warn').textContent = dict.lblChunkWarn;
       document.getElementById('lbl-tag-hint').textContent = dict.lblTagHint;
 
       document.getElementById('lbl-sec3-title').textContent = dict.sec3Title;
@@ -1542,37 +1531,11 @@
     }
 
     function updateScriptStats() {
-      const text = document.getElementById('scriptInput').value;
+      const input = document.getElementById('scriptInput');
+      if (!input) return;
+      const text = input.value;
       STATE.scriptText = text;
       STATE.ttsText = text;
-
-      const charCount = text.length;
-      document.getElementById('statChars').textContent = charCount;
-
-      let graphemeCount = 0;
-      if (typeof Intl !== 'undefined' && Intl.Segmenter) {
-        const segmenter = new Intl.Segmenter('ur', { granularity: 'grapheme' });
-        graphemeCount = Array.from(segmenter.segment(text)).length;
-      } else {
-        graphemeCount = Array.from(text).length;
-      }
-      document.getElementById('statGraphemes').textContent = graphemeCount;
-
-      const chunks = splitTextIntoChunks(text, 1800);
-      document.getElementById('statChunks').textContent = chunks.length;
-
-      const textWithoutTags = stripVocalTags(text);
-      const wordCount = textWithoutTags.trim() ? textWithoutTags.trim().split(/\s+/).length : 0;
-      const estSeconds = Math.ceil((wordCount / 120) * 60);
-      document.getElementById('statEstTime').textContent = `~${estSeconds} sec`;
-
-      const warnBox = document.getElementById('chunkWarning');
-      if (charCount > 1800) {
-        warnBox.classList.remove('hidden');
-      } else {
-        warnBox.classList.add('hidden');
-      }
-
       updatePayloadPreview();
     }
 
