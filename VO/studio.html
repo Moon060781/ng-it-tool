@@ -301,6 +301,7 @@
           <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;sigh&gt;</code>
           <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;laugh&gt;</code> — اوپر بٹن سے براہِ راست شامل کریں
         </div>
+        <div id="diacriticsErrorBox" class="hidden rounded-xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-200" role="alert" aria-live="assertive" dir="rtl"></div>
       </div>
     </section>
 
@@ -1379,6 +1380,21 @@
       if (box) box.classList.add('hidden');
     }
 
+    function showDiacriticsError(message) {
+      const box = document.getElementById('diacriticsErrorBox');
+      if (!box) return showError(`اعراب لگانے میں خرابی: ${message}`, 'Gemini Diacritics');
+      box.textContent = `اعراب لگانے میں خرابی: ${message}`;
+      box.classList.remove('hidden');
+    }
+
+    function hideDiacriticsError() {
+      const box = document.getElementById('diacriticsErrorBox');
+      if (box) {
+        box.textContent = '';
+        box.classList.add('hidden');
+      }
+    }
+
     function insertDiacritic(mark) {
       const input = document.getElementById('diacriticsPreview');
       const validMarks = ['\u0650', '\u064e', '\u064f', '\u0652'];
@@ -1434,9 +1450,9 @@
       const preview = document.getElementById('diacriticsPreview');
       const box = document.getElementById('diacriticsPreviewBox');
       const text = source ? source.value.trim() : '';
-      if (!text) { showError('پہلے متن لکھیں۔', 'متن موجود نہیں'); return; }
+      if (!text) { showDiacriticsError('پہلے متن لکھیں۔'); return; }
       if (button) { button.disabled = true; button.textContent = 'اعراب لگ رہے ہیں...'; }
-      hideError();
+      hideDiacriticsError();
       try {
         if (window.NGPronunciation) await NGPronunciation.ready();
         const response = await fetch('gemini_tts_server_proxy.php', {
@@ -1464,7 +1480,7 @@
         }
         setScriptFont(localStorage.getItem('ng_voice_script_font') || 'Noto Nastaliq Urdu, serif');
       } catch (error) {
-        showError(`اعراب لگانے میں خرابی: ${sanitizeError(error.message)}`, 'Gemini Diacritics');
+        showDiacriticsError(sanitizeError(error.message));
       } finally {
         if (button) { button.disabled = false; button.textContent = 'Gemini سے اعراب لگائیں'; }
       }
