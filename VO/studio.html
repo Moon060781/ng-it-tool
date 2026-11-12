@@ -79,6 +79,29 @@
     input[type=range] {
       accent-color: #FFBE0B;
     }
+    .caption-y-slider-shell {
+      display: flex;
+      min-height: 160px;
+      align-items: center;
+      justify-content: center;
+      gap: .75rem;
+    }
+    input.caption-y-slider {
+      width: 28px;
+      height: 140px;
+      writing-mode: vertical-lr;
+      direction: rtl;
+      touch-action: pan-y;
+    }
+    .caption-y-slider-shell output {
+      min-width: 3.5rem;
+      border: 1px solid #4B4038;
+      border-radius: .5rem;
+      padding: .3rem .5rem;
+      color: #FFBE0B;
+      font-family: Inter, sans-serif;
+      text-align: center;
+    }
 
     /* Focus styles for accessible navigation */
     a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
@@ -172,7 +195,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs border-t border-[#4B4038]/50">
           <label class="flex items-center gap-2 cursor-pointer select-none">
             <input type="checkbox" id="chkSaveKey" onchange="handleSaveKeyToggle()" class="rounded border-[#4B4038] text-[#FFBE0B] focus:ring-0 bg-[#1F1A17] w-4 h-4" />
-            <span id="lbl-save-device">اسی ڈیوائس پر محفوظ کریں (Save on this device)</span>
+            <span id="lbl-save-device">اسی ڈیوائس پر API کی محفوظ کریں (Save API key on this device)</span>
           </label>
 
           <div class="flex items-center gap-4 text-xs font-inter text-gray-400">
@@ -183,6 +206,7 @@
         </div>
 
         <div id="keyStatusBox" class="hidden rounded-xl p-3 text-xs border font-inter"></div>
+        <p id="voSettingsStatus" class="text-xs text-gray-400" role="status" aria-live="polite">اکاؤنٹ settings لوڈ ہو رہی ہیں...</p>
       </div>
     </section>
 
@@ -240,6 +264,19 @@
               <button type="button" onclick="dismissDiacriticsPreview()" class="px-3 py-2 bg-[#4B4038] text-gray-200 rounded-lg text-xs">بند کریں</button>
             </div>
           </div>
+          <section class="space-y-2 rounded-xl border border-[#4B4038] bg-[#1F1A17] p-3" aria-labelledby="lbl-ipa-title">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <label id="lbl-ipa-title" for="ipaOutput" class="text-xs font-semibold text-[#FFBE0B]">IPA تلفظی نقل (International Phonetic Alphabet)</label>
+              <span id="ipaStatus" class="text-[11px] text-gray-400" role="status" aria-live="polite"></span>
+            </div>
+            <p id="lbl-ipa-note" class="text-[11px] text-gray-400">پاکستانی اردو کے لیے Gemini سے IPA مسودہ بنے گا۔ اسے ضرور جانچیں؛ یہ TTS متن تبدیل نہیں کرتا۔ متن Gemini کو بھیجا جائے گا۔</p>
+            <textarea id="ipaOutput" dir="ltr" rows="3" spellcheck="false" placeholder="IPA output will appear here" class="w-full bg-[#2E2723] border border-[#4B4038] rounded-xl p-3 text-base text-[#F7F2E7] font-mono text-left resize-y"></textarea>
+            <div class="flex flex-wrap gap-2" dir="rtl">
+              <button type="button" id="btnGenerateIpa" onclick="generateIpa()" class="px-3 py-2 bg-[#FFBE0B] hover:bg-amber-400 text-[#1F1A17] rounded-lg text-xs font-bold">IPA بنائیں</button>
+              <button type="button" id="btnCopyIpa" onclick="copyIpa()" class="px-3 py-2 bg-[#4B4038] hover:bg-[#65564B] text-[#FFBE0B] rounded-lg text-xs">IPA کاپی کریں</button>
+              <button type="button" id="btnClearIpa" onclick="clearIpa()" class="px-3 py-2 bg-[#4B4038] hover:bg-[#65564B] text-gray-200 rounded-lg text-xs">صاف کریں</button>
+            </div>
+          </section>
         </div>
 
         <!-- Script Metrics Counter Bar -->
@@ -581,8 +618,11 @@
                   <input id="vidCaptionX" type="range" min="0" max="100" value="50" oninput="updateCaptionControls()" class="block w-full mt-1" />
                 </label>
                 <label class="block text-[11px] text-gray-300">
-                  <span id="lbl-video-y">عمودی پوزیشن</span> <output id="vidCaptionYValue">62%</output>
-                  <input id="vidCaptionY" type="range" min="0" max="100" value="62" oninput="updateCaptionControls()" class="block w-full mt-1" />
+                  <span id="lbl-video-y">عمودی پوزیشن</span>
+                  <div class="caption-y-slider-shell" dir="ltr">
+                    <input id="vidCaptionY" type="range" min="0" max="100" value="62" aria-orientation="vertical" aria-label="Caption vertical position" oninput="updateCaptionControls()" class="caption-y-slider" />
+                    <output id="vidCaptionYValue" for="vidCaptionY">62%</output>
+                  </div>
                 </label>
                 <label class="flex items-center justify-between gap-3 text-[11px] text-gray-300">
                   <span id="lbl-video-text-color">متن کا رنگ</span>
@@ -701,6 +741,10 @@
       exportedVideoBlob: null
     };
     window.STATE = STATE;
+    let voSettingsCsrfToken = '';
+    let voSettingsSaveTimer = null;
+    let voSettingsSaveChain = Promise.resolve();
+    let voSettingsAutosaveBound = false;
 
     const OFFICIAL_VOICES = [
       { id: "Kore", desc: "Firm" }, { id: "Zephyr", desc: "Bright" }, { id: "Puck", desc: "Upbeat" },
@@ -724,7 +768,14 @@
         sec1Title: "API کی (Key) اور راز داری",
         sec1Desc: "آپ کی Gemini API کی براہ راست آپ کے براؤزر سے سرور پروکسی یا Google Servers کو بھیجی جاتی ہے۔ اگر آپ اپنی کی درج نہ کریں تو سرور میں موجود .env کی کی استعمال ہوگی۔",
         showKey: "کی دکھائیں", hideKey: "کی چھپائیں", testKey: "کی آزمائیں", clearKey: "کی صاف کریں",
-        saveDevice: "اسی ڈیوائس پر محفوظ کریں (Save on this device)",
+        saveDevice: "اسی ڈیوائس پر API کی محفوظ کریں (Save API key on this device)",
+        ipaTitle: "IPA تلفظی نقل (International Phonetic Alphabet)",
+        ipaNote: "پاکستانی اردو کے لیے Gemini سے IPA مسودہ بنے گا۔ اسے ضرور جانچیں؛ یہ TTS متن تبدیل نہیں کرتا۔ متن Gemini کو بھیجا جائے گا۔",
+        ipaPlaceholder: "IPA متن یہاں آئے گا",
+        ipaGenerate: "IPA بنائیں", ipaCopy: "IPA کاپی کریں", ipaClear: "صاف کریں",
+        ipaWorking: "IPA تیار ہو رہا ہے...", ipaReady: "IPA تیار ہے؛ تلفظ جانچ لیں۔", ipaCopied: "IPA کاپی ہو گیا۔",
+        settingsLoading: "اکاؤنٹ settings لوڈ ہو رہی ہیں...", settingsSaving: "اکاؤنٹ settings محفوظ ہو رہی ہیں...",
+        settingsSaved: "Settings login account میں محفوظ ہیں؛ API key encrypted ہے۔", settingsSaveFailed: "Account settings محفوظ نہ ہو سکیں۔",
         sec2Title: "تحریر اور مختصر آڈیشن", btnAuditionSample: "نمونہ متن لوڈ کریں",
         auditionNotice: "<strong>نوٹ:</strong> Gemini Flash TTS ماڈل 130 سے زائد زبانوں کا احاطہ کرتا ہے۔ باقاعدہ اردو تلفظ اور آواز کے تاثر کا اندازہ لگانے کے لیے نیچے دیے گئے مختصر آزمائشی متن پر آڈیشن لیں۔",
         placeholderScript: "یہاں اپنا اردو متن درج کریں...",
@@ -753,7 +804,14 @@
         sec1Title: "1. API Key & Privacy (BYOK)",
         sec1Desc: "Your Gemini API Key is sent securely. If left empty, the application falls back to your server's configured .env API key.",
         showKey: "Show Key", hideKey: "Hide Key", testKey: "Test Key", clearKey: "Clear Key",
-        saveDevice: "Save on this device (LocalStorage)",
+        saveDevice: "Save API key on this device (optional)",
+        ipaTitle: "IPA transcription (International Phonetic Alphabet)",
+        ipaNote: "Gemini drafts IPA for Pakistani Urdu. Review it; it does not change the TTS script. Source text is sent to Gemini.",
+        ipaPlaceholder: "IPA transcription appears here",
+        ipaGenerate: "Generate IPA", ipaCopy: "Copy IPA", ipaClear: "Clear",
+        ipaWorking: "Generating IPA...", ipaReady: "IPA ready; review pronunciation.", ipaCopied: "IPA copied.",
+        settingsLoading: "Loading account settings...", settingsSaving: "Saving account settings...",
+        settingsSaved: "Settings saved to this login account; the API key is encrypted.", settingsSaveFailed: "Could not save account settings.",
         sec2Title: "2. Script & Short Audition", btnAuditionSample: "Load Audition Sample",
         auditionNotice: "<strong>Note:</strong> Gemini Flash TTS covers 130+ languages. Run a short audition on the sample text below to judge Pakistani Urdu pronunciation.",
         placeholderScript: "Enter your Urdu script here...",
@@ -784,7 +842,7 @@
     ];
     let fishVoicesRequest = null;
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       initVoiceDropdown();
       loadStoredSettings();
       updateScriptStats();
@@ -804,6 +862,7 @@
         updateScriptStats();
       }
       if (window.NGPronunciation) NGPronunciation.init();
+      await initializeVoAccountSettings();
     });
 
     function toggleEngineUI() {
@@ -833,7 +892,8 @@
 
       let savedId = '';
       try { savedId = localStorage.getItem('ng_voice_fish_reference_id') || ''; } catch (_) { /* optional */ }
-      const selectedId = savedId || select.value || FISH_VOICE_PRESETS[0].id;
+      const accountSavedId = select.dataset.accountSavedId || '';
+      const selectedId = accountSavedId || savedId || select.value || FISH_VOICE_PRESETS[0].id;
       if (status) status.textContent = 'Fish Audio کی آوازیں لوڈ ہو رہی ہیں...';
       if (refreshButton) refreshButton.disabled = true;
 
@@ -859,7 +919,7 @@
           });
           let latestSavedId = '';
           try { latestSavedId = localStorage.getItem('ng_voice_fish_reference_id') || ''; } catch (_) { /* optional */ }
-          const preferredId = latestSavedId || select.value || selectedId;
+          const preferredId = select.dataset.accountSavedId || latestSavedId || select.value || selectedId;
           if (preferredId && !voices.has(preferredId)) {
             voices.set(preferredId, { id: preferredId, title: 'محفوظ انتخاب' });
           }
@@ -868,6 +928,7 @@
           voices.forEach(voice => {
             const option = document.createElement('option');
             option.value = voice.id;
+            option.dataset.title = voice.title;
             option.textContent = `${voice.title} (${voice.id})`;
             select.appendChild(option);
           });
@@ -898,6 +959,7 @@
         option.value = id;
         select.appendChild(option);
       }
+      option.dataset.title = title || 'Fish Audio voice';
       option.textContent = `${title || 'Fish Audio voice'} (${id})`;
       select.value = id;
       try { localStorage.setItem('ng_voice_fish_reference_id', id); } catch (_) { /* optional */ }
@@ -948,6 +1010,154 @@
       }
     }
 
+    function setVoSettingsStatus(state) {
+      const status = document.getElementById('voSettingsStatus');
+      if (!status) return;
+      const dict = I18N[STATE.lang];
+      status.textContent = state === 'loading' ? dict.settingsLoading
+        : state === 'saving' ? dict.settingsSaving
+        : state === 'saved' ? dict.settingsSaved
+        : dict.settingsSaveFailed;
+      status.className = 'text-xs ' + (state === 'saved' ? 'text-emerald-300' : state === 'error' ? 'text-amber-300' : 'text-gray-400');
+    }
+
+    function collectVoAccountSettings() {
+      const value = id => document.getElementById(id)?.value ?? '';
+      return {
+        apiKey: value('apiKeyInput').trim(),
+        language: STATE.lang,
+        engine: value('engineSelect'),
+        geminiModel: value('modelSelect'),
+        geminiVoice: value('voiceSelect'),
+        customVoiceId: value('customVoiceInput').trim(),
+        styleMetadata: value('styleMetadataInput'),
+        expression: value('presetExpression'),
+        pace: value('presetPace'),
+        accent: value('presetAccent'),
+        fishReferenceId: value('fishRefInput'),
+        fishReferenceName: document.getElementById('fishRefInput')?.selectedOptions?.[0]?.dataset.title || '',
+        cloneVoiceName: value('vc-name'),
+        cloneStoreMode: value('vc-store'),
+        sourceDriveUrl: value('vc-drive-source').trim(),
+        consentDriveUrl: value('vc-drive-consent').trim(),
+        consentLanguage: value('vc-consent-lang'),
+        captionResolution: value('vidResolution'),
+        captionFormat: value('vidFormat'),
+        captionX: Number(value('vidCaptionX') || 50),
+        captionY: Number(value('vidCaptionY') || 62),
+        captionColor: value('vidCaptionColor') || '#FFBE0B',
+        captionBackgroundColor: value('vidCaptionBgColor') || '#1F1A17'
+      };
+    }
+
+    function applyVoAccountSettings(settings) {
+      const put = (id, key) => {
+        const element = document.getElementById(id);
+        if (element && settings[key] !== undefined && settings[key] !== null) element.value = settings[key];
+      };
+      if (settings.language === 'ur' || settings.language === 'en') STATE.lang = settings.language;
+      put('apiKeyInput', 'apiKey');
+      STATE.apiKey = settings.apiKey || '';
+      put('engineSelect', 'engine');
+      put('modelSelect', 'geminiModel');
+      put('voiceSelect', 'geminiVoice');
+      put('customVoiceInput', 'customVoiceId');
+      put('styleMetadataInput', 'styleMetadata');
+      put('presetExpression', 'expression');
+      put('presetPace', 'pace');
+      put('presetAccent', 'accent');
+      put('vc-name', 'cloneVoiceName');
+      put('vc-store', 'cloneStoreMode');
+      put('vc-drive-source', 'sourceDriveUrl');
+      put('vc-drive-consent', 'consentDriveUrl');
+      put('vc-consent-lang', 'consentLanguage');
+      put('vidResolution', 'captionResolution');
+      put('vidFormat', 'captionFormat');
+      put('vidCaptionX', 'captionX');
+      put('vidCaptionY', 'captionY');
+      put('vidCaptionColor', 'captionColor');
+      put('vidCaptionBgColor', 'captionBackgroundColor');
+      const fishSelect = document.getElementById('fishRefInput');
+      if (fishSelect && settings.fishReferenceId) {
+        fishSelect.dataset.accountSavedId = settings.fishReferenceId;
+        setFishVoiceSelection(settings.fishReferenceId, settings.fishReferenceName || 'Account voice');
+      }
+      applyLanguageUI();
+      updateStylePromptFromPresets();
+      if (settings.styleMetadata !== undefined) document.getElementById('styleMetadataInput').value = settings.styleMetadata;
+      toggleEngineUI();
+      if (typeof VC !== 'undefined') VC.consent();
+      updateCaptionControls();
+      updatePayloadPreview();
+    }
+
+    async function saveVoAccountSettings() {
+      if (!voSettingsCsrfToken) return;
+      setVoSettingsStatus('saving');
+      const response = await fetch('settings_api.php', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': voSettingsCsrfToken
+        },
+        body: JSON.stringify({ settings: collectVoAccountSettings() })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.saved) throw new Error(data.error || 'Settings save failed.');
+      setVoSettingsStatus('saved');
+    }
+
+    function queueVoSettingsSave() {
+      if (!voSettingsCsrfToken) return;
+      clearTimeout(voSettingsSaveTimer);
+      voSettingsSaveTimer = setTimeout(() => {
+        voSettingsSaveChain = voSettingsSaveChain
+          .catch(() => {})
+          .then(() => saveVoAccountSettings())
+          .catch(() => setVoSettingsStatus('error'));
+      }, 850);
+    }
+
+    function bindVoSettingsAutosave() {
+      if (voSettingsAutosaveBound) return;
+      voSettingsAutosaveBound = true;
+      const ids = [
+        'apiKeyInput', 'engineSelect', 'modelSelect', 'voiceSelect', 'customVoiceInput',
+        'styleMetadataInput', 'presetExpression', 'presetPace', 'presetAccent', 'fishRefInput',
+        'vc-name', 'vc-store', 'vc-drive-source', 'vc-drive-consent', 'vc-consent-lang',
+        'vidResolution', 'vidFormat', 'vidCaptionX', 'vidCaptionY', 'vidCaptionColor', 'vidCaptionBgColor'
+      ];
+      ids.forEach(id => {
+        const element = document.getElementById(id);
+        if (!element) return;
+        element.addEventListener('input', queueVoSettingsSave);
+        element.addEventListener('change', queueVoSettingsSave);
+      });
+    }
+
+    async function initializeVoAccountSettings() {
+      setVoSettingsStatus('loading');
+      try {
+        const response = await fetch('settings_api.php', { credentials: 'same-origin' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.csrfToken || !data.settings) {
+          throw new Error(data.error || 'Account settings unavailable.');
+        }
+        voSettingsCsrfToken = data.csrfToken;
+        const hasSavedSettings = Object.keys(data.settings).length > 0;
+        if (hasSavedSettings) applyVoAccountSettings(data.settings);
+        bindVoSettingsAutosave();
+        if (hasSavedSettings) {
+          setVoSettingsStatus('saved');
+        } else {
+          await saveVoAccountSettings();
+        }
+      } catch (_) {
+        setVoSettingsStatus('error');
+      }
+    }
+
     function handleSaveKeyToggle() {
       const chk = document.getElementById('chkSaveKey');
       const val = document.getElementById('apiKeyInput').value.trim();
@@ -985,6 +1195,7 @@
       }
       document.getElementById('chkSaveKey').checked = false;
       showKeyStatus(STATE.lang === 'ur' ? 'کی صاف کر دی گئی ہے۔' : 'API Key cleared.', 'info');
+      queueVoSettingsSave();
     }
 
     async function testApiKey() {
@@ -1004,6 +1215,7 @@
           if (key && document.getElementById('chkSaveKey').checked && checkLocalStorageSupport()) {
             localStorage.setItem('ng_voice_api_key', key);
           }
+          queueVoSettingsSave();
           showKeyStatus(
             STATE.lang === 'ur' 
               ? `✅ کی درست ہے! ماڈل رسائی معلوم ہو گئی (${model})۔`
@@ -1049,6 +1261,7 @@
         localStorage.setItem('ng_voice_lang', STATE.lang);
       }
       applyLanguageUI();
+      queueVoSettingsSave();
     }
 
     function applyLanguageUI() {
@@ -1112,6 +1325,12 @@
       document.getElementById('lbl-video-y').textContent = dict.videoY;
       document.getElementById('lbl-video-text-color').textContent = dict.videoTextColor;
       document.getElementById('lbl-video-bg-color').textContent = dict.videoBgColor;
+      document.getElementById('lbl-ipa-title').textContent = dict.ipaTitle;
+      document.getElementById('lbl-ipa-note').textContent = dict.ipaNote;
+      document.getElementById('ipaOutput').placeholder = dict.ipaPlaceholder;
+      document.getElementById('btnGenerateIpa').textContent = dict.ipaGenerate;
+      document.getElementById('btnCopyIpa').textContent = dict.ipaCopy;
+      document.getElementById('btnClearIpa').textContent = dict.ipaClear;
       document.getElementById('vc-drive-source-label').textContent = dict.driveLinkLabel;
       document.getElementById('vc-drive-consent-label').textContent = dict.driveLinkLabel;
       document.getElementById('vc-drive-source-load').textContent = dict.driveLoad;
@@ -1249,6 +1468,61 @@
       } finally {
         if (button) { button.disabled = false; button.textContent = 'Gemini سے اعراب لگائیں'; }
       }
+    }
+
+    async function generateIpa() {
+      const source = document.getElementById('scriptInput');
+      const output = document.getElementById('ipaOutput');
+      const button = document.getElementById('btnGenerateIpa');
+      const status = document.getElementById('ipaStatus');
+      const text = source ? source.value.trim() : '';
+      const dict = I18N[STATE.lang];
+      if (!text) {
+        if (status) status.textContent = STATE.lang === 'ur' ? 'پہلے متن درج کریں۔' : 'Enter source text first.';
+        return;
+      }
+      if (button) button.disabled = true;
+      if (status) status.textContent = dict.ipaWorking;
+      try {
+        const response = await fetch('gemini_tts_server_proxy.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            endpoint: 'ipa',
+            api_key: document.getElementById('apiKeyInput').value.trim(),
+            text
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ipa) throw new Error(formatGeminiError(data, response.status));
+        output.value = data.ipa;
+        if (status) status.textContent = dict.ipaReady;
+      } catch (error) {
+        if (status) status.textContent = (STATE.lang === 'ur' ? 'IPA بنانے میں خرابی: ' : 'IPA generation failed: ') + sanitizeError(error.message);
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
+    async function copyIpa() {
+      const output = document.getElementById('ipaOutput');
+      const status = document.getElementById('ipaStatus');
+      if (!output || !output.value.trim()) return;
+      try {
+        await navigator.clipboard.writeText(output.value);
+      } catch (_) {
+        output.focus();
+        output.select();
+        document.execCommand('copy');
+      }
+      if (status) status.textContent = I18N[STATE.lang].ipaCopied;
+    }
+
+    function clearIpa() {
+      const output = document.getElementById('ipaOutput');
+      const status = document.getElementById('ipaStatus');
+      if (output) output.value = '';
+      if (status) status.textContent = '';
     }
 
     function updateScriptStats() {

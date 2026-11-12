@@ -258,15 +258,13 @@ $env = loadEnv([
     dirname(__DIR__, 2) . '/vo.env',
     __DIR__ . '/.env',
 ]);
-$key = trim((string) ($env['GEMINI_API_KEY'] ?? ''));
-if ($key === '' && !empty($input['api_key'])) {
-    $key = trim((string) $input['api_key']);
-}
+$endpoint = trim((string) ($input['endpoint'] ?? 'generateContent'), '/');
+$clientKey = trim((string) ($input['api_key'] ?? ''));
+$key = $clientKey !== '' ? $clientKey : trim((string) ($env['GEMINI_API_KEY'] ?? ''));
 if ($key === '') {
     failRequest(500, 'GEMINI_API_KEY was not found on the server.');
 }
 
-$endpoint = trim((string) ($input['endpoint'] ?? 'generateContent'), '/');
 $model = trim((string) ($input['model'] ?? 'gemini-3.8-flash-tts'));
 $allowedModels = [
     'gemini-3.8-flash-tts',
@@ -374,6 +372,72 @@ if ($endpoint === 'diacritize') {
         'correctionsUsed' => count($memory),
         'correctionsSource' => $memorySource,
     ]);
+}
+
+if ($endpoint === 'ipa') {
+    $text = trim((string) ($input['text'] ?? ''));
+    if ($text === '' || mb_strlen($text, 'UTF-8') > 12000) {
+        failRequest(400, 'IPA source text is empty or exceeds 12,000 characters.');
+    }
+
+    $prompt = "You are an expert phonetician transcribing Urdu for voice production. Convert the input into a broad, readable IPA transcription for standard Pakistani Urdu as spoken in Karachi. Use authentic IPA symbols, not Roman Urdu or respelling. Preserve every word in order, meaning, and punctuation; do not translate, summarize, or explain. Keep word boundaries. Put the complete transcription between one pair of slashes / /. Use phonemic contrasts and long-vowel marks where appropriate. Transcribe clearly recognizable non-Urdu words in their spoken pronunciation. If pronunciation is ambiguous, choose the most likely reading from context. Return JSON only with one key named ipa. Input text:\n" . $text;
+    $ipaModel = trim((string) ($env['GEMINI_IPA_MODEL'] ?? 'gemini-3.8-flash'));
+    if (!preg_match('/^[a-zA-Z0-9._-]{1,120}$/', $ipaModel)) {
+        failRequest(400, 'Invalid Gemini IPA model.');
+    }
+    $requestPayload = [
+        'model' => $ipaModel,
+        'input' => [[
+            'type' => 'user_input',
+            'content' => [[
+                'type' => 'text',
+                'text' => $prompt,
+            ]],
+        ]],
+        'generation_config' => [
+            'temperature' => 0.1,
+        ],
+        'response_format' => ['type' => 'text'],
+    ];
+    [$status, $result] = withGeminiOverloadRetries(
+        static fn (): array => curlJson(
+            'https://generativelanguage.googleapis.com/v1beta/interactions',
+            'POST',
+            $key,
+            $requestPayload
+        )
+    );
+    if ($status >= 400) {
+        $upstreamError = $result['error'] ?? $result;
+        if (is_array($upstreamError)) {
+            $message = $upstreamError['message'] ?? $upstreamError['status'] ?? '';
+            if (is_array($message)) {
+                $message = json_encode($message, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+            if (trim((string) $message) === '') {
+                $message = json_encode($upstreamError, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+        } else {
+            $message = (string) $upstreamError;
+        }
+        respond($status, [
+            'error' => [
+                'message' => trim((string) $message) ?: 'Gemini IPA request failed.',
+                'status' => $status,
+            ],
+        ]);
+    }
+
+    $rawText = findInteractionText($result);
+    $cleanJson = preg_replace('/^\\s*```(?:json)?\\s*|\\s*```\\s*$/i', '', $rawText);
+    $decoded = json_decode((string) $cleanJson, true);
+    $ipa = is_array($decoded) ? trim((string) ($decoded['ipa'] ?? '')) : trim($rawText);
+    $ipa = preg_replace('/^```(?:text)?\\s*|\\s*```$/i', '', $ipa);
+    $ipa = trim((string) $ipa);
+    if ($ipa === '' || mb_strlen($ipa, 'UTF-8') > 24000) {
+        failRequest(502, 'Gemini returned no usable IPA transcription.');
+    }
+    respond(200, ['ipa' => $ipa]);
 }
 
 if ($endpoint === 'voices') {
