@@ -231,22 +231,6 @@
       <div class="space-y-3">
         <div class="relative space-y-2">
           <textarea id="scriptInput" dir="auto" rows="6" oninput="updateScriptStats()" placeholder="یہاں اپنا اردو متن درج کریں..." class="w-full bg-[#1F1A17] border border-[#4B4038] rounded-xl p-4 text-base md:text-lg text-[#F7F2E7] placeholder-gray-500 focus:border-[#FFBE0B] transition resize-y"></textarea>
-          <div class="text-xs text-gray-400 pt-1">
-            <span id="lbl-tag-hint">قابلِ استعمال وقفے و تاثراتی ٹیگز:</span>
-            <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;short pause&gt;</code>
-            <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;long pause&gt;</code>
-            <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;breath&gt;</code>
-            <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;sigh&gt;</code>
-            <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;laugh&gt;</code> — اوپر بٹن سے براہِ راست شامل کریں
-          </div>
-          <div class="flex flex-wrap items-center gap-2" dir="rtl">
-            <button type="button" id="btnApplyDiacritics" onclick="applyGeminiDiacritics()" class="px-3 py-2 bg-[#FFBE0B] hover:bg-amber-400 text-[#1F1A17] rounded-lg text-xs font-bold disabled:opacity-40">Gemini سے اعراب لگائیں</button>
-            <button type="button" onclick="insertVocalTag('<short pause>')" class="vocal-tag-button">short pause</button>
-            <button type="button" onclick="insertVocalTag('<long pause>')" class="vocal-tag-button">long pause</button>
-            <button type="button" onclick="insertVocalTag('<breath>')" class="vocal-tag-button">breath</button>
-            <button type="button" onclick="insertVocalTag('<sigh>')" class="vocal-tag-button">sigh</button>
-            <button type="button" onclick="insertVocalTag('<laugh>')" class="vocal-tag-button">laugh</button>
-          </div>
           <div class="flex flex-wrap items-center gap-2 text-xs text-gray-400" dir="rtl">
             <span>فونٹ:</span>
             <button type="button" onclick="setScriptFont('Noto Nastaliq Urdu, serif')" class="font-button font-nastaliq">نستعلیق</button>
@@ -280,6 +264,22 @@
             </div>
             <p id="lbl-ipa-note" class="text-[11px] text-gray-400">پاکستانی اردو کے لیے Gemini سے IPA مسودہ بنے گا۔ اسے ضرور جانچیں؛ یہ TTS متن تبدیل نہیں کرتا۔ متن Gemini کو بھیجا جائے گا۔</p>
             <textarea id="ipaOutput" dir="ltr" rows="3" spellcheck="false" placeholder="IPA output will appear here" class="w-full bg-[#2E2723] border border-[#4B4038] rounded-xl p-3 text-base text-[#F7F2E7] font-mono text-left resize-y"></textarea>
+            <div class="flex flex-wrap items-center gap-2" dir="rtl" aria-label="اسکرپٹ اور اعراب کے بٹن">
+              <button type="button" onclick="insertVocalTag('<short pause>')" class="vocal-tag-button">short pause</button>
+              <button type="button" onclick="insertVocalTag('<long pause>')" class="vocal-tag-button">long pause</button>
+              <button type="button" id="btnApplyDiacritics" onclick="applyGeminiDiacritics()" class="px-3 py-2 bg-[#FFBE0B] hover:bg-amber-400 text-[#1F1A17] rounded-lg text-xs font-bold disabled:opacity-40">Gemini سے اعراب لگائیں</button>
+              <button type="button" onclick="insertVocalTag('<breath>')" class="vocal-tag-button">breath</button>
+              <button type="button" onclick="insertVocalTag('<sigh>')" class="vocal-tag-button">sigh</button>
+              <button type="button" onclick="insertVocalTag('<laugh>')" class="vocal-tag-button">laugh</button>
+            </div>
+            <div class="text-xs text-gray-400 pt-1">
+              <span id="lbl-tag-hint">قابلِ استعمال وقفے و تاثراتی ٹیگز:</span>
+              <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;short pause&gt;</code>
+              <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;long pause&gt;</code>
+              <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;breath&gt;</code>
+              <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;sigh&gt;</code>
+              <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;laugh&gt;</code> — اوپر بٹن سے براہِ راست شامل کریں
+            </div>
             <div class="flex flex-wrap gap-2" dir="rtl">
               <button type="button" id="btnGenerateIpa" onclick="generateIpa()" class="px-3 py-2 bg-[#FFBE0B] hover:bg-amber-400 text-[#1F1A17] rounded-lg text-xs font-bold">IPA بنائیں</button>
               <button type="button" id="btnCopyIpa" onclick="copyIpa()" class="px-3 py-2 bg-[#4B4038] hover:bg-[#65564B] text-[#FFBE0B] rounded-lg text-xs">IPA کاپی کریں</button>
