@@ -49,6 +49,22 @@ function loadEnv(array $paths): array
     return [];
 }
 
+function resolveGeminiApiKey(string $endpoint, string $clientKey, array $env): string
+{
+    $specificKeyName = $endpoint === 'diacritize' ? 'GEMINI_API_KEY_DIACRITIC'
+        : ($endpoint === 'ipa' ? 'GEMINI_API_KEY_IPA' : '');
+    if ($specificKeyName !== '') {
+        $specificKey = trim((string) ($env[$specificKeyName] ?? ''));
+        if ($specificKey !== '') {
+            return $specificKey;
+        }
+    }
+    if ($clientKey !== '') {
+        return $clientKey;
+    }
+    return trim((string) ($env['GEMINI_API_KEY'] ?? ''));
+}
+
 function requestJson(): array
 {
     $raw = file_get_contents('php://input');
@@ -260,9 +276,9 @@ $env = loadEnv([
 ]);
 $endpoint = trim((string) ($input['endpoint'] ?? 'generateContent'), '/');
 $clientKey = trim((string) ($input['api_key'] ?? ''));
-$key = $clientKey !== '' ? $clientKey : trim((string) ($env['GEMINI_API_KEY'] ?? ''));
+$key = resolveGeminiApiKey($endpoint, $clientKey, $env);
 if ($key === '') {
-    failRequest(500, 'GEMINI_API_KEY was not found on the server.');
+    failRequest(500, 'No Gemini API key is configured for this endpoint.');
 }
 
 $model = trim((string) ($input['model'] ?? 'gemini-3.8-flash-tts'));
