@@ -249,14 +249,6 @@
         <div class="flex flex-wrap items-center gap-2" dir="rtl" aria-label="اعراب کے بٹن">
           <button type="button" id="btnApplyDiacritics" onclick="applyGeminiDiacritics()" class="px-3 py-2 bg-[#FFBE0B] hover:bg-amber-400 text-[#1F1A17] rounded-lg text-xs font-bold disabled:opacity-40">Gemini سے اعراب لگائیں</button>
         </div>
-        <div class="text-xs text-gray-400 pt-1">
-          <span id="lbl-tag-hint">قابلِ استعمال وقفے و تاثراتی ٹیگز:</span>
-          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;short pause&gt;</code>
-          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;long pause&gt;</code>
-          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;breath&gt;</code>
-          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;sigh&gt;</code>
-          <code class="bg-[#1F1A17] text-[#FFBE0B] px-1.5 py-0.5 rounded border border-[#4B4038] font-mono text-[11px] mx-0.5">&lt;laugh&gt;</code> — اوپر بٹن سے براہِ راست شامل کریں
-        </div>
         <div id="diacriticsErrorBox" class="hidden rounded-xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-200" role="alert" aria-live="assertive" dir="rtl"></div>
           <div id="diacriticsPreviewBox" class="hidden space-y-2 rounded-xl border border-[#FFBE0B]/50 bg-[#1F1A17] p-3" dir="rtl">
             <div class="flex items-center justify-between gap-2">
@@ -278,7 +270,6 @@
           <section class="space-y-2 rounded-xl border border-[#4B4038] bg-[#1F1A17] p-3" aria-labelledby="lbl-ipa-title">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <label id="lbl-ipa-title" for="ipaOutput" class="text-xs font-semibold text-[#FFBE0B]">IPA تلفظی نقل (International Phonetic Alphabet)</label>
-              <span id="ipaStatus" class="text-[11px] text-gray-400" role="status" aria-live="polite"></span>
             </div>
             <p id="lbl-ipa-note" class="text-[11px] text-gray-400">پاکستانی اردو کے لیے Gemini سے IPA مسودہ بنے گا۔ اسے ضرور جانچیں؛ یہ TTS متن تبدیل نہیں کرتا۔ متن Gemini کو بھیجا جائے گا۔</p>
             <textarea id="ipaOutput" dir="ltr" rows="3" spellcheck="false" placeholder="IPA output will appear here" class="w-full bg-[#2E2723] border border-[#4B4038] rounded-xl p-3 text-base text-[#F7F2E7] font-mono text-left resize-y"></textarea>
@@ -294,6 +285,7 @@
               <button type="button" id="btnCopyIpa" onclick="copyIpa()" class="px-3 py-2 bg-[#4B4038] hover:bg-[#65564B] text-[#FFBE0B] rounded-lg text-xs">IPA کاپی کریں</button>
               <button type="button" id="btnClearIpa" onclick="clearIpa()" class="px-3 py-2 bg-[#4B4038] hover:bg-[#65564B] text-gray-200 rounded-lg text-xs">صاف کریں</button>
             </div>
+            <span id="ipaStatus" class="block w-full text-[11px] text-gray-400" role="status" aria-live="polite"></span>
           </section>
         </div>
 
@@ -776,7 +768,7 @@
         auditionNotice: "<strong>نوٹ:</strong> Gemini Flash TTS ماڈل 130 سے زائد زبانوں کا احاطہ کرتا ہے۔ باقاعدہ اردو تلفظ اور آواز کے تاثر کا اندازہ لگانے کے لیے نیچے دیے گئے مختصر آزمائشی متن پر آڈیشن لیں۔",
         placeholderScript: "یہاں اپنا اردو متن درج کریں...",
         lblChars: "حروف:", lblGraphemes: "گرافیم:", lblChunks: "حصے (Chunks):", lblEstTime: "تخمینی وقت:",
-        lblChunkWarn: "متن 1800 حروف سے زائد ہے (ملٹی چنک)", lblTagHint: "قابلِ استعمال وقفے و تاثراتی ٹیگز:",
+        lblChunkWarn: "متن 1800 حروف سے زائد ہے (ملٹی چنک)",
         sec3Title: "آواز، ماڈل اور طرز کا انتخاب", selectModel: "TTS ماڈل کا انتخاب:",
         modelNote: "نوٹ: gemini-2.5-flash-preview-tts کی ممکنہ بندش 17 نومبر 2026 تک متوقع ہے۔ یہ ایپ پہلے سے 3.8 ماڈلز استعمال کرتی ہے۔",
         selectVoice: "آواز کا انتخاب (30 Prebuilt Voices):", customVoice: "کسٹم وائس کی (اگر Gemini کلون استعمال کر رہے ہوں):",
@@ -812,7 +804,7 @@
         auditionNotice: "<strong>Note:</strong> Gemini Flash TTS covers 130+ languages. Run a short audition on the sample text below to judge Pakistani Urdu pronunciation.",
         placeholderScript: "Enter your Urdu script here...",
         lblChars: "Characters:", lblGraphemes: "Graphemes:", lblChunks: "Chunks:", lblEstTime: "Est. Time:",
-        lblChunkWarn: "Script exceeds 1,800 chars (Multi-chunk)", lblTagHint: "Allowed vocal/pause tags:",
+        lblChunkWarn: "Script exceeds 1,800 chars (Multi-chunk)",
         sec3Title: "3. Voice, Model & Style Direction", selectModel: "Select TTS Model:",
         modelNote: "Note: gemini-2.5-flash-preview-tts has a listed deprecation of 17 Nov 2026. This app defaults to 3.8 models.",
         selectVoice: "Select Voice (30 Prebuilt Voices):", customVoice: "Custom Voice ID (Optional):",
@@ -1281,8 +1273,6 @@
       document.getElementById('lbl-btn-audition-sample').textContent = dict.btnAuditionSample;
       document.getElementById('lbl-audition-notice').innerHTML = dict.auditionNotice;
       document.getElementById('scriptInput').placeholder = dict.placeholderScript;
-
-      document.getElementById('lbl-tag-hint').textContent = dict.lblTagHint;
 
       document.getElementById('lbl-sec3-title').textContent = dict.sec3Title;
       document.getElementById('lbl-select-model').textContent = dict.selectModel;
